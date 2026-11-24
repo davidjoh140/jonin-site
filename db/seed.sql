@@ -1,3 +1,4 @@
+-- WARNING: this wipes sets, cards AND scans. Only for a brand-new database. Never re-run once scans exist.
 begin;
 delete from scans; delete from cards; delete from sets;
 insert into sets(id,name,code,kind,released,foils,first_edition,unlimited,card_count,rarity_counts,notes,symbol_url,sort) values('1','The Path to Hokage','PTH','Main','Apr 28, 2006',array['Diamond','Wavy']::text[],'Yes','Yes',122,'{"Common": 70, "Uncommon": 25, "Rare": 13, "Starter": 12, "Super Rare": 2}'::jsonb,'Unlimited reprint shipped Sept 2006 after 1st Edition sold out (ICv2).',null,0);
