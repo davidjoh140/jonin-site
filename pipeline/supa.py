@@ -12,7 +12,9 @@ KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 def _h(extra=None):
     if not URL or not KEY:
         raise SystemExit("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set")
-    h = {"apikey": KEY, "Authorization": f"Bearer {KEY}"}
+    h = {"apikey": KEY}
+    if KEY.startswith("eyJ"):  # legacy service_role JWT; new sb_secret_ keys must NOT go in Authorization
+        h["Authorization"] = f"Bearer {KEY}"
     h.update(extra or {})
     return h
 
