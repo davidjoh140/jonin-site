@@ -1,5 +1,5 @@
 -- 002: scan pipeline + keeping every copy of the card list in step with Supabase.
--- Run once in the Supabase SQL editor, after schema.sql and seed.sql, then run 003_backfill.sql.
+-- Applied to the live jonin project on 2026-11-24 (migration "scan_pipeline"). Safe to re-run.
 -- Safe to re-run.
 --
 -- Rule this migration sets up: Supabase is the only master card list.
@@ -41,7 +41,7 @@ alter table scans add column if not exists candidate_id bigint references scan_c
 create unique index if not exists scans_candidate_uidx on scans(candidate_id) where candidate_id is not null;
 
 -- Approving a candidate (from the review screen) creates the public scan in one step.
-create or replace function scan_candidate_approved() returns trigger language plpgsql as $$
+create or replace function scan_candidate_approved() returns trigger language plpgsql set search_path = public as $$
 begin
   if new.status = 'approved' and old.status is distinct from 'approved' and new.image_path is not null then
     insert into scans(card_id, printing, edition, image_url, source, credit, public, quality, candidate_id)
@@ -86,7 +86,7 @@ create table if not exists pipeline_runs (
 -- Bump this whenever the card list changes, so every copy can tell it is stale.
 create table if not exists checklist_version (id int primary key default 1 check (id = 1), version bigint not null default 1, changed_at timestamptz default now());
 insert into checklist_version(id) values (1) on conflict do nothing;
-create or replace function bump_checklist_version() returns trigger language plpgsql as $$
+create or replace function bump_checklist_version() returns trigger language plpgsql set search_path = public as $$
 begin update checklist_version set version = version + 1, changed_at = now() where id = 1; return null; end $$;
 drop trigger if exists bump_sets on sets;
 create trigger bump_sets after insert or update or delete on sets for each statement execute function bump_checklist_version();
