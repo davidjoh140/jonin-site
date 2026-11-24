@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jonin — Naruto CCG card database</title>
+<meta name="description" content="Every card in the original Bandai Naruto Collectible Card Game (2006–2013): sets, rarities, printings and 1st Editions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1012;--panel:#17181b;--line:#2a2c31;--ink:#ececec;--mute:#9a9ea6;--acc:#e8772e;--acc2:#f39a5c}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
+a{color:var(--acc)}a:hover{color:var(--acc2)}
+button{font-family:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid #23252a}
+.hw{max-width:1320px;margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:20px}
+.logo{font:700 22px "Space Grotesk",sans-serif;letter-spacing:.12em;color:var(--ink);text-decoration:none}.logo span{color:var(--acc)}
+nav{display:flex;gap:18px;flex-grow:1}nav a{color:var(--mute);text-decoration:none;font-weight:500}nav a.on{color:var(--ink)}
+.sell{color:var(--ink);text-decoration:none;border:1px solid #34373d;padding:9px 14px;border-radius:8px;font-weight:500}
+main{max-width:1320px;margin:0 auto;padding:24px 20px 64px}
+h1{font:700 clamp(24px,3vw,30px)/1.15 "Space Grotesk",sans-serif;margin:0 0 12px}
+#q{width:100%;background:var(--panel);border:1px solid #2c2f34;border-radius:10px;padding:14px 16px;color:var(--ink);font:16px Inter,sans-serif;outline:none}
+#q:focus{border-color:var(--acc)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.lbl{color:var(--mute);font-size:13px;margin-right:2px}
+.pill{min-height:36px;padding:7px 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;background:var(--panel);color:var(--ink);border:1px solid #2c2f34}
+.pill[aria-pressed=true]{background:var(--acc);color:#141414;border-color:var(--acc)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;padding:12px 0;border-top:1px solid #23252a;border-bottom:1px solid #23252a}
+select{background:var(--panel);color:var(--ink);border:1px solid #2c2f34;border-radius:8px;padding:8px 10px;font:13px Inter,sans-serif;min-height:36px}
+.count{margin-left:auto;color:var(--mute);font-size:13px}
+.clear{background:none;border:0;color:var(--acc);cursor:pointer;font-size:13px;padding:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px;margin-top:20px}
+.card{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.card:focus-visible .art{outline:2px solid var(--acc);outline-offset:2px}
+.art{aspect-ratio:5/7;background:#1b1c20;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;overflow:hidden;padding:10px;text-align:center}
+.art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.art .num{font:700 20px "Space Grotesk",sans-serif;color:#4a4d55}
+.art .ty{font-size:10px;letter-spacing:.08em;color:#6f737b;text-transform:uppercase}
+.art.sr{border-color:#5a3a22}
+.tag{position:absolute;top:8px;right:8px;background:var(--bg);border:1px solid var(--acc);color:var(--acc);font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
+.nm{font-weight:600;font-size:14px;line-height:1.3}
+.mt{color:var(--mute);font-size:12px}
+.r-UR,.r-SR{color:var(--acc)}.r-R{color:var(--ink)}.r-P{color:#7fb6e8}
+.empty{color:var(--mute);text-align:center;padding:48px 0}
+.sets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:16px}
+.set{all:unset;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:4px}
+.set:hover{border-color:#3a3d44}.set .top{display:flex;justify-content:space-between;align-items:center}
+.set .no{font:700 28px "Space Grotesk",sans-serif;color:var(--acc);line-height:1}
+.set img{height:26px;border-radius:4px}
+.set h3{margin:0;font-size:16px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10;display:flex;justify-content:flex-end}
+.ov[hidden]{display:none}
+.ov .bg{flex-grow:1;background:none;border:0}
+aside{width:460px;max-width:100%;height:100%;overflow-y:auto;background:#141518;border-left:1px solid #26282c;padding:18px 22px 32px;display:flex;flex-direction:column;gap:14px}
+.nav3{display:flex;gap:8px}.nav3 span{flex-grow:1}
+.ib{background:#1d1f23;border:1px solid #2c2f34;color:var(--ink);border-radius:8px;width:44px;height:44px;cursor:pointer;font-size:16px}
+.big{aspect-ratio:5/7;width:70%;align-self:center}
+aside h2{margin:0;font:700 24px "Space Grotesk",sans-serif}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:var(--panel);border:1px solid #26282c;border-radius:10px;padding:14px}
+.facts div div:first-child{color:var(--mute);font-size:12px}
+.links{display:flex;gap:8px;flex-wrap:wrap}.links a{flex-grow:1;text-align:center;border:1px solid #34373d;color:var(--ink);text-decoration:none;padding:12px;border-radius:8px}
+.buy{background:#1d1712;border:1px solid #4a3320;border-radius:10px;padding:16px;display:grid;gap:6px}
+.buy b{font:700 17px "Space Grotesk",sans-serif}.buy span{color:#b8b2aa;font-size:13px}
+.more{display:block;margin:24px auto 0;padding:12px 18px}
+footer{border-top:1px solid #23252a;color:var(--mute);font-size:12px;text-align:center;padding:24px 20px}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}nav{order:3;width:100%}aside{width:100%}}
+</style>
+</head>
+<body>
+<header><div class="hw">
+  <a class="logo" href="#">JONIN<span>.</span></a>
+  <nav><a href="#" data-v="cards" class="on">Cards</a><a href="#sets" data-v="sets">Sets</a></nav>
+  <a class="sell" href="https://sell.jonin.cards">Sell to Jonin</a>
+</div></header>
+<main id="main">
+  <section id="v-cards">
+    <h1>Every card in the original Bandai Naruto CCG</h1>
+    <input id="q" type="search" placeholder="Search a card or character — try Kakashi" aria-label="Search cards" autocomplete="off">
+    <div class="row" id="quick"><span class="lbl">Popular</span></div>
+    <div class="bar">
+      <span id="rars" style="display:contents"></span>
+      <select id="setsel" aria-label="Set"><option value="">All sets</option></select>
+      <select id="typesel" aria-label="Card type"><option value="">All types</option><option>Ninja</option><option>Jutsu</option><option>Mission</option><option>Client</option><option>Promo</option></select>
+      <span class="count" id="count">Loading…</span>
+      <button class="clear" id="clear" hidden>Clear all</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <button class="pill more" id="more" hidden>Show more</button>
+  </section>
+  <section id="v-sets" hidden>
+    <h1>Sets</h1>
+    <p class="mt">The 28 main sets, tournament packs, collector tins and promos of the English Bandai Naruto CCG.</p>
+    <div class="sets" id="sets"></div>
+  </section>
+</main>
+<div class="ov" id="ov" hidden>
+  <button class="bg" id="ovbg" aria-label="Close card"></button>
+  <aside id="panel" aria-label="Card details"></aside>
+</div>
+<footer>Jonin is an independent fan reference. Naruto © Masashi Kishimoto / Shueisha; the Naruto CCG was published by Bandai. Not affiliated with either.</footer>
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['SR','Super Rare'],['UR','Ultra Rare'],['P','Promo']];
+const QUICK=[['Naruto','char:Naruto Uzumaki'],['Sasuke','char:Sasuke Uchiha'],['Kakashi','char:Kakashi Hatake'],['Itachi','char:Itachi Uchiha'],['Gaara','char:Gaara of the Desert'],['Jiraiya','char:Jiraiya'],['Super Rares','rar:SR'],['Ultra Rares','rar:UR'],['Promos','rar:P']];
+let D=null,S={q:'',rar:'',set:'',type:'',quick:''},list=[],shown=0,sel=-1;
+const PAGE=120;
+const setName=id=>D.byId[id]?.name||id;
+const setLabel=s=>s.kind==='Main'?'Set '+s.id:s.kind==='Promo'?'Promo':s.id;
+const baseName=n=>n.replace(/\s*\(.*?\)\s*/g,'').trim();
+function readHash(){const h=decodeURIComponent(location.hash.slice(1));if(h==='sets')return 'sets';S={q:'',rar:'',set:'',type:'',quick:''};h.split('&').forEach(p=>{const[k,v]=p.split('=');if(k in S&&v)S[k]=v});return 'cards'}
+function writeHash(){const h=Object.entries(S).filter(([k,v])=>v).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');history.replaceState(null,'',h?'#'+h:location.pathname)}
+function match(c){
+  if(S.set&&c.s!==S.set)return false;
+  if(S.rar&&c.src!==S.rar)return false;
+  if(S.type&&c.t!==S.type)return false;
+  if(S.quick){const[k,v]=S.quick.split(':');if(k==='char'&&baseName(c.name)!==v)return false;if(k==='rar'&&c.src!==v)return false}
+  if(S.q){const q=S.q.toLowerCase().split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)).toLowerCase();if(!q.every(w=>hay.includes(w)))return false}
+  return true}
+function tile(c,i){const sr=c.src==='SR'||c.src==='UR';const foil=(c.v||[]).some(v=>/foil/i.test(v));
+  return `<button class="card" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}"><div class="art${sr?' sr':''}"><span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${foil?'<span class="tag">FOIL</span>':''}</div><div class="nm">${esc(c.name)}</div><div class="mt">${esc(setLabel(D.byId[c.s]||{id:c.s}))} · ${esc(c.n)} · <span class="r-${esc(c.src)}">${esc(c.r)}</span></div></button>`}
+function renderCards(reset){
+  if(reset){list=D.cards.filter(match);shown=0;$('#grid').innerHTML=''}
+  const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
+  $('#count').textContent=list.length.toLocaleString()+' cards';$('#more').hidden=shown>=list.length;
+  $('#clear').hidden=!Object.values(S).some(Boolean);
+  if(!list.length)$('#grid').innerHTML='<p class="empty">No cards match. <button class="clear" data-clear>Clear filters</button></p>';
+  document.querySelectorAll('#quick .pill').forEach(b=>b.setAttribute('aria-pressed',S.quick===b.dataset.q));
+  document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',S.rar===b.dataset.r));
+  $('#setsel').value=S.set;$('#typesel').value=S.type;if(document.activeElement!==$('#q'))$('#q').value=S.q}
+function renderSets(){$('#sets').innerHTML=D.sets.map(s=>`<button class="set" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(s.symbol)}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
+function view(v){$('#v-cards').hidden=v!=='cards';$('#v-sets').hidden=v!=='sets';document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v))}
+function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};const q=encodeURIComponent('naruto ccg '+c.name+' '+c.n.replace(/-/g,''));
+  $('#panel').innerHTML=`<div class="nav3"><button class="ib" data-step="-1" aria-label="Previous card">‹</button><button class="ib" data-step="1" aria-label="Next card">›</button><span></span><button class="ib" data-close aria-label="Close">✕</button></div>
+  <div class="art big"><span class="num" style="font-size:34px">${esc(c.n)}</span><span class="ty">${esc(c.t)} · scan coming soon</span></div>
+  <div><h2>${esc(c.name)}</h2><div class="mt">${esc(s.name||c.s)} · ${esc(c.n)} · ${esc(c.r)}</div></div>
+  <div class="facts"><div><div>Set</div><div>${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</div></div><div><div>Rarity</div><div>${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div><div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div>${esc((c.v||[]).join(', '))}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
+  <div class="links"><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a><a href="https://www.psacard.com/pop" target="_blank" rel="noopener">PSA pop report</a></div>
+  <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div>`;
+  $('#ov').hidden=false;$('#panel').querySelector('[data-close]').focus()}
+function close(){$('#ov').hidden=true;sel=-1}
+$('#q').addEventListener('input',e=>{S.q=e.target.value.trim();writeHash();renderCards(true)});
+$('#setsel').addEventListener('change',e=>{S.set=e.target.value;writeHash();renderCards(true)});
+$('#typesel').addEventListener('change',e=>{S.type=e.target.value;writeHash();renderCards(true)});
+$('#more').addEventListener('click',()=>renderCards(false));
+document.addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t)return;
+  if(t.dataset.q!=null){S.quick=S.quick===t.dataset.q?'':t.dataset.q;writeHash();renderCards(true)}
+  else if(t.dataset.r!=null){S.rar=t.dataset.r;writeHash();renderCards(true)}
+  else if(t.id==='clear'||t.dataset.clear!=null){S={q:'',rar:'',set:'',type:'',quick:''};writeHash();renderCards(true)}
+  else if(t.dataset.i!=null)openCard(+t.dataset.i);
+  else if(t.dataset.step){openCard((sel+ +t.dataset.step+list.length)%list.length)}
+  else if(t.dataset.close!=null||t.id==='ovbg')close();
+  else if(t.dataset.set){S={q:'',rar:'',set:t.dataset.set,type:'',quick:''};view('cards');writeHash();renderCards(true);scrollTo(0,0)}
+  else if(t.dataset.v){e.preventDefault();if(t.dataset.v==='sets'){history.replaceState(null,'','#sets');view('sets')}else{writeHash();view('cards')}}});
+document.addEventListener('keydown',e=>{if($('#ov').hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')openCard((sel+1)%list.length);if(e.key==='ArrowLeft')openCard((sel-1+list.length)%list.length)});
+new IntersectionObserver(es=>{if(es[0].isIntersecting&&!$('#more').hidden)renderCards(false)},{rootMargin:'600px'}).observe($('#more'));
+fetch('cards.json').then(r=>r.json()).then(d=>{D=d;D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
+  $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>`<button class="pill" data-q="${esc(q)}" aria-pressed="false">${esc(l)}</button>`).join(''));
+  $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${l}</button>`).join('');
+  $('#setsel').insertAdjacentHTML('beforeend',D.sets.map(s=>`<option value="${esc(s.id)}">${esc(setLabel(s))} · ${esc(s.name)}</option>`).join(''));
+  renderSets();const v=readHash();view(v);renderCards(true)}).catch(()=>{$('#count').textContent='Could not load cards'});
+}
+</script>
+</body>
+</html>
