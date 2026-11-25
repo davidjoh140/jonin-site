@@ -38,6 +38,7 @@ h1{font:800 clamp(26px,3.2vw,34px)/1.15 "Baloo 2",sans-serif;margin:0 0 12px}
 .bar .brk{flex-basis:100%;height:0}
 .bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;padding:12px 0;border-top:1px solid #2E2638;border-bottom:1px solid #2E2638}
 select{background:var(--panel);color:var(--ink);border:1px solid #3A3046;border-radius:8px;padding:8px 10px;font:13px Inter,sans-serif;min-height:36px}
+.setpick{display:flex;align-items:center;gap:12px;margin-top:14px}.setpick>span{font:700 18px "Baloo 2",sans-serif;color:var(--acc)}.setpick select{flex:0 1 440px;min-width:0;min-height:48px;padding:10px 40px 10px 14px;border:1.5px solid var(--acc);border-radius:10px;font:600 16px Inter,sans-serif;cursor:pointer;appearance:none;-webkit-appearance:none;background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F57C00' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 14px center}.setpick select:hover,.setpick select:focus-visible{border-color:var(--acc2);outline:none;box-shadow:0 0 0 3px rgba(245,124,0,.2)}
 .count{margin-left:auto;color:var(--mute);font-size:13px}
 .clear{background:none;border:0;color:var(--acc);cursor:pointer;font-size:13px;padding:8px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px;margin-top:20px}
@@ -216,12 +217,12 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
     </details>
     <h1>Every card in the original Bandai Naruto CCG</h1>
     <input id="q" type="search" placeholder="Search a card or character — try Kakashi" aria-label="Search cards" autocomplete="off">
+    <label class="setpick" for="setsel"><span>Set</span><select id="setsel"><option value="">All sets</option></select></label>
     <div class="row" id="quick"><span class="lbl">Popular</span></div>
     <div class="bar">
       <span id="rars" style="display:contents"></span>
       <span class="brk" aria-hidden="true"></span>
       <span id="types" style="display:contents"></span>
-      <select id="setsel" aria-label="Set"><option value="">All sets</option></select>
       <span class="count" id="count">Loading…</span>
       <button class="clear" id="clear" hidden>Clear all</button>
     </div>
