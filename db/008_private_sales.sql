@@ -1,0 +1,9 @@
+-- Applied to Supabase on 2026-11-25 (migration private_sales). Kept here as the record.
+-- Private sales: David enters sales that didn't happen on eBay from /admin/. Stored in `sales` with
+-- source 'Private', sale_type 'Private', status 'approved', no URL. They count like any approved sale
+-- (price ranges, Premium estimates, most-valuable pages).
+-- RPCs (owner only, is_admin()):
+--   admin_add_private_sale(card_id, price, sold_at date, printing, edition, grader, grade, note) -> id; refreshes price ranges
+--   admin_private_sales() -> latest 300 private sales
+--   admin_delete_private_sale(id) -> deletes only source = 'Private' rows; refreshes price ranges
+-- Execute revoked from anon; granted to authenticated (non-admins get "not allowed").

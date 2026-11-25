@@ -48,3 +48,8 @@ LAST_SEEN_MAX_MINUTES_BEFORE_END = 20  # PLACEHOLDER
 # Free price bands shown on jonin.cards. Exact prices by edition, foil and grade are Premium.
 # A card's band comes from its highest recorded sale across every version and grade.
 PRICE_BAND_CUTOFFS = [10, 50, 200]   # PLACEHOLDER: Under $10 / $10–50 / $50–200 / $200+
+
+# Most-valuable pages (/character/<slug>/most-valuable/). Ranked by each card's single highest approved
+# sale (eBay or private, any version, all time), one spot per card.
+MOST_VALUABLE_CHARACTERS = ["naruto", "sasuke", "itachi"]   # character slugs; add more here
+MOST_VALUABLE_TOP = 5

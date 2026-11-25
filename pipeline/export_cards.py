@@ -69,9 +69,37 @@ def price_band(rows, cuts=PRICE_BAND_CUTOFFS):
     return sum(1 for c in cuts if top >= c)
 
 
-def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None, ranges=()):
+def version_label(sale):
+    """'1st Edition · Full foil · PSA 10' for a sale (blank parts left out)."""
+    gr = sale.get("grader") or "Raw"
+    parts = [sale.get("edition") or "", sale.get("printing") or "",
+             "Raw" if gr == "Raw" else f"{gr} {sale.get('grade') or ''}".strip()]
+    return " · ".join(p for p in parts if p and p != "?")
+
+
+def top_sales(sales, cuts=PRICE_BAND_CUTOFFS):
+    """Highest approved sale per card (any version, eBay or private, all time) ->
+    {card_id: [rank, band, version, sold_date]}. rank 1 = the most expensive top sale on the site.
+    Only the order and the band go public; the exact price stays in Supabase (Premium)."""
+    best = {}
+    for x in sales:
+        cid, price = x.get("card_id"), float(x.get("price") or 0)
+        if not cid or price <= 0 or x.get("status") != "approved":
+            continue
+        if (x.get("printing") or "") == "?" or (x.get("edition") or "") == "?":
+            continue
+        k = (price, x.get("sold_at") or "", x.get("id") or 0)
+        if cid not in best or k > best[cid][0]:
+            best[cid] = (k, x)
+    order = sorted(best, key=lambda cid: (-best[cid][0][0], cid))
+    return {cid: [i + 1, sum(1 for c in cuts if best[cid][0][0] >= c), version_label(best[cid][1]),
+                  (best[cid][1].get("sold_at") or "")[:10]] for i, cid in enumerate(order)}
+
+
+def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None, ranges=(), sales=()):
     """Pure transform: Supabase rows -> the cards.json object (same key order as before).
-    A card with recorded sales gets "pb": its free price band (see price_band); exact prices are Premium."""
+    A card with recorded sales gets "pb": its free price band (see price_band); exact prices are Premium.
+    "top": [rank, band, version, date] of its highest sale, for the most-valuable pages (see top_sales)."""
     best = {}
     for sc in scans:
         if not sc.get("public"):
@@ -92,6 +120,7 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
         out_sets.append(o)
     pnames = {p["id"]: p["name"] for p in products}
     px = price_rows(ranges)
+    tops = top_sales(sales)
     out_cards = []
     for c in sorted(cards, key=lambda c: (c.get("sort") is None, c.get("sort"), c["id"])):
         o = {"s": c["set_id"], "n": c["number"], "name": c["name"], "t": _s(c.get("type")),
@@ -109,6 +138,8 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
             o["img"] = url_for(u[len("storage:scans/"):]) if u.startswith("storage:scans/") else u
         if c["id"] in px:
             o["pb"] = price_band(px[c["id"]])   # free price band only; exact prices stay in Supabase (Premium)
+        if c["id"] in tops:
+            o["top"] = tops[c["id"]]
         out_cards.append(o)
     out = {"sets": out_sets, "cards": out_cards, "bands": band_labels()}
     if version is not None:
@@ -140,11 +171,14 @@ def main():
                      image_url,
                      supa.select("products"),
                      (supa.select("checklist_version") or [{}])[0].get("version"),
-                     supa.select("price_ranges"))
+                     supa.select("price_ranges"),
+                     supa.select("sales", {"select": "id,card_id,price,sold_at,status,printing,edition,grader,grade",
+                                           "status": "eq.approved"}))
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),
                      "with_image": sum(1 for c in data["cards"] if "img" in c),
-                     "with_prices": sum(1 for c in data["cards"] if "pb" in c)}
+                     "with_prices": sum(1 for c in data["cards"] if "pb" in c),
+                     "with_top_sale": sum(1 for c in data["cards"] if "top" in c)}
         same = OUT.exists() and OUT.read_text() == text
         run.stats["changed"] = not same
         if "--check" in sys.argv:

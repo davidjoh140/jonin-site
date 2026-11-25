@@ -41,3 +41,11 @@ Repo secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EBAY_CLIENT_ID`, `EBAY_CL
 Main-set rarities follow the dots after the copyright line: none = Common, one = Uncommon, two = Rare, three = Super Rare. The 749 cards changed on 2026-11-25 are kept in `rarity_dot_fix` (with `old_rarity`) so the change can be reviewed or undone.
 
 Red dots mean a starter/theme deck printing. Those cards are marked `starter_exclusive`; cards with no other rarity get `Starter` (code F), cards that also have a booster rarity keep it (shown as "Starter <rarity>").
+
+## Most valuable pages
+
+- `/character/<slug>/most-valuable/` for the characters in `MOST_VALUABLE_CHARACTERS` (`pipeline/settings.py`; Naruto, Sasuke, Itachi to start). Top `MOST_VALUABLE_TOP` (5) cards.
+- Ranked by each card's single highest approved sale (eBay or private, any version, all time). One spot per card, so a card and its foil can't both appear.
+- `export_cards.py` adds `"top": [rank, band, version, date]` to each card with sales. Only the order and the price band go public; exact prices stay in Supabase (Premium).
+- Rebuilt by the Sync workflow every ~15 minutes, so the lists update on their own.
+- Private sales (not on eBay) are added from `/admin/` → Private sales (`db/008_private_sales.sql`).

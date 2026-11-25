@@ -62,3 +62,15 @@ footer{max-width:1180px;margin:0 auto;padding:20px;color:var(--mute);font-size:1
 .ccell:hover{border-color:var(--acc);color:var(--ink)}
 .ccell img{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:4px}
 .ccell b{font-weight:600}.ccell span{color:var(--mute);font-size:13px}
+/* Most valuable pages (/character/<slug>/most-valuable/) */
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink);background:var(--panel);font-weight:500}a.ghostbtn:hover{border-color:var(--acc);color:var(--ink)}
+.mvlist{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:16px;max-width:860px}
+.mvrow{display:grid;grid-template-columns:44px 150px 1fr;gap:18px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.mvn{font:800 34px/1 "Baloo 2",sans-serif;color:var(--acc);text-align:center;padding-top:4px}
+.mvrow:first-child{border-color:var(--accdim)}.mvrow:first-child .mvn{font-size:44px}
+.mvart img,.mvart .noimg{width:100%;height:auto;aspect-ratio:5/7;border-radius:9px;display:block}
+.mvinfo h2{font:700 22px/1.2 "Baloo 2",sans-serif;margin:0 0 2px}.mvinfo h2 a{color:var(--ink);text-decoration:none}.mvinfo h2 a:hover{color:var(--acc)}
+.mvinfo .mt{margin:0 0 12px}.mvinfo dl{margin:0 0 12px;padding:10px 14px;background:var(--bg)}
+.mvinfo .band{font:700 22px/1.1 "Baloo 2",sans-serif;color:var(--acc)}
+@media (max-width:620px){.mvrow{grid-template-columns:32px 96px 1fr;gap:12px;padding:12px}.mvn{font-size:26px}.mvrow:first-child .mvn{font-size:32px}.mvinfo h2{font-size:18px}}
