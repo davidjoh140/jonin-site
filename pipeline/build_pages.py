@@ -304,7 +304,7 @@ def mv_index(mv_chars, ranked, sets_by_id):
     """/most-valuable/: every character's most-valuable list on one page (a list of lists), for search."""
     url = f'{SITE}/most-valuable/'
     names = ', '.join(c['label'] for c in mv_chars)
-    title = 'Most expensive Naruto cards: top lists by character | Jonin'
+    title = 'Most expensive Naruto CCG cards: top lists from the Naruto card game | Jonin'
     desc = (f'The most valuable cards in the original Bandai Naruto CCG, ranked by highest recorded sale. '
             f'Top {MOST_VALUABLE_TOP} lists for {names}, updated as new sales come in.')
 
@@ -327,8 +327,8 @@ def mv_index(mv_chars, ranked, sets_by_id):
             f'<div class="mvminis">{"".join(mini(c, i) for i, c in enumerate(r[:3]))}</div>'
             f'<p class="btns"><a class="primary" href="{lu}">See the full top {len(r)} →</a></p></section>')
     body = ('<nav class="crumb"><a href="/">All cards</a> › <a href="/lists/">Lists</a> › Most valuable</nav>\n'
-            '<section class="sethead"><h1>Most expensive Naruto cards</h1>\n'
-            '<p class="lede">The most valuable cards in the original Bandai Naruto CCG (2006–2013), one list per character, '
+            '<section class="sethead"><h1>Most expensive Naruto CCG cards</h1>\n'
+            '<p class="lede">The most valuable cards in the whole original Bandai Naruto card game (2006–2013), with one list per character, '
             'ranked by the highest price each card has sold for. Lists update on their own as new sales come in.</p></section>\n'
             + ''.join(blocks)
             + '\n<p class="mt" style="margin-top:22px">More characters are coming. <a href="/characters/">Browse every character</a> · <a href="/most-popular/">Most popular cards</a> · <a href="/lists/">All card lists</a>.</p>\n')

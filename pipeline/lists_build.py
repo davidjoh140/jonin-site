@@ -61,7 +61,7 @@ def pop_page(ch, ranked, voters, sets_by_id, pop_chars):
             + (f'<a class="ghostbtn" href="/character/{ch["slug"]}/most-valuable/">💰 Most valuable {e(ch["label"])} cards</a>' if ch.get('mv') else '')
             + f'</p></section>\n<ol class="mvlist">{rows}</ol>\n'
             + (f'<section class="others"><h2>Most popular cards of other characters</h2><div class="chips">{others}</div></section>\n' if others else '')
-            + '<p class="btns" style="margin-top:22px"><a class="ghostbtn" href="/lists/">All Naruto card lists</a></p>\n')
+            + '<p class="btns" style="margin-top:22px"><a class="ghostbtn" href="/lists/">All Naruto CCG lists</a></p>\n')
     img = next((c['img'] for c, _ in ranked if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
     ld = B.ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'ItemList', 'name': title, 'description': desc, 'url': url, 'numberOfItems': n,
@@ -82,11 +82,11 @@ def mini(c, i, sets_by_id, extra):
 def pop_index(overall, all_voters, pop_chars, pop_ranked, chars, sets_by_id):
     e, SITE = B.e, B.SITE
     url = f'{SITE}/most-popular/'
-    title = 'Most popular Naruto cards: the best cards, voted by collectors | Jonin'
+    title = 'Most popular Naruto CCG cards: the best cards in the Naruto card game, voted by collectors | Jonin'
     desc = ('The best and coolest cards in the original Bandai Naruto CCG, voted by collectors on Jonin. '
             'An overall top list plus the most popular cards for each character.')
     vt = lambda n: f'{n} vote{"s" if n != 1 else ""}'
-    over = (f'<section class="mvlistcard"><h2>Most popular overall<span>{all_voters} collectors voted</span></h2>'
+    over = (f'<section class="mvlistcard"><h2>Most popular across the whole game<span>{all_voters} collectors voted</span></h2>'
             f'<div class="mvminis">{"".join(mini(c, i, sets_by_id, vt(v)) for i, (c, v) in enumerate(overall[:6]))}</div></section>') if overall else ''
     blocks = ''.join(
         f'<section class="mvlistcard"><h2><a href="/character/{ch["slug"]}/most-popular/"><img class="face" src="/chars/{ch["slug"]}.webp" alt="" width="44" height="44">'
@@ -96,8 +96,8 @@ def pop_index(overall, all_voters, pop_chars, pop_ranked, chars, sets_by_id):
     vote_chips = ''.join(f'<a class="chip" href="/character/{c["slug"]}/#vote-top"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(c["label"])}</a>' for c in chars)
     empty = '' if (over or blocks) else (f'<p class="lede">Voting is open. A character\'s list shows here once {VOTE_MIN_VOTERS} collectors have voted for their cards.</p>')
     body = (f'<nav class="crumb"><a href="/">All cards</a> › <a href="/lists/">Lists</a> › Most popular</nav>\n'
-            f'<section class="sethead"><h1>Most popular Naruto cards</h1>\n'
-            f'<p class="lede">The best cards in the original Bandai Naruto CCG (2006–2013), as voted by collectors. Every signed-in collector gets 3 votes per character, and the lists update as votes come in.</p></section>\n'
+            f'<section class="sethead"><h1>Most popular Naruto CCG cards</h1>\n'
+            f'<p class="lede">The best cards in the whole original Bandai Naruto card game (2006–2013), as voted by collectors: one list across every character, then a list for each character. Every signed-in collector gets 3 votes per character, and the lists update as votes come in.</p></section>\n'
             f'{empty}{over}{blocks}\n'
             f'<section class="others"><h2>Vote for your favorites<span>Pick a character</span></h2><div class="chips">{vote_chips}</div></section>\n')
     ld = B.ld_json({'@context': 'https://schema.org', '@graph': [
@@ -114,20 +114,20 @@ def pop_index(overall, all_voters, pop_chars, pop_ranked, chars, sets_by_id):
 def lists_index(mv_chars, pop_chars, popular_live):
     e, SITE = B.e, B.SITE
     url = f'{SITE}/lists/'
-    title = 'Naruto card lists: most valuable and most popular cards | Jonin'
+    title = 'Naruto CCG card lists: the most valuable and most popular cards in the Naruto card game | Jonin'
     desc = ('Every Naruto card list on Jonin: the most expensive cards by highest sale and the most popular cards voted by '
             'collectors, for the original Bandai Naruto CCG.')
-    chip = lambda c, path: f'<a class="chip" href="/character/{c["slug"]}/{path}/"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(c["label"])}</a>'
+    chip = lambda c, path: f'<a class="chip" href="/character/{c["slug"]}/{path}/"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(c["name"])}</a>'
     sec = lambda href, h, p, chips, more: (
         f'<section class="mvlistcard"><h2><a href="{href}">{h}</a></h2><p class="mt" style="margin:-6px 0 12px">{p}</p>'
-        f'{f"<div class=chips>{chips}</div>" if chips else ""}{more}'
+        f'{f"<p class=mt style=margin:0 0 8px>By character</p><div class=chips>{chips}</div>" if chips else ""}{more}'
         f'<p class="btns" style="margin-top:12px"><a class="primary" href="{href}">Open the list →</a></p></section>')
     body = (f'<nav class="crumb"><a href="/">All cards</a> › Lists</nav>\n'
-            f'<section class="sethead"><h1>Naruto card lists</h1>\n'
-            f'<p class="lede">Ranked lists for the original Bandai Naruto CCG (2006–2013): the most expensive cards by highest recorded sale, and the most popular cards voted by collectors.</p></section>\n'
-            + sec('/most-valuable/', '💰 Most valuable Naruto cards', 'Ranked by the highest price each card has sold for. Updates as new sales come in.',
+            f'<section class="sethead"><h1>Naruto CCG card lists</h1>\n'
+            f'<p class="lede">Ranked lists for the whole original Bandai Naruto card game (2006–2013), not just Naruto himself: the most expensive cards by highest recorded sale, and the most popular cards voted by collectors, with a list for each character.</p></section>\n'
+            + sec('/most-valuable/', '💰 Most valuable cards in the Naruto CCG', 'The most expensive cards in the game, ranked by the highest price each has sold for, with a top list per character. Updates as new sales come in.',
                   ''.join(chip(c, 'most-valuable') for c in mv_chars), '')
-            + sec('/most-popular/', '⭐ Most popular Naruto cards', 'Ranked by collector votes. Every signed-in collector gets 3 votes per character.',
+            + sec('/most-popular/', '⭐ Most popular cards in the Naruto CCG', 'Cards from across the game, ranked by collector votes, overall and per character. Every signed-in collector gets 3 votes per character.',
                   ''.join(chip(c, 'most-popular') for c in pop_chars),
                   '' if popular_live else f'<p class="mt">Voting is open. Lists appear once {VOTE_MIN_VOTERS} collectors have voted for a character.</p>'))
     ld = B.ld_json({'@context': 'https://schema.org', '@graph': [
