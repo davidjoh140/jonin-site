@@ -111,6 +111,12 @@ def user_token():
 
 def ebay_record(utok, external_id):
     """eBay's own record of a finished listing via Trading API GetItem (works up to 90 days after it ends)."""
+    got = ebay_item(utok, external_id)
+    return got and got["record"]
+
+
+def ebay_item(utok, external_id):
+    """GetItem -> {"record": {...} or None while live, "summary": Browse-style item summary} or None."""
     legacy = external_id.split("|")[1] if "|" in external_id else external_id.split(":")[-1]
     kind, token = utok
     creds = (f"<RequesterCredentials><eBayAuthToken>{token}</eBayAuthToken></RequesterCredentials>"
@@ -136,14 +142,24 @@ def ebay_record(utok, external_id):
     item = x.find("e:Item", NS)
     if item is None:
         return None
+    f = lambda path, d="": item.findtext(path, default=d, namespaces=NS)
     st = item.find("e:SellingStatus", NS)
-    if st is None or st.findtext("e:ListingStatus", default="", namespaces=NS) == "Active":
-        return None                     # not finished yet
-    qty = int(st.findtext("e:QuantitySold", default="0", namespaces=NS) or 0)
-    price = float(st.findtext("e:CurrentPrice", default="0", namespaces=NS) or 0)
-    bo = item.findtext("e:BestOfferDetails/e:BestOfferEnabled", default="false", namespaces=NS) == "true"
-    auction = item.findtext("e:ListingType", default="", namespaces=NS) == "Chinese"
-    return {"sold": qty > 0, "price": price, "qty_sold": qty, "best_offer_accepted": bo and not auction}
+    qty = int(f("e:SellingStatus/e:QuantitySold", "0") or 0)
+    price = float(f("e:SellingStatus/e:CurrentPrice", "0") or 0)
+    cur = st.find("e:CurrentPrice", NS).get("currencyID", "USD") if st is not None and st.find("e:CurrentPrice", NS) is not None else "USD"
+    bo = f("e:BestOfferDetails/e:BestOfferEnabled", "false") == "true"
+    auction = f("e:ListingType") == "Chinese"
+    pics = item.findall("e:PictureDetails/e:PictureURL", NS)
+    summary = {"itemId": f"v1|{legacy}|0", "title": f("e:Title"), "itemEndDate": f("e:ListingDetails/e:EndTime") or None,
+               "buyingOptions": ["AUCTION"] if auction else ["FIXED_PRICE"] + (["BEST_OFFER"] if bo else []),
+               "bidCount": int(f("e:SellingStatus/e:BidCount", "0") or 0),
+               ("currentBidPrice" if auction else "price"): {"value": str(price), "currency": cur},
+               "itemWebUrl": f("e:ListingDetails/e:ViewItemURL") or f"https://www.ebay.com/itm/{legacy}",
+               "image": {"imageUrl": pics[0].text if pics else ""}}
+    live = st is None or f("e:SellingStatus/e:ListingStatus") == "Active"
+    record = None if live else {"sold": qty > 0, "price": price, "qty_sold": qty,
+                                "best_offer_accepted": bo and not auction}
+    return {"record": record, "summary": summary}
 
 
 def last_full_sweep():

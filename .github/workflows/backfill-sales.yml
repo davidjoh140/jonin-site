@@ -1,0 +1,23 @@
+# One-off: queue already-completed eBay sales listed in pipeline/backfill_ids.txt for David's review.
+name: Backfill sold prices
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["pipeline/backfill_ids.txt"]
+concurrency: { group: collect-sales, cancel-in-progress: false }
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests pillow
+      - name: Backfill
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+        run: cd pipeline && python backfill_sales.py
