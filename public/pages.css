@@ -115,3 +115,15 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .spx-cta{color:var(--mute);margin:0}
 .tile.owned::after{content:"✓";position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;background:var(--acc);color:var(--bg);font:800 14px/24px Inter,sans-serif;text-align:center}
 .tile[hidden]{display:none}
+/* News (/news/) */
+.news{max-width:760px;font-size:16px;line-height:1.65}
+.news h1{display:block;font-size:clamp(28px,4vw,38px);line-height:1.15;margin-bottom:6px}
+.news h2{font:700 24px/1.25 "Baloo 2",sans-serif;margin:30px 0 8px}
+.news .lede{font-size:18px}
+.news ul{padding-left:20px}.news li{margin:6px 0}
+.newsfacts{margin:18px 0}.newsfacts h2{margin-top:0}
+.newsnote{color:var(--mute);font-size:14px;margin-top:28px}
+.sources{font-size:14px}
+.newslist{display:grid;gap:12px;max-width:760px}
+.newsitem{display:grid;gap:4px;padding:16px 18px;background:var(--panel);border:1px solid var(--line);border-radius:14px;text-decoration:none;color:var(--ink)}
+.newsitem:hover{border-color:var(--acc);color:var(--ink)}.newsitem b{font:700 20px/1.25 "Baloo 2",sans-serif}.newsitem .mt{margin:0}

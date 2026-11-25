@@ -37,7 +37,7 @@ jobs:
         run: python pipeline/build_pages.py
       - name: Commit if changed
         run: |
-          OUT="public/cards.json public/card public/set public/sitemap.xml public/robots.txt public/img public/index.html pipeline/lastmod.json public/character public/characters"
+          OUT="public/cards.json public/card public/set public/sitemap.xml public/robots.txt public/img public/index.html pipeline/lastmod.json public/character public/characters public/news"
           if [ -z "$(git status --porcelain $OUT)" ]; then echo "No change"; exit 0; fi
           git config user.name "jonin-bot"
           git config user.email "jonin-bot@users.noreply.github.com"

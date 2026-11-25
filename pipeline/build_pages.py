@@ -73,7 +73,7 @@ HEAD = '''<!DOCTYPE html>
 </head>
 <body>
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="#feedback" data-fb>💬 Feedback</a><a href="/premium/">🔔 Alerts</a></nav></div></header>
+<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/news/">News</a><a href="#feedback" data-fb>💬 Feedback</a><a href="/premium/">🔔 Alerts</a></nav></div></header>
 <main>
 '''
 FOOT = '''</main>
@@ -402,6 +402,60 @@ def set_page(s, cards):
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
 
 
+NEWS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'news')
+
+
+def fmt_date(iso):
+    d = datetime.date.fromisoformat(iso)
+    return d.strftime('%B ') + str(d.day) + d.strftime(', %Y')
+
+
+def load_news():
+    """Articles live in pipeline/news/<slug>.html: a <!--meta {json} --> block, then the article body HTML."""
+    out = []
+    for f in sorted(os.listdir(NEWS)) if os.path.isdir(NEWS) else []:
+        if not f.endswith('.html'):
+            continue
+        raw = open(os.path.join(NEWS, f), encoding='utf-8').read()
+        m = re.match(r'\s*<!--meta\s*(\{.*?\})\s*-->\s*(.*)$', raw, re.S)
+        if m:
+            meta = json.loads(m.group(1))
+            meta['body'] = m.group(2)
+            out.append(meta)
+    return sorted(out, key=lambda a: a['published'], reverse=True)
+
+
+def news_page(a):
+    url = f"{SITE}/news/{a['slug']}/"
+    title = a['title'] + ' | Jonin'
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'NewsArticle', 'headline': a['title'], 'description': a['description'], 'url': url,
+         'image': a.get('image') or SITE + '/og.png', 'datePublished': a['published'], 'dateModified': a.get('updated') or a['published'],
+         'author': {'@type': 'Organization', 'name': 'Jonin', 'url': SITE + '/'},
+         'publisher': {'@type': 'Organization', 'name': 'Jonin', 'logo': {'@type': 'ImageObject', 'url': SITE + '/icon-512.png'}}},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('News', SITE + '/news/'), (a.get('short') or a['title'], url))]})
+    upd = f" · Updated {fmt_date(a['updated'])}" if a.get('updated') and a['updated'] != a['published'] else ''
+    body = (f'<nav class="crumb"><a href="/">All cards</a> › <a href="/news/">News</a> › {e(a.get("short") or a["title"])}</nav>\n'
+            f'<article class="news"><h1>{e(a["title"])}</h1><p class="mt">{fmt_date(a["published"])}{upd}</p>\n{a["body"]}</article>\n')
+    return HEAD.format(title=e(title), desc=e(a['description']), url=url, img=e(a.get('image') or SITE + '/og.png'),
+                       tw='summary_large_image', ld=ld) + body + FOOT
+
+
+def news_index(arts):
+    url = f'{SITE}/news/'
+    title = 'Naruto card game news | Jonin'
+    desc = 'News on Naruto trading card games: Bandai\'s new Naruto Card Game (2027), the original Bandai Naruto CCG (2006–2013) and collecting.'
+    items = ''.join(f'<a class="newsitem" href="/news/{a["slug"]}/"><b>{e(a["title"])}</b><span class="mt">{fmt_date(a["published"])}</span>'
+                    f'<span>{e(a["description"])}</span></a>' for a in arts)
+    body = (f'<nav class="crumb"><a href="/">All cards</a> › News</nav>\n<section class="sethead"><h1>News</h1>'
+            f'<p class="lede">Naruto card game news, from Bandai\'s new 2027 game to the original CCG.</p></section>\n'
+            f'<section class="newslist">{items}</section>\n')
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('News', url))]})
+    return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
+
+
 def write(path, text):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     old = open(path, encoding='utf-8').read() if os.path.exists(path) else None
@@ -490,6 +544,13 @@ def main():
             shutil.rmtree(mvdir)
     chars = [ch for ch in chars if ch['slug'] in keep_ch]
     changed += write(os.path.join(ROOT, 'characters', 'index.html'), chars_index(chars, counts))
+    arts = load_news()
+    keep_n = set()
+    for a in arts:
+        keep_n.add(a['slug'])
+        changed += write(os.path.join(ROOT, 'news', a['slug'], 'index.html'), news_page(a))
+    if arts:
+        changed += write(os.path.join(ROOT, 'news', 'index.html'), news_index(arts))
     removed = 0
     for sub, keep in (('card', keep_c), ('set', keep_s), ('character', keep_ch)):
         base = os.path.join(ROOT, sub)
@@ -503,7 +564,7 @@ def main():
     if hs2 == hs and '<!--setlinks-->' not in hs:
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
-    urls = [SITE + '/', SITE + '/characters/'] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
+    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/'] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
            [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
