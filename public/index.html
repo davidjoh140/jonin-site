@@ -392,7 +392,7 @@ function sddPick(v){sddClose(true);if(v===S.set)return;S.set=v;writeHash();rende
 function paintChars(){const rows=[...document.querySelectorAll('#clist .crow')];if(!rows.length||!D)return;const keep=S.chars;S.chars=[];const base=D.cards.filter(match);S.chars=keep;
   const n=rows.map(b=>{const ws=b.dataset.q.split('|');let k=0;for(const c of base){const names=c.name.split(/\s*&\s*/).map(baseName);if(ws.some(w=>names.includes(w)))k++}return k}),mx=Math.max(1,...n);
   {const q=$('#qn'),on=QUICK.filter(([l,v])=>S.chars.includes(v.replace(/^char:/,''))).map(([l])=>l);q.textContent=on.length?'· '+on.join(', '):'('+QUICK.length+')';q.classList.toggle('on',!!on.length)}
-  {const cl=$('#clist'),ord=rows.map((b,i)=>[b,n[i],i]).sort((a,b)=>b[1]-a[1]||a[2]-b[2]);if(ord.some(([b],i)=>cl.children[i]!==b))ord.forEach(([b])=>cl.appendChild(b))}
+  {const cl=$('#clist'),ord=rows.map((b,i)=>[b,n[i],i]).sort((a,b)=>(+b[0].classList.contains('fav'))-(+a[0].classList.contains('fav'))||b[1]-a[1]||a[2]-b[2]);if(ord.some(([b],i)=>cl.children[i]!==b))ord.forEach(([b])=>cl.appendChild(b))}
   rows.forEach((b,i)=>{b.setAttribute('aria-pressed',S.chars.includes(b.dataset.q));b.classList.toggle('zero',!n[i]);b.querySelector('.cnum').textContent=n[i];b.querySelector('.cbar i').style.width=(n[i]/mx*100).toFixed(1)+'%';b.title=n[i]+' card'+(n[i]===1?'':'s')})}
 function renderCards(reset){
   {const k=S.rars.length+(S.type?1:0);$('#fn').textContent=k?'· '+k:''}
@@ -640,8 +640,8 @@ function favRow(){const f=MYP&&MYP.fav_character,n=f&&favName(f);
   return `<div class="share favrow"><span>${n?'Pick a new favorite character:':'Pick your favorite character. It shows on your shared collection.'}</span><div class="favgrid">${FAVS().map(([sl,l])=>`<button type="button" class="favchip${sl===f?' on':''}" data-favpick="${esc(sl)}">${favImg(sl)}${esc(l)}</button>`).join('')}</div>${n?'<button class="clear" data-favcancel>Cancel</button>':''}</div>`}
 // Signed-in favorite goes to the top of the Characters filter; everyone else sees the normal order.
 function favFirst(){const cl=$('#clist');if(!cl||!cl.children.length)return;const f=ME&&MYP&&MYP.fav_character;
-  const order=QUICK.map(([l,q])=>q.replace(/^char:/,''));const fq=f?(QUICK.find(([l,q])=>q.startsWith('char:')&&chSlug(l)===f)||[])[1]:null;const fk=fq?fq.replace(/^char:/,''):null;
-  [...cl.children].sort((a,b)=>(a.dataset.q===fk?-1:b.dataset.q===fk?1:order.indexOf(a.dataset.q)-order.indexOf(b.dataset.q))).forEach(b=>{b.classList.toggle('fav',b.dataset.q===fk);cl.appendChild(b)})}
+  const fq=f?(QUICK.find(([l,q])=>q.startsWith('char:')&&chSlug(l)===f)||[])[1]:null;const fk=fq?fq.replace(/^char:/,''):null;
+  [...cl.children].forEach(b=>b.classList.toggle('fav',b.dataset.q===fk));if(fk)cl.prepend([...cl.children].find(b=>b.dataset.q===fk));if(D&&D.byId)paintChars()}
 async function saveFav(sl){const v=sl||null;const r=await sb.from('profiles').update({fav_character:v}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data){MYP=r.data;FAVEDIT=false}favFirst();renderMine()}
 // Instagram handle on the profile: shown on their shared collection page with a link to their IG.
 let IGEDIT=false;const igUrl=h=>'https://www.instagram.com/'+encodeURIComponent(h)+'/';
