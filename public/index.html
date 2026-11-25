@@ -541,9 +541,12 @@ async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{ite
   EST=null;if(MEMBER)await loadEstimates();if(VIEW==='cards'&&D&&D.byId)renderCards(true);
   if(sel>=0&&list[sel]){const px=$('#panel .px');if(px)px.outerHTML=priceBlock(list[sel]);loadExact(list[sel])}
   paintAcct();favFirst();refreshMarks();if(sel>=0&&list[sel])renderMyColl(list[sel]);if(VIEW==='mine'){if(ME||gCount())renderMine();else{history.replaceState(null,'',location.pathname);view('cards')}}}
+let AUTHREADY=false;
+function hasSession(){if(ME)return true;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^sb-.*-auth-token$/.test(k)&&(!AUTHREADY||!sb))return true}}catch(_){}return false}
 function paintAcct(){const n=ME?0:gCount();$('#acct').innerHTML=ME?`<a href="#mine" data-v="mine" class="pill">My collection</a><button class="clear" data-signout>Sign out</button>`:n?`<a href="#mine" data-v="mine" class="pill">My collection · ${n}</a><button class="pill" data-auth="up">Sign up to save</button>`:`<button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button>`;
   const b=$('#ctaband');if(!b)return;let off=false;try{off=Date.now()-(+localStorage.getItem('jcta')||0)<864e5}catch(_){} // closed banner comes back after a day
-  b.hidden=!!ME||off;if(b.hidden)return;
+  // wait until we know whether they're signed in, so signed-in people never see a sign-up banner flash
+  b.hidden=!AUTHREADY||!!ME||off||hasSession();if(b.hidden)return;
   b.innerHTML=n?`<b>Don’t lose your collection</b><span class="sp1">You’ve marked ${plural(n,'card')} on this device. Make a free account to keep them safe, see them on any device and share your list.</span><button class="pill" data-auth="up">Sign up free</button><button class="x" data-ctax aria-label="Dismiss">×</button>`
     :`<b>Track your Naruto CCG collection</b><span class="sp1">Mark your haves and wants, log your slabs, and vote for the coolest cards of every character. Free.</span><button class="pill" data-auth="up">Make a free account</button><button class="x" data-ctax aria-label="Dismiss">×</button>`}
 function openAuth(mode,msg){const up=mode==='up',reset=mode==='reset';
@@ -688,8 +691,8 @@ async function renderUser(slug){const el=$('#v-user');el.innerHTML='<p class="em
   const [r,pr]=await Promise.all([sb.rpc('shared_list',{slug}),sb.rpc('shared_profile',{slug})]);const prof=pr&&pr.data&&pr.data[0],ig=prof&&prof.instagram,fav=prof&&prof.fav_character&&favName(prof.fav_character)?prof.fav_character:null;if(!r.error&&prof&&(!r.data||!r.data.length))r.data=[];if(r.error||!r.data||(!r.data.length&&!prof)){el.innerHTML='<h1>Shared list</h1><p class="empty">This list is empty, private, or the link is wrong.</p>';return}
   const m=new Map();r.data.forEach(i=>m.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));const who=(r.data[0]&&r.data[0].handle)||(prof&&prof.handle)||'A collector';
   listView(el,`<h1>${esc(who)}'s haves and wants</h1><div class="pbadges">${fav?`<a class="favchip big" href="/character/${esc(fav)}/">${favImg(fav)}<span><small>Favorite character</small>${esc(favName(fav))}</span></a>`:''}${ig?`<a class="igbadge" href="${igUrl(ig)}" target="_blank" rel="noopener"><span aria-hidden="true">📷</span> @${esc(ig)} on Instagram</a>`:''}</div><p class="mt">Shared from Jonin. ${ME?'':'<button class="clear" data-auth="up">Make your own list</button>'}</p>`,m,true)}
-gLoad();if(sbc()){sb.auth.getSession().then(({data})=>setUser(data.session?data.session.user:null));sb.auth.onAuthStateChange((ev,ses)=>{setUser(ses?ses.user:null);if(ev==='PASSWORD_RECOVERY'){const pw=prompt('Choose a new password (at least 8 characters)');if(pw&&pw.length>=8)sb.auth.updateUser({password:pw})}})}
-paintAcct();
+gLoad();if(sbc()){sb.auth.getSession().then(async({data})=>{await setUser(data.session?data.session.user:null);AUTHREADY=true;paintAcct()}).catch(()=>{AUTHREADY=true;paintAcct()});sb.auth.onAuthStateChange((ev,ses)=>{setUser(ses?ses.user:null);if(ev==='PASSWORD_RECOVERY'){const pw=prompt('Choose a new password (at least 8 characters)');if(pw&&pw.length>=8)sb.auth.updateUser({password:pw})}})}
+if(!sbc())AUTHREADY=true;paintAcct();
 const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url',{headers:{apikey:SUPA_KEY,Range:`${i*1000}-${i*1000+999}`}}).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>a.flat());
 // Live list only fills cards that have no image in cards.json yet (images are served from jonin.cards; see pipeline/mirror_images.py)
 function applyLive(rows){if(!D||!rows||!rows.length)return false;const m={};rows.forEach(r=>{if(r&&r.url)m[r.card_id]=r.url});let n=0;D.cards.forEach(c=>{const u=m[c.s+':'+c.n];if(u&&/^https:\/\//.test(u)&&!c.img){c.img=u;n++}});return n>0}
