@@ -121,6 +121,11 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
 .pill:active,.ib:active,.sell:active,.clear:active,.links a:active,.alert:active{transform:scale(.97);transition-duration:.08s}
 .pill[aria-pressed=true]{box-shadow:0 6px 18px -6px rgba(181,18,27,.75)}
 .pill.pop{animation:pop .42s var(--spring)}
+#quick .pill{background:color-mix(in srgb,var(--c) 16%,var(--panel));border-color:color-mix(in srgb,var(--c) 60%,transparent)}
+#quick .pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 6px color-mix(in srgb,var(--c) 70%,transparent)}
+#quick .pill:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 26%,var(--panel))}
+#quick .pill[aria-pressed=true]{background:var(--c);color:var(--ct);border-color:var(--c);box-shadow:0 6px 18px -6px color-mix(in srgb,var(--c) 85%,transparent)}
+#quick .pill[aria-pressed=true]::before{background:var(--ct);box-shadow:none}
 @keyframes pop{0%{transform:scale(.95)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
 .card .art{transition:transform .35s var(--spring),box-shadow .3s var(--ease),border-color .2s}
 .card:hover .art{transform:translateY(-3px) rotate(-.6deg);box-shadow:0 16px 28px -14px rgba(0,0,0,.8),0 0 0 1px #4A3E57;border-color:#4A3E57}
@@ -207,6 +212,8 @@ const rsym=k=>{const n={U:1,R:2,SR:3}[k];const inner=n?'<i></i>'.repeat(n):({C:'
 const foilsOf=c=>{const seen=new Set(),out=[];(c.v||[]).forEach(v=>{const f=FOILS[v];if(f&&!seen.has(f[0])){seen.add(f[0]);out.push(f)}});return out};
 const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['SR','Super Rare'],['P','Promo']];
 // PLACEHOLDER character list (fan favorites that have cards); David to confirm. 'A|B' = either name, e.g. Minato also printed as The Fourth Hokage
+const QCOL={"Naruto": "#F57C00", "Sasuke": "#2F6FDB", "Kakashi": "#9FB3C8", "Itachi": "#C8102E", "Gaara": "#C9A26B", "Sakura": "#F06292", "Hinata": "#C9B6E4", "Jiraiya": "#D9503F", "Minato": "#FFC93C", "Madara": "#8E2A3A", "Obito": "#5C6BC0", "Pain": "#9C7AD6", "Shikamaru": "#4E8F3A", "Rock Lee": "#6CC24A", "Neji": "#DCD3C2", "Orochimaru": "#7B45A8", "Tsunade": "#3F9E8F", "Deidara": "#4FC3F7", "Might Guy": "#2E7D32", "Killer Bee": "#E0A030"};
+const qct=h=>{const n=parseInt(h.slice(1),16),l=(.299*(n>>16)+.587*(n>>8&255)+.114*(n&255))/255;return l>.6?'#1B1622':'#fff'};
 const QUICK=[['Naruto','char:Naruto Uzumaki'],['Sasuke','char:Sasuke Uchiha'],['Kakashi','char:Kakashi Hatake'],['Itachi','char:Itachi Uchiha'],['Gaara','char:Gaara of the Desert'],['Sakura','char:Sakura Haruno'],['Hinata','char:Hinata Hyuga'],['Jiraiya','char:Jiraiya'],['Minato','char:Minato Namikaze|The Fourth Hokage'],['Madara','char:Madara Uchiha'],['Obito','char:Obito Uchiha|Tobi'],['Pain','char:Pain|Nagato'],['Shikamaru','char:Shikamaru Nara'],['Rock Lee','char:Rock Lee'],['Neji','char:Neji Hyuga'],['Orochimaru','char:Orochimaru'],['Tsunade','char:Tsunade'],['Deidara','char:Deidara'],['Might Guy','char:Might Guy'],['Killer Bee','char:Killer Bee']];
 const S0=()=>({q:'',set:'',type:'',chars:[],rars:[]});
 let D=null,S=S0(),list=[],shown=0,sel=-1;
@@ -270,7 +277,7 @@ const SUPA='https://cfzpayanhvvqtkuqfgof.supabase.co',SUPA_KEY='sb_publishable_Z
 const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url',{headers:{apikey:SUPA_KEY,Range:`${i*1000}-${i*1000+999}`}}).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>a.flat());
 function applyLive(rows){if(!D||!rows||!rows.length)return false;const m={};rows.forEach(r=>{if(r&&r.url)m[r.card_id]=r.url});let n=0;D.cards.forEach(c=>{const u=m[c.s+':'+c.n];if(u&&/^https:\/\//.test(u)&&c.img!==u){c.img=u;n++}});return n>0}
 fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promise.race([LIVE,new Promise(r=>setTimeout(()=>r(null),2500))]);if(live)applyLive(live);else LIVE.then(rows=>{if(applyLive(rows))renderCards(true)});D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
-  $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>`<button class="pill" data-q="${esc(q.replace(/^char:/,''))}" aria-pressed="false">${esc(l)}</button>`).join(''));
+  $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>`<button class="pill" data-q="${esc(q.replace(/^char:/,''))}" aria-pressed="false" style="--c:${QCOL[l]||'#F57C00'};--ct:${qct(QCOL[l]||'#F57C00')}">${esc(l)}</button>`).join(''));
   $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${k?rsym(k)+' ':''}${l}</button>`).join('');if(matchMedia('(max-width:900px)').matches)$('#legend').open=false;
   $('#setsel').insertAdjacentHTML('beforeend',D.sets.map(s=>`<option value="${esc(s.id)}">${esc(setLabel(s))} · ${esc(s.name)}</option>`).join(''));
   renderSets();const v=readHash();view(v);renderCards(true)}).catch(()=>{$('#count').textContent='Could not load cards'});
