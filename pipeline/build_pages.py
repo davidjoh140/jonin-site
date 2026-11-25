@@ -123,7 +123,7 @@ def price_block(c):
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from settings import MOST_VALUABLE_CHARACTERS, MOST_VALUABLE_TOP, CHARACTER_EXTRA_NAMES
+from settings import MOST_VALUABLE_CHARACTERS, MOST_VALUABLE_TOP, MOST_VALUABLE_MIN_CARDS, CHARACTER_EXTRA_NAMES
 import articles_build as AB
 import lists_build as LB
 featured_in = lambda c: AB.featured_in(c)
@@ -242,6 +242,11 @@ def char_page(ch, cs, sets_by_id, chars, notes):
          'about': {'@type': 'Thing', 'name': ch['name']}},
         crumbs(('Naruto CCG cards', SITE + '/'), ('Characters', SITE + '/characters/'), (ch['name'], url))]})
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(img), tw='summary_large_image', ld=ld) + body + FOOT
+
+
+def mv_live(cs):
+    """A character's most-valuable list is live once MOST_VALUABLE_MIN_CARDS of their cards have a sale."""
+    return sum(1 for c in cs if c.get('top')) >= MOST_VALUABLE_MIN_CARDS
 
 
 def most_valuable(cs, top=MOST_VALUABLE_TOP):
@@ -618,8 +623,9 @@ def main():
     keep_ch, counts, ranked = set(), {}, {}
     for ch in chars:
         if ch['slug'] in MOST_VALUABLE_CHARACTERS:
-            ranked[ch['slug']] = most_valuable(char_cards(ch, d['cards']))
-            ch['mv'] = bool(ranked[ch['slug']])
+            cs = char_cards(ch, d['cards'])
+            ranked[ch['slug']] = most_valuable(cs)
+            ch['mv'] = bool(ranked[ch['slug']]) and mv_live(cs)
     mv_chars = [ch for ch in chars if ch.get('mv')]
     LB.setup(sys.modules[__name__])
     lchanged, list_urls = LB.build([ch for ch in chars if char_cards(ch, d['cards'])], {c['s'] + ':' + c['n']: c for c in d['cards']}, sets_by_id, mv_chars)

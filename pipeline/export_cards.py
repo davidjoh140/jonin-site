@@ -112,7 +112,10 @@ def reveal_top_prices(data, sales):
     for ch in bp.load_chars():
         if ch["slug"] not in MOST_VALUABLE_CHARACTERS:
             continue
-        for c in bp.most_valuable(bp.char_cards(ch, data["cards"])):
+        cs = bp.char_cards(ch, data["cards"])
+        if not bp.mv_live(cs):
+            continue   # list isn't live yet, so its top prices stay Premium
+        for c in bp.most_valuable(cs):
             x = best.get(c["s"] + ":" + c["n"])
             if x and len(c["top"]) == 4:
                 url = x.get("url") or ""

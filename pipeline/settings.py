@@ -51,7 +51,9 @@ PRICE_BAND_CUTOFFS = [10, 50, 200]   # PLACEHOLDER: Under $10 / $10â€“50 / $50â€
 
 # Most-valuable pages (/character/<slug>/most-valuable/). Ranked by each card's single highest approved
 # sale (eBay or private, any version, all time), one spot per card.
-MOST_VALUABLE_CHARACTERS = ["naruto", "sasuke", "itachi"]   # character slugs; add more here
+MOST_VALUABLE_CHARACTERS = ["naruto", "sasuke", "itachi", "kakashi", "sakura", "jiraiya", "hinata", "minato",
+                            "gaara", "madara", "pain", "obito", "tsunade", "orochimaru", "might-guy"]   # character slugs; PLACEHOLDER pick of 15 main characters (David asked for 10-15, 2026-11-25)
+MOST_VALUABLE_MIN_CARDS = 5   # a character's list goes live once this many of their cards have an approved sale (David, 2026-11-25)
 MOST_VALUABLE_TOP = 5
 VOTE_MIN_VOTERS = 5   # people who must vote for a character before its Most popular page goes live (David confirmed 5; matches vote.js MIN_VOTERS)
 POPULAR_TOP = 10      # cards on a character's Most popular page (David OK'd 10 for now)
