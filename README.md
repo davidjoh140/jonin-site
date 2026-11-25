@@ -49,3 +49,10 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - `export_cards.py` adds `"top": [rank, band, version, date]` to each card with sales. Cards that make a most-valuable list also get `[price, ebay_url]` appended: those pages show the exact top sale (and link it). Every other card's exact prices stay Premium.
 - Rebuilt by the Sync workflow every ~15 minutes, so the lists update on their own.
 - Private sales (not on eBay) are added from `/admin/` → Private sales (`db/009_private_sales.sql`).
+
+## Accounts and the signup prompts
+
+- Signed-out visitors can mark haves, wants and slabs right away. It's kept in their browser (`localStorage` key `jonin_guest_v1`) and moves into their account the first time they sign in or sign up (counts merge by taking the higher number).
+- Prompts: a dismissible band above the homepage grid, a "Saved on this device only" note in each card's collection box and on My collection, a one-time toast after their first mark, and "Sign up to save" in the header.
+- Slabs: `collection_slabs` (`db/009_collection_slabs.sql`) — grader, grade, optional cert, per printing/edition. Private to the owner; not part of shared lists yet.
+- Votes: tapping Vote while signed out opens signup and casts that vote once they're in (stored in `jonin_pending_vote` for 24h, so it also survives the email-confirm link).

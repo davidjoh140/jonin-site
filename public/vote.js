@@ -69,11 +69,21 @@
   function refresh() {
     return sb.rpc('character_votes', { p_character: CHAR }).then(function (r) { if (!r.error && r.data) renderTop(r.data); paint(); });
   }
+  // A vote tapped while signed out is remembered and cast as soon as they're signed in (also after the email-confirm link).
+  var PKEY = 'jonin_pending_vote', pending = null;
+  function pend(card) { pending = card; try { localStorage.setItem(PKEY, JSON.stringify({ c: CHAR, card: card, t: Date.now() })); } catch (_) {} }
+  function takePending() {
+    var p = null; try { p = JSON.parse(localStorage.getItem(PKEY) || 'null'); } catch (_) {}
+    if (p && p.c === CHAR && Date.now() - p.t < 864e5) { try { localStorage.removeItem(PKEY); } catch (_) {} return p.card; }
+    return null;
+  }
   function loadMine() {
     mine.clear();
     if (!me) { paint(); return Promise.resolve(); }
     return sb.from('card_votes').select('card_id').eq('character', CHAR).then(function (r) {
       (r.data || []).forEach(function (x) { mine.add(x.card_id); }); paint();
+      var c = takePending();
+      if (c && !mine.has(c)) { if (mine.size < limit) { toggle(c); say('Vote cast. You have ' + (limit - mine.size - 1) + ' left for ' + CNAME + '.'); } else say('You already used all ' + limit + ' votes for ' + CNAME + '.'); }
     });
   }
 
@@ -84,7 +94,7 @@
 
   function toggle(card) {
     if (!sb || busy) return;
-    if (!me) { openAuth('up'); return; }
+    if (!me) { pend(card); openAuth('up'); return; }
     var on = mine.has(card);
     if (!on && mine.size >= limit) { say('You have used all ' + limit + ' votes for ' + CNAME + '. Tap a ✓ Voted card to free one up.'); return; }
     busy = true; paint();
@@ -108,7 +118,7 @@
   function drawAuth() {
     $('form', ov).innerHTML =
       '<h2>' + (mode === 'up' ? 'Make a free account' : 'Sign in') + '</h2>' +
-      '<p>' + (mode === 'up' ? 'Vote for the coolest cards and keep a list of your collection.' : 'Welcome back.') + '</p>' +
+      '<p>' + (mode === 'up' ? (pending ? 'Make a free account to cast your vote. It counts as soon as you’re in.' : 'Vote for the coolest cards, and track your haves, wants and slabs.') : (pending ? 'Sign in to cast your vote.' : 'Welcome back.')) + '</p>' +
       (mode === 'up' ? '<label>Username<input name="handle" autocomplete="username" maxlength="24" required></label>' : '') +
       '<label>Email<input name="email" type="email" autocomplete="email" required></label>' +
       '<label>Password<input name="pw" type="password" autocomplete="' + (mode === 'up' ? 'new-password' : 'current-password') + '" minlength="8" required></label>' +
@@ -132,7 +142,7 @@
       : sb.auth.signInWithPassword({ email: email, password: pw });
     p.then(function (r) {
       if (r.error) return fail(r.error.message || 'Something went wrong.');
-      if (mode === 'up' && !r.data.session) { err.textContent = 'Check your email and click the link to finish signing up. You will land back here to vote.'; err.hidden = false; go.disabled = false; return; }
+      if (mode === 'up' && !r.data.session) { err.textContent = 'Check your email and click the link to finish signing up. You will land back here and your vote will be cast.'; err.hidden = false; go.disabled = false; return; }
       ov.hidden = true;
     });
   });
