@@ -77,6 +77,7 @@ def to_listing(it, matcher, t):
     price = (it.get("currentBidPrice") if auction else it.get("price")) or it.get("price") or {}
     if price.get("currency", "USD") != "USD":
         return None
+    cond, csrc = it.get("_condition") or prices.parse_condition(title)
     notes = [reason] + (["assumed Normal"] if ap else []) + (["assumed Unlimited"] if ae else [])
     return {"external_id": f"ebay:{it['itemId']}", "card_id": card["id"], "title": title,
             "price": float(price.get("value") or 0), "currency": "USD", "grader": grader, "grade": grade,
@@ -84,7 +85,8 @@ def to_listing(it, matcher, t):
             "bids": it.get("bidCount") or 0, "best_offer": "BEST_OFFER" in opts,
             "ends_at": it.get("itemEndDate"), "source": "eBay", "url": it.get("itemWebUrl"),
             "image_url": big((it.get("image") or {}).get("imageUrl")) or None,
-            "confidence": conf, "match_reason": ", ".join(notes), "seen_at": iso(t), "state": "active"}
+            "confidence": conf, "match_reason": ", ".join(notes), "seen_at": iso(t), "state": "active",
+            "condition": cond, "condition_source": csrc}
 
 
 def user_token():
@@ -156,6 +158,13 @@ def ebay_item(utok, external_id):
                ("currentBidPrice" if auction else "price"): {"value": str(price), "currency": cur},
                "itemWebUrl": f("e:ListingDetails/e:ViewItemURL") or f"https://www.ebay.com/itm/{legacy}",
                "image": {"imageUrl": pics[0].text if pics else ""}}
+    desc = {}
+    for d in item.findall("e:ConditionDescriptors/e:ConditionDescriptor", NS):
+        desc[d.findtext("e:Name", default="", namespaces=NS)] = d.findtext("e:Value", default="", namespaces=NS)
+    html = f("e:Description")
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", html)))[:5000]
+    cond, src = prices.parse_condition(summary["title"], desc.get("40001"), text)
+    summary["_condition"] = (cond, src)
     live = st is None or f("e:SellingStatus/e:ListingStatus") == "Active"
     record = None if live else {"sold": qty > 0, "price": price, "qty_sold": qty,
                                 "best_offer_accepted": bo and not auction}
@@ -263,7 +272,12 @@ def main():
             rec = None
             if utok:
                 try:
-                    rec = ebay_record(utok, li["external_id"])
+                    got = ebay_item(utok, li["external_id"])
+                    rec = got and got["record"]
+                    if got and got["summary"].get("_condition"):
+                        cond, csrc = got["summary"]["_condition"]
+                        if cond != prices.UNKNOWN or not li.get("condition"):
+                            li["condition"], li["condition_source"] = cond, csrc
                     time.sleep(0.2)
                 except TokenError as e:
                     stats["ebay_token"] = f"rejected: {e}"[:200]
@@ -280,7 +294,7 @@ def main():
             if sale:
                 row = {k: li.get(k) for k in ("card_id", "title", "currency", "grader", "grade", "printing",
                                                "edition", "bids", "url", "image_url", "confidence",
-                                               "match_reason", "external_id")}
+                                               "match_reason", "external_id", "condition", "condition_source")}
                 row.update(sale, source="eBay")
                 supa.insert("sales", [row], ignore_duplicates=True, returning=False)
                 stats[sale["status"]] += 1

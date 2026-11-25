@@ -127,3 +127,39 @@ def settle(listing, ebay=None, now=None):
         ok = bool(ends and seen and ends - seen <= timedelta(minutes=cfg.LAST_SEEN_MAX_MINUTES_BEFORE_END))
     sale["status"] = "approved" if ok else "pending"
     return "sold", sale
+
+
+# ---------------------------------------------------------------- condition (raw cards)
+CONDITIONS = ["NM", "LP", "MP", "HP", "DMG"]          # best to worst
+COND_RE = [  # PLACEHOLDER mapping for David to check: VLP / Excellent count as LP, Poor as HP
+    ("DMG", r"\bDMG\b|\bDAMAGED?\b|\bCREASED?\b"),
+    ("HP", r"\bHP\b|HEAVILY?\s*PLAYED|\bHEAVY\s*PLAY|\bPOOR\b"),
+    ("MP", r"\bMP\b|MODERATELY?\s*PLAYED|\bMODERATE\s*PLAY|\bVERY\s*GOOD\b"),
+    ("LP", r"\bV?LP\b|\bSP\b|LIGHTLY?\s*PLAYED|\bLIGHT\s*PLAY|SLIGHTLY\s*PLAYED|\bEXCELLENT\b|\bEX\b"),
+    ("NM", r"\bNM(\s*/\s*M|-?MT)?\b|NEAR\s*MINT|\bMINT\b|\bM/NM\b|PACK\s*FRESH"),
+]
+# eBay condition descriptor 40001 (ungraded card condition) value ids
+EBAY_COND = {"400010": "NM", "400011": "LP", "400015": "LP", "400012": "MP", "400016": "MP",
+             "400013": "HP", "400017": "HP"}
+
+
+def conditions_in(text):
+    t = (text or "").upper()
+    return [c for c, pat in COND_RE if re.search(pat, t)]
+
+
+def parse_condition(title, ebay_value_id=None, description=""):
+    """(condition, source) for a raw card. Title first (seller wrote it for this card), then the
+    seller's eBay condition field, then the description only if it names exactly one condition.
+    Several conditions in one place ("LP-NM") count as the worst of them."""
+    if parse_grade(title)[0] != "Raw":
+        return "", "graded"
+    found = conditions_in(re.sub(r"\b(PSA|BGS|CGC|SGC|TAG)\s*(GEM\s*)?MINT\b", " ", title.upper()))
+    if found:
+        return found[0] if len(found) == 1 else max(found, key=CONDITIONS.index), "title"
+    if ebay_value_id in EBAY_COND:
+        return EBAY_COND[ebay_value_id], "ebay"
+    found = conditions_in(description)
+    if len(found) == 1:
+        return found[0], "description"
+    return UNKNOWN, ""

@@ -64,10 +64,23 @@ def main():
                 stats["unsold"] += 1
                 continue
             out = {k: row.get(k) for k in ("card_id", "title", "currency", "grader", "grade", "printing", "edition",
-                                            "bids", "url", "image_url", "confidence", "match_reason", "external_id")}
+                                            "bids", "url", "image_url", "confidence", "match_reason", "external_id",
+                                            "condition", "condition_source")}
             out.update(sale, source="eBay", status="pending")
             supa.insert("sales", [out], ignore_duplicates=True, returning=False)
             stats["queued"] += 1
+        # sales recorded before condition tracking: ask eBay again for the condition
+        stats["condition_filled"] = 0
+        for r in supa.select("sales", {"select": "id,external_id,title", "condition": "is.null",
+                                       "external_id": "like.ebay:*"}):
+            try:
+                got = ebay_item(utok, r["external_id"])
+            except TokenError:
+                break
+            cond, src = (got or {}).get("summary", {}).get("_condition") or prices.parse_condition(r["title"] or "")
+            supa.update("sales", {"id": r["id"]}, {"condition": cond, "condition_source": src})
+            stats["condition_filled"] += 1
+            time.sleep(0.2)
         print(stats)
 
 

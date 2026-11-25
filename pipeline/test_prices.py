@@ -101,3 +101,17 @@ def test_to_listing():
     assert cs.to_listing(item("Naruto CCG N-001 Naruto Uzumaki proxy custom"), M, T) is None
     assert cs.to_listing(item("Naruto CCG lot of 50 cards N-001"), M, T) is None
     assert cs.to_listing(item("Naruto Uzumaki NRSA-PR-015 Naruto Kayou promo"), M, T) is None
+
+
+def test_condition():
+    pc = prices.parse_condition
+    assert pc("Naruto CCG Minato N-1122 Lp 1st Edition Foil") == ("LP", "title")
+    assert pc("Kakashi N-396 First Edition Near Mint") == ("NM", "title")
+    assert pc("Neji N-513 Common 1st Edition Foil Played - LP/MP") == ("MP", "title")   # worst of two
+    assert pc("Sasuke PR088 PSA 10 GEM MINT") == ("", "graded")
+    assert pc("Naruto N-001 foil", "400015") == ("LP", "ebay")
+    assert pc("Naruto N-001 foil", "400010") == ("NM", "ebay")
+    assert pc("Naruto N-001 foil", None, "Card is in heavily played condition, see photos") == ("HP", "description")
+    assert pc("Naruto N-001 foil", None, "Grading scale: NM, LP, MP, HP") == (prices.UNKNOWN, "")
+    assert pc("Naruto N-001 foil") == (prices.UNKNOWN, "")
+    assert pc("Hidden Lotus J-US005 Rare Unlimited Diamond Foil LP/MP Pi") == ("MP", "title")
