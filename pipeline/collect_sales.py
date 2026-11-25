@@ -7,8 +7,9 @@ How it works (runs every 15 minutes from GitHub Actions):
   4. When a listing ends it is "settled":
        - with EBAY_REFRESH_TOKEN set, eBay's own record says whether it sold and for how much;
        - without it, an auction with bids counts at the last bid we saw, and a Buy It Now that
-         vanished is not counted (it may have been pulled, not sold).
-  5. Confident sales go straight into the public range; the rest wait in `sales` as pending.
+         vanished is queued at its listed price as "unconfirmed" (it may have been pulled, not sold).
+  5. Every sale waits in `sales` as pending until David OKs or vetoes it in the Buying Desk
+     (settings.SALES_AUTO_APPROVE_CONFIDENCE = None). Only OK'd sales reach the public range.
 
 Env: SUPABASE_URL, SUPABASE_SERVICE_KEY, EBAY_CLIENT_ID, EBAY_CLIENT_SECRET,
      EBAY_REFRESH_TOKEN (optional, a user token for eBay's Trading API GetItem).
@@ -147,14 +148,20 @@ def main():
                     if row:
                         rows[row["external_id"]] = row
             if full:                                          # 2. everything, about hourly
+                complete = True
                 for q in cfg.SALES_QUERIES:
+                    got = 0
                     for it in search(tok, q, budget, cfg.SALES_PAGES_PER_QUERY):
+                        got += 1
                         stats["seen"] += 1
                         seen_ids.add(f"ebay:{it['itemId']}")
                         row = to_listing(it, matcher, t)
                         if row:
                             rows[row["external_id"]] = row
+                    if got >= cfg.SALES_PAGES_PER_QUERY * 200:
+                        complete = False              # more results than we read: can't tell what vanished
                 stats["full"] = True
+                stats["complete"] = complete
         except OutOfCalls:
             stats["stopped"] = "call budget used up"
             full = stats["full"] = False                      # an incomplete sweep can't say what vanished
@@ -170,7 +177,7 @@ def main():
             ends = datetime.fromisoformat(li["ends_at"].replace("Z", "+00:00")) if li.get("ends_at") else None
             if li["kind"] == "AUCTION" and ends and ends < t - timedelta(minutes=2):
                 ended.append(li)
-            elif li["kind"] != "AUCTION" and ((ends and ends < t) or (full and li["external_id"] not in seen_ids)):
+            elif li["kind"] != "AUCTION" and ((ends and ends < t) or (full and stats.get("complete") and li["external_id"] not in seen_ids)):
                 ended.append(li)
         utok = None
         try:

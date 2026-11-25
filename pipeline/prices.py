@@ -114,9 +114,14 @@ def settle(listing, ebay=None, now=None):
         sale = {"price": listing["price"], "sale_type": "auction", "price_basis": "last_seen_bid",
                 "sold_at": (ends or now).isoformat()}
     else:
-        return "gone", None       # a Buy It Now that disappeared: sold or pulled, we can't tell
-    ok = (listing.get("confidence") or 0) >= cfg.SALES_AUTO_APPROVE_CONFIDENCE \
-        and UNKNOWN not in (listing.get("printing"), listing.get("edition")) and sale["price_basis"] != "listed"
+        # A Buy It Now that disappeared: sold or pulled, we can't tell from search alone.
+        # It goes to David's review at its listed price; he checks the listing and OKs or vetoes it.
+        return "gone", {"price": listing["price"], "sale_type": "buy_it_now", "price_basis": "unconfirmed",
+                        "sold_at": now.isoformat(), "status": "pending"}
+    ok = cfg.SALES_AUTO_APPROVE_CONFIDENCE is not None \
+        and (listing.get("confidence") or 0) >= cfg.SALES_AUTO_APPROVE_CONFIDENCE \
+        and UNKNOWN not in (listing.get("printing"), listing.get("edition")) \
+        and sale["price_basis"] not in ("listed", "unconfirmed")
     if ok and sale["price_basis"] == "last_seen_bid":
         seen = _dt(listing["seen_at"]) if listing.get("seen_at") else None
         ok = bool(ends and seen and ends - seen <= timedelta(minutes=cfg.LAST_SEEN_MAX_MINUTES_BEFORE_END))

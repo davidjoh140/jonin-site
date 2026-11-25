@@ -26,7 +26,7 @@ THUMB_WIDTH = 480                     # review-screen thumbnail width in px
 # Everything here is a PLACEHOLDER for David to change.
 SALES_QUERIES = ["naruto ccg", "naruto card game bandai", "naruto bandai card"]  # PLACEHOLDER
 SALES_FULL_SWEEP_MINUTES = 60      # PLACEHOLDER: re-read every Naruto listing about once an hour
-SALES_PAGES_PER_QUERY = 5          # PLACEHOLDER: 200 listings per page
+SALES_PAGES_PER_QUERY = 10         # PLACEHOLDER: 200 listings per page; must cover every result or vanished listings are not checked
 SALES_ENDING_WINDOW_MINUTES = 30   # PLACEHOLDER: each run re-checks auctions ending within this window
 SALES_MAX_CALLS_PER_RUN = 120      # PLACEHOLDER: eBay Browse calls per run (runs every 15 min)
 SALES_MAX_SETTLE_PER_RUN = 150     # PLACEHOLDER: ended listings looked up per run
@@ -40,7 +40,7 @@ ASSUME_NORMAL_IF_NO_FOIL = True    # PLACEHOLDER: no foil word in the title -> N
 ASSUME_UNLIMITED_IF_NO_1ST = True  # PLACEHOLDER: no "1st Edition" in the title -> Unlimited
 
 # Which recorded sales go straight into the public range; the rest wait for David's yes / no.
-SALES_AUTO_APPROVE_CONFIDENCE = 0.85   # PLACEHOLDER
+SALES_AUTO_APPROVE_CONFIDENCE = None   # David OKs every sale himself (None = nothing auto-approved)
 # Without eBay's confirmed final price, an auction counts at its last bid we saw,
 # but only if we saw it this close to the end (otherwise it waits for review).
 LAST_SEEN_MAX_MINUTES_BEFORE_END = 20  # PLACEHOLDER

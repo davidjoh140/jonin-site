@@ -46,7 +46,12 @@ def L(**k):
     return base
 
 
-def test_settle_auction_without_ebay_record():
+def test_nothing_auto_approved_by_default():
+    assert prices.settle(L(), None, T)[1]["status"] == "pending"
+
+
+def test_settle_auction_without_ebay_record(monkeypatch):
+    monkeypatch.setattr(prices.cfg, "SALES_AUTO_APPROVE_CONFIDENCE", 0.85)
     state, sale = prices.settle(L(), None, T)
     assert state == "sold" and sale["price"] == 42.0 and sale["price_basis"] == "last_seen_bid"
     assert sale["status"] == "approved"
@@ -64,15 +69,17 @@ def test_settle_with_ebay_record():
     assert prices.settle(L(), {"sold": False}, T) == ("unsold", None)
 
 
-def test_settle_unknown_version_waits():
+def test_settle_unknown_version_waits(monkeypatch):
+    monkeypatch.setattr(prices.cfg, "SALES_AUTO_APPROVE_CONFIDENCE", 0.85)
     _, sale = prices.settle(L(printing=prices.UNKNOWN), None, T)
     assert sale["status"] == "pending"
     _, sale = prices.settle(L(confidence=0.75), None, T)
     assert sale["status"] == "pending"
 
 
-def test_buy_it_now_vanished_is_not_a_sale():
-    assert prices.settle(L(kind="FIXED_PRICE"), None, T) == ("gone", None)
+def test_buy_it_now_vanished_goes_to_review():
+    state, sale = prices.settle(L(kind="FIXED_PRICE"), None, T)
+    assert state == "gone" and sale["price_basis"] == "unconfirmed" and sale["status"] == "pending"
 
 
 def item(title, **k):
