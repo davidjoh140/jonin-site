@@ -103,8 +103,8 @@ footer{border-top:1px solid #23252a;color:var(--mute);font-size:12px;text-align:
 {
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['SR','Super Rare'],['UR','Ultra Rare'],['P','Promo']];
-const QUICK=[['Naruto','char:Naruto Uzumaki'],['Sasuke','char:Sasuke Uchiha'],['Kakashi','char:Kakashi Hatake'],['Itachi','char:Itachi Uchiha'],['Gaara','char:Gaara of the Desert'],['Jiraiya','char:Jiraiya'],['Super Rares','rar:SR'],['Ultra Rares','rar:UR'],['Promos','rar:P']];
+const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['SR','Super Rare'],['P','Promo']];
+const QUICK=[['Naruto','char:Naruto Uzumaki'],['Sasuke','char:Sasuke Uchiha'],['Kakashi','char:Kakashi Hatake'],['Itachi','char:Itachi Uchiha'],['Gaara','char:Gaara of the Desert'],['Jiraiya','char:Jiraiya'],['Super Rares','rar:SR'],['Promos','rar:P']];
 let D=null,S={q:'',rar:'',set:'',type:'',quick:''},list=[],shown=0,sel=-1;
 const PAGE=120;
 const setName=id=>D.byId[id]?.name||id;
