@@ -29,6 +29,10 @@ from find_scans import EBAY, Budget, OutOfCalls, big, ebay_token
 from match import Matcher
 
 TRADING = "https://api.ebay.com/ws/api.dll"
+
+
+class TokenError(Exception):
+    pass
 NS = {"e": "urn:ebay:apis:eBLBaseComponents"}
 
 
@@ -123,6 +127,12 @@ def ebay_record(utok, external_id):
     if r.status_code != 200:
         return None
     x = ET.fromstring(r.content)
+    err = x.find("e:Errors", NS)
+    if err is not None and x.findtext("e:Ack", default="", namespaces=NS) == "Failure":
+        code = err.findtext("e:ErrorCode", default="", namespaces=NS)
+        if code in ("931", "932", "16110", "21916984", "21917053"):   # token invalid / expired / revoked
+            raise TokenError(err.findtext("e:LongMessage", default=code, namespaces=NS))
+        return None
     item = x.find("e:Item", NS)
     if item is None:
         return None
@@ -201,6 +211,19 @@ def main():
             utok = user_token()
         except Exception as e:
             print("eBay user token failed, settling without it:", e)
+        if utok:                                              # quick check that eBay accepts the token
+            probe = next((li for li in active if li["kind"] == "FIXED_PRICE"), None)
+            try:
+                if probe:
+                    ebay_record(utok, probe["external_id"])
+                stats["ebay_token"] = "ok"
+            except TokenError as e:
+                stats["ebay_token"] = f"rejected: {e}"[:200]
+                utok = None
+            except Exception as e:
+                stats["ebay_token"] = f"check failed: {e}"[:200]
+        else:
+            stats["ebay_token"] = "none"
         for li in ended[:cfg.SALES_MAX_SETTLE_PER_RUN]:
             stats["ended"] += 1
             rec = None
@@ -208,6 +231,9 @@ def main():
                 try:
                     rec = ebay_record(utok, li["external_id"])
                     time.sleep(0.2)
+                except TokenError as e:
+                    stats["ebay_token"] = f"rejected: {e}"[:200]
+                    utok = None
                 except Exception as e:
                     print("GetItem failed for", li["external_id"], e)
                 if rec is None and li["kind"] != "AUCTION" and not (li.get("ends_at") and
