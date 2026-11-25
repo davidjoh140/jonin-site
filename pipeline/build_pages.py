@@ -68,7 +68,7 @@ HEAD = '''<!DOCTYPE html>
 <meta name="twitter:card" content="{tw}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/themes.css?v=1"><script src="/theme.js?v=1"></script>
+<link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/themes.css?v=2"><script src="/theme.js?v=2"></script>
 {ld}
 </head>
 <body>

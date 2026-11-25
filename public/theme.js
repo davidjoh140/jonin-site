@@ -1,15 +1,15 @@
 /* Character theme picker for jonin.cards. Load in <head> (no defer) so the theme applies before first paint. */
 (function(){
   var T=[
-    {id:'jonin',  n:'Jonin',   d:'Night & Akatsuki red', bg:'#1B1622',a:'#B5121B',c:'#F57C00'},
-    {id:'naruto', n:'Naruto',  d:'Orange & navy',        bg:'#17130F',a:'#FF7A00',c:'#263A6E'},
-    {id:'sasuke', n:'Sasuke',  d:'Purple & Chidori blue',bg:'#12121F',a:'#6A3FD6',c:'#7FB2FF'},
-    {id:'itachi', n:'Itachi',  d:'Black & crimson moon', bg:'#0D0A0B',a:'#C3141E',c:'#E5484D'},
-    {id:'kakashi',n:'Kakashi', d:'Silver & steel blue',  bg:'#12171B',a:'#3F6E86',c:'#B8D5E4'},
-    {id:'gaara',  n:'Gaara',   d:'Sand & brick',         bg:'#1A1410',a:'#A8322A',c:'#D9A65A'},
-    {id:'hinata', n:'Hinata',  d:'Lavender',             bg:'#15142A',a:'#7B67D1',c:'#C4B2F5'},
-    {id:'sakura', n:'Sakura',  d:'Cherry blossom pink',  bg:'#1A1216',a:'#D94B7F',c:'#F48FB1'},
-    {id:'leaf',   n:'Hidden Leaf',d:'Forest green',      bg:'#0F1712',a:'#2E8B4A',c:'#7FCB6B'}
+    {id:'jonin',f:'/apple-touch-icon.png',  n:'Jonin',   d:'Night & Akatsuki red', bg:'#1B1622',a:'#B5121B',c:'#F57C00'},
+    {id:'naruto',f:'/theme-faces/naruto.webp', n:'Naruto',  d:'Orange & navy',        bg:'#17130F',a:'#FF7A00',c:'#263A6E'},
+    {id:'sasuke',f:'/theme-faces/sasuke.webp', n:'Sasuke',  d:'Purple & Chidori blue',bg:'#12121F',a:'#6A3FD6',c:'#7FB2FF'},
+    {id:'itachi',f:'/theme-faces/itachi.webp', n:'Itachi',  d:'Black & crimson moon', bg:'#0D0A0B',a:'#C3141E',c:'#E5484D'},
+    {id:'kakashi',f:'/theme-faces/kakashi.webp',n:'Kakashi', d:'Silver & steel blue',  bg:'#12171B',a:'#3F6E86',c:'#B8D5E4'},
+    {id:'gaara',f:'/theme-faces/gaara.webp',  n:'Gaara',   d:'Sand & brick',         bg:'#1A1410',a:'#A8322A',c:'#D9A65A'},
+    {id:'hinata',f:'/theme-faces/hinata.webp', n:'Hinata',  d:'Lavender',             bg:'#15142A',a:'#7B67D1',c:'#C4B2F5'},
+    {id:'sakura',f:'/theme-faces/sakura.webp', n:'Sakura',  d:'Cherry blossom pink',  bg:'#1A1216',a:'#D94B7F',c:'#F48FB1'},
+    {id:'leaf',f:'/theme-faces/rock-lee.webp',   n:'Hidden Leaf',d:'Forest green',      bg:'#0F1712',a:'#2E8B4A',c:'#7FCB6B'}
   ];
   var K='jtheme',root=document.documentElement;
   function get(){try{return localStorage.getItem(K)||'jonin'}catch(_){return 'jonin'}}
@@ -21,7 +21,8 @@
     return t;
   }
   apply(get());
-  function sw(t){return 'style="--a:'+t.bg+';--b:'+t.a+';--c:'+t.c+'"'}
+  function st(t){return '--a:'+t.bg+';--b:'+t.a+';--c:'+t.c+";--f:url('"+t.f+"')"}
+  function sw(t){return 'style="'+st(t)+'"'}
   function build(){
     var hw=document.querySelector('header .hw');if(!hw||hw.querySelector('.tp'))return;
     var cur=find(get());
@@ -36,7 +37,7 @@
       var x=ev.target.closest('[data-t]');if(!x)return;
       var t=apply(x.getAttribute('data-t'));try{localStorage.setItem(K,t.id)}catch(_){}
       l.querySelectorAll('[data-t]').forEach(function(y){y.setAttribute('aria-checked',y===x)});
-      b.querySelector('.tsw').setAttribute('style','--a:'+t.bg+';--b:'+t.a+';--c:'+t.c);
+      b.querySelector('.tsw').setAttribute('style',st(t));
       b.querySelector('.tpn').textContent=t.n;b.setAttribute('aria-label','Theme: '+t.n);
       open(false);b.focus();
     });
