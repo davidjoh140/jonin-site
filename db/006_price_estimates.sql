@@ -6,3 +6,5 @@
 -- refresh_price_estimates(half_life_days default 30) rebuilds it; refresh_price_ranges() now calls it at the end.
 -- Site (David, 2026-11-25): Premium members see estimates instead of the price band; grid tiles show the RAW estimate of the
 --   card's most-sold version, and "Market value" sorting uses that number.
+-- 2026-11-25 (migration member_card_sales): member_card_sales(card_id) returns a card's approved sales (version, price,
+--   sold date, eBay link) to active members only; the Premium popup lists them under each version as links to eBay.
