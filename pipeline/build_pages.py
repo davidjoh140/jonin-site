@@ -29,6 +29,10 @@ def set_slug(s):
     return s['id'].lower()
 
 
+def sym_img(s):
+    return f'<img class="ssym" src="{e(s["symbol"])}" alt="" loading="lazy">' if s.get('symbol') else ''
+
+
 def set_label(s):
     return 'Set ' + s['id'] if s.get('kind') == 'Main' else 'Promo' if s.get('kind') == 'Promo' else s['id']
 
@@ -113,7 +117,7 @@ def card_page(c, s, prev, nxt):
            if c['s'] in PSA else '<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>')
     art = (f'<img src="{e(img)}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card scan" width="750" height="1050">'
            if img else f'<div class="noimg"><b>{e(c["n"])}</b><span>{e(c["t"])} · scan coming soon</span></div>')
-    rows = [('Set', f'<a href="/set/{set_slug(s)}/">{e(s["name"])}</a> · {e(set_label(s))}{" · " + e(s["rel"]) if s.get("rel") else ""}'),
+    rows = [('Set', f'<a class="stag" href="/set/{set_slug(s)}/">{sym_img(s)}{e(s["name"])}</a> · {e(set_label(s))}{" · " + e(s["rel"]) if s.get("rel") else ""}'),
             ('Number', e(c['n'])), ('Rarity', e(c['r'])), ('Type', e(c['t'])),
             ('Editions', e(', '.join(eds) or '—')),
             ('Printings', ''.join(f'<span class="pv">{e(v)}</span>' for v in (c.get('v') or [])))]
@@ -163,7 +167,7 @@ def set_page(s, cards):
         f'<a class="tile" href="/card/{slug(c)}/">'
         + (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])}" width="750" height="1050">'
            if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
-        + f'<span class="tn">{e(c["n"])}</span><span class="tt">{e(c["name"])}</span></a>' for c in cards)
+        + f'<span class="tt">{e(c["name"])}</span><span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])}</span></a>' for c in cards)
     sym = f'<img class="sym" src="{e(s["symbol"])}" alt="">' if s.get('symbol') else ''
     body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/#sets">Sets</a> › {e(s["name"])}</nav>
 <section class="sethead"><h1>{sym}{e(s["name"])}</h1>
