@@ -197,13 +197,14 @@ def char_page(ch, cs, sets_by_id, chars, notes):
         f'<span>{e(set_label(sets_by_id[sid]))}{" · " + e(year(sets_by_id[sid].get("rel"))) if sets_by_id[sid].get("rel") else ""}</span></h2>'
         f'<div class="grid">{"".join(tile(c, sets_by_id[sid]) for c in cs if c["s"] == sid)}</div></section>'
         for sid in in_sets)
-    face = f'/chars/{ch["slug"]}.webp'
+    art = f'/char-art/{ch["slug"]}.webp'
     mvlink = (f'<a class="ghostbtn" href="/character/{ch["slug"]}/most-valuable/">💰 Most valuable {e(ch["label"])} cards</a>'
               if ch.get('mv') else '')
     others = ''.join(f'<a class="chip" href="/character/{o["slug"]}/"><img src="/chars/{o["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(o["label"])}</a>'
                      for o in chars if o is not ch)
     body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/characters/">Characters</a> › {e(ch["name"])}</nav>
-<section class="sethead charhead"><h1><img class="face" src="{face}" alt="" width="56" height="56">{e(ch["name"])} cards</h1>
+<section class="sethead charhead"><img class="hero" src="{art}" alt="{e(ch["name"])} in action, from a Naruto CCG card" width="480" height="360">
+<h1>{e(ch["name"])} cards</h1>
 <p class="lede">{intro}</p>
 {f'<p class="lede">{e(note)}</p>' if note else ''}
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
@@ -285,7 +286,7 @@ def chars_index(chars, counts):
     title = 'Naruto CCG cards by character | Jonin'
     desc = ('Browse every card in the original Bandai Naruto CCG by character: Naruto, Sasuke, Kakashi, Itachi, Gaara '
             f'and {len(chars) - 5} more, with every printing, foil and 1st Edition.')
-    cells = ''.join(f'<a class="ccell" href="/character/{c["slug"]}/"><img src="/chars/{c["slug"]}.webp" alt="" width="64" height="64" loading="lazy">'
+    cells = ''.join(f'<a class="ccell" href="/character/{c["slug"]}/"><img src="/char-art/{c["slug"]}.webp" alt="" width="480" height="360" loading="lazy">'
                     f'<b>{e(c["name"])}</b><span>{counts[c["slug"]]} cards</span></a>' for c in chars)
     mv = [c for c in chars if c.get('mv')]
     mvrow = (f'<section class="others"><h2>Most valuable cards<span>Top {MOST_VALUABLE_TOP} by highest sale</span></h2><div class="chips">'
