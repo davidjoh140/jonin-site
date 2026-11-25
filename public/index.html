@@ -36,6 +36,7 @@ h1{font:800 clamp(26px,3.2vw,34px)/1.15 "Baloo 2",sans-serif;margin:0 0 12px}
 .pill{min-height:36px;padding:7px 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;background:var(--panel);color:var(--ink);border:1px solid #3A3046}
 .pill[aria-pressed=true]{background:var(--red);color:#fff;border-color:var(--red)}
 .bar .brk{flex-basis:100%;height:0}
+.picks{display:flex;flex-wrap:wrap;gap:4px 24px;align-items:center}.picks .setpick{flex:1 1 300px}.sortpick select{flex:0 1 260px}
 .bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;padding:12px 0;border-top:1px solid #2E2638;border-bottom:1px solid #2E2638}
 select{background:var(--panel);color:var(--ink);border:1px solid #3A3046;border-radius:8px;padding:8px 10px;font:13px Inter,sans-serif;min-height:36px}
 .setpick{display:flex;align-items:center;gap:12px;margin-top:14px}.setpick>span{font:700 18px "Baloo 2",sans-serif;color:var(--acc)}.setpick select{flex:0 1 440px;min-width:0;min-height:48px;padding:10px 40px 10px 14px;border:1.5px solid var(--acc);border-radius:10px;font:600 16px Inter,sans-serif;cursor:pointer;appearance:none;-webkit-appearance:none;background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F57C00' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 14px center}.setpick select:hover,.setpick select:focus-visible{border-color:var(--acc2);outline:none;box-shadow:0 0 0 3px rgba(245,124,0,.2)}
@@ -221,7 +222,7 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
     </details>
     <h1>Every card in the original Bandai Naruto CCG</h1>
     <input id="q" type="search" placeholder="Search a card or character — try Kakashi" aria-label="Search cards" autocomplete="off">
-    <label class="setpick" for="setsel"><span>Set</span><select id="setsel"><option value="">All sets</option></select></label>
+    <div class="picks"><label class="setpick" for="setsel"><span>Set</span><select id="setsel"><option value="">All sets</option></select></label><label class="setpick sortpick" for="sortsel"><span>Sort</span><select id="sortsel"></select></label></div>
     <div class="row" id="quick"><span class="lbl">Popular</span></div>
     <div class="bar">
       <span id="rars" style="display:contents"></span>
@@ -271,7 +272,7 @@ const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['S
 const QCOL={"Naruto": "#F57C00", "Sasuke": "#2F6FDB", "Kakashi": "#9FB3C8", "Itachi": "#C8102E", "Gaara": "#C9A26B", "Sakura": "#F06292", "Hinata": "#C9B6E4", "Jiraiya": "#D9503F", "Minato": "#FFC93C", "Madara": "#8E2A3A", "Obito": "#5C6BC0", "Pain": "#9C7AD6", "Shikamaru": "#4E8F3A", "Rock Lee": "#6CC24A", "Neji": "#DCD3C2", "Orochimaru": "#7B45A8", "Tsunade": "#3F9E8F", "Deidara": "#4FC3F7", "Might Guy": "#2E7D32", "Killer Bee": "#E0A030"};
 const qct=h=>{const n=parseInt(h.slice(1),16),l=(.299*(n>>16)+.587*(n>>8&255)+.114*(n&255))/255;return l>.6?'#1B1622':'#fff'};
 const QUICK=[['Naruto','char:Naruto Uzumaki'],['Sasuke','char:Sasuke Uchiha'],['Kakashi','char:Kakashi Hatake'],['Itachi','char:Itachi Uchiha'],['Gaara','char:Gaara of the Desert'],['Sakura','char:Sakura Haruno'],['Hinata','char:Hinata Hyuga'],['Jiraiya','char:Jiraiya'],['Minato','char:Minato Namikaze|The Fourth Hokage'],['Madara','char:Madara Uchiha'],['Obito','char:Obito Uchiha|Tobi'],['Pain','char:Pain|Nagato'],['Shikamaru','char:Shikamaru Nara'],['Rock Lee','char:Rock Lee'],['Neji','char:Neji Hyuga'],['Orochimaru','char:Orochimaru'],['Tsunade','char:Tsunade'],['Deidara','char:Deidara'],['Might Guy','char:Might Guy'],['Killer Bee','char:Killer Bee']];
-const S0=()=>({q:'',set:'',type:'',chars:[],rars:[]});
+const S0=()=>({q:'',set:'',type:'',chars:[],rars:[],sort:''});
 let VIEW='cards',D=null,S=S0(),list=[],shown=0,sel=-1;
 const PAGE=120;
 const setName=id=>D.byId[id]?.name||id;
@@ -282,7 +283,7 @@ const baseName=n=>n.replace(/\s*\(.*?\)\s*/g,'').trim();
 function readHash(){const h=location.hash.slice(1);if(h==='sets')return 'sets';if(h==='mine')return 'mine';if(h.startsWith('u='))return 'user';S=S0();h.split('&').forEach(p=>{const i=p.indexOf('=');if(i<0)return;const k=p.slice(0,i),v=decodeURIComponent(p.slice(i+1));if(!v)return;
   if(k==='chars'||k==='rars')S[k]=v.split(',').filter(Boolean);else if(k==='rar')S.rars=[v];else if(k==='quick'){const[a,b]=v.split(':');if(a==='char')S.chars=[b];if(a==='rar')S.rars=[b]}else if(k in S)S[k]=v});return 'cards'}
 function writeHash(){const h=Object.entries(S).filter(([k,v])=>Array.isArray(v)?v.length:v).map(([k,v])=>k+'='+encodeURIComponent(Array.isArray(v)?v.join(','):v)).join('&');history.replaceState(null,'',h?'#'+h:location.pathname)}
-const active=()=>Object.values(S).some(v=>Array.isArray(v)?v.length:v);
+const active=()=>Object.entries(S).some(([k,v])=>k!=='sort'&&(Array.isArray(v)?v.length:v));
 const tog=(a,v)=>a.includes(v)?a.filter(x=>x!==v):[...a,v];
 function match(c){
   if(S.set&&c.s!==S.set)return false;
@@ -293,15 +294,25 @@ function match(c){
   return true}
 function tile(c,i){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c);
   return `<button class="card in" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div><div class="nm">${esc(c.name)}</div><div class="mt">${setTag(c.s)}</div><div class="mt">${esc(c.n)} · ${rsym(c.src)}</div></button>`}
+// Sort options. PLACEHOLDER choices for David to confirm: rarity order (UR > SR > R > U > C, then Promo, Starter, unknown),
+// "Newest sets first" = main sets 28 down to 1, then packs/tins/promos; "market value" = the highest recorded sale for any version of the card; cards with no sales always go last.
+const SORTS=[['','Set & number'],['name','Name A–Z'],['name-d','Name Z–A'],['rar-d','Rarity: high to low'],['rar','Rarity: low to high'],['px-d','Market value: high to low'],['px','Market value: low to high'],['set-d','Newest sets first']];
+const RORD={UR:6,SR:5,R:4,U:3,C:2,P:1,F:0,'':-1};
+const pxOf=c=>{const r=c.px||[];return r.length?Math.max(...r.map(x=>+x[5]||+x[4]||0)):null};
+function sorted(a){const k=S.sort;if(!k)return a;const ix=new Map(D.cards.map((c,i)=>[c,i])),so=new Map(D.sets.map((s,i)=>[s.id,i]));const d=k.endsWith('-d')?-1:1,b=k.replace(/-d$/,'');
+  const key={name:c=>c.name.toLowerCase(),rar:c=>RORD[c.src]??-1,px:pxOf,set:c=>{const i=so.get(c.s)??0;return (D.byId[c.s]||{}).kind==='Main'?i:i-1000}}[b];
+  return a.map(c=>[c,key(c)]).sort(([x,kx],[y,ky])=>{if(b==='px'&&(kx==null||ky==null)){if(kx==null&&ky==null)return ix.get(x)-ix.get(y);return kx==null?1:-1}
+    if(b==='rar'&&d===1){const lo=v=>v<2?99:v;kx=lo(kx);ky=lo(ky)}
+    const r=kx<ky?-d:kx>ky?d:0;return r||ix.get(x)-ix.get(y)}).map(p=>p[0])}
 function renderCards(reset){
-  if(reset){list=D.cards.filter(match);shown=0;$('#grid').innerHTML=''}
+  if(reset){list=sorted(D.cards.filter(match));shown=0;$('#grid').innerHTML=''}
   const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
   {const ct=$('#count'),txt=list.length.toLocaleString()+' cards';if(ct.textContent!==txt){ct.textContent=txt;if(reset){ct.classList.remove('bump');void ct.offsetWidth;ct.classList.add('bump')}}}$('#more').hidden=shown>=list.length;
   $('#clear').hidden=!active();
   if(!list.length)$('#grid').innerHTML='<p class="empty">No cards match. <button class="clear" data-clear>Clear filters</button></p>';
   document.querySelectorAll('#quick .pill').forEach(b=>b.setAttribute('aria-pressed',S.chars.includes(b.dataset.q)));
   document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r?S.rars.includes(b.dataset.r):!S.rars.length));
-  $('#setsel').value=S.set;document.querySelectorAll('#types .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ty===S.type));if(document.activeElement!==$('#q'))$('#q').value=S.q}
+  $('#setsel').value=S.set;$('#sortsel').value=S.sort;document.querySelectorAll('#types .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ty===S.type));if(document.activeElement!==$('#q'))$('#q').value=S.q}
 function renderSets(){$('#sets').innerHTML=D.sets.map((s,k)=>`<button class="set in" style="--k:${Math.min(k,24)}" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(symUrl(s.symbol))}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
 function view(v){const was=VIEW;VIEW=v;$('#v-cards').hidden=v!=='cards';$('#v-sets').hidden=v!=='sets';$('#v-mine').hidden=v!=='mine';$('#v-user').hidden=v!=='user';if(v==='cards'&&(was==='mine'||was==='user'))renderCards(true);if(v==='mine')renderMine();if(v==='user')renderUser(decodeURIComponent(location.hash.slice(3)));document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v))}
 const money=v=>'$'+(v>=100?Math.round(v).toLocaleString():(+v).toFixed(2).replace(/\.00$/,''));
@@ -324,12 +335,13 @@ function pop(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add
 function close(){$('#ov').hidden=true;sel=-1}
 $('#q').addEventListener('input',e=>{S.q=e.target.value.trim();clearTimeout(trackT);if(S.q.length>=2){const t=S.q.slice(0,80);trackT=setTimeout(()=>track('search',{term:t}),1500)}writeHash();renderCards(true)});
 $('#setsel').addEventListener('change',e=>{S.set=e.target.value;writeHash();renderCards(true)});
+$('#sortsel').addEventListener('change',e=>{S.sort=e.target.value;writeHash();renderCards(true)});
 $('#more').addEventListener('click',()=>renderCards(false));
 document.addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t)return;
   if(t.dataset.q!=null){S.chars=tog(S.chars,t.dataset.q);writeHash();renderCards(true);pop(t)}
   else if(t.dataset.ty!=null){S.type=t.dataset.ty&&S.type!==t.dataset.ty?t.dataset.ty:'';writeHash();renderCards(true);pop(t)}
   else if(t.dataset.r!=null){S.rars=t.dataset.r?tog(S.rars,t.dataset.r):[];writeHash();renderCards(true);pop(t)}
-  else if(t.id==='clear'||t.dataset.clear!=null){S=S0();writeHash();renderCards(true)}
+  else if(t.id==='clear'||t.dataset.clear!=null){S=Object.assign(S0(),{sort:S.sort});writeHash();renderCards(true)}
   else if(t.dataset.i!=null)openCard(+t.dataset.i);
   else if(t.dataset.step){openCard((sel+ +t.dataset.step+list.length)%list.length)}
   else if(t.dataset.close!=null||t.id==='ovbg')close();
@@ -440,7 +452,7 @@ function applyLive(rows){if(!D||!rows||!rows.length)return false;const m={};rows
 fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promise.race([LIVE,new Promise(r=>setTimeout(()=>r(null),2500))]);if(live)applyLive(live);else LIVE.then(rows=>{if(applyLive(rows))renderCards(true)});D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
   $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>{const f=q.startsWith('char:')?'chars/'+l.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.webp':'';return `<button class="pill${f?' face':''}" data-q="${esc(q.replace(/^char:/,''))}" aria-pressed="false" style="--c:${QCOL[l]||'#F57C00'};--ct:${qct(QCOL[l]||'#F57C00')}">${f?`<img src="${f}" alt="" width="28" height="28" loading="lazy" decoding="async" onerror="this.remove();this.parentNode&&this.parentNode.classList.remove('face')">`:''}${esc(l)}</button>`}).join(''));
   $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${k?rsym(k)+' ':''}${l}</button>`).join('');$('#types').innerHTML=TYPES.map(k=>`<button class="pill" data-ty="${k}" aria-pressed="false">${k||'All types'}</button>`).join('');if(matchMedia('(max-width:900px)').matches)$('#legend').open=false;
-  $('#setsel').insertAdjacentHTML('beforeend',D.sets.map(s=>`<option value="${esc(s.id)}">${esc(setLabel(s))} · ${esc(s.name)}</option>`).join(''));
+  $('#sortsel').innerHTML=SORTS.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');$('#setsel').insertAdjacentHTML('beforeend',D.sets.map(s=>`<option value="${esc(s.id)}">${esc(setLabel(s))} · ${esc(s.name)}</option>`).join(''));
   renderSets();const v=readHash();view(v);renderCards(true);{const m=location.hash.match(/(?:^#|&)card=([^&]+)/);if(m){const k=decodeURIComponent(m[1]),i=list.findIndex(c=>c.s+':'+c.n===k);if(i>=0)openCard(i);history.replaceState(null,'',location.pathname)}}let rf='';try{rf=document.referrer?new URL(document.referrer).hostname:''}catch(_){}track('view',{page:v,ref:rf.slice(0,80)||null})}).catch(()=>{$('#count').textContent='Could not load cards'});
 }
 </script>
