@@ -191,6 +191,8 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .mk .h{color:#7ee2a8;border-color:#2f6b4a}.mk .w{color:#ff9db0;border-color:#6b2f3c}.mk .sl{color:#ffd38a;border-color:#7a5a1f}
 .gsave{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:color-mix(in srgb,var(--acc) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);border-radius:10px;padding:10px 12px;font-size:13px}
 .gsave .pill{min-height:34px}
+.igrow label{color:var(--mute)}.igat{display:inline-flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--edge);border-radius:8px;padding:0 4px 0 10px;color:var(--mute)}.igat input{all:unset;padding:7px 6px;color:var(--ink);min-width:140px}.igrow .igtip{flex-basis:100%;font-size:12px}
+.igbadge{display:inline-flex;align-items:center;gap:8px;margin:4px 0 8px;padding:8px 14px;border-radius:999px;border:1px solid var(--edge);color:var(--ink);text-decoration:none;font-weight:600;font-size:14px;background:linear-gradient(90deg,color-mix(in srgb,#d62976 25%,var(--panel)),color-mix(in srgb,#feda75 18%,var(--panel)))}.igbadge:hover{border-color:var(--acc)}
 .shv{all:unset;box-sizing:border-box;width:100%;display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:12px 0 0;font-size:13px;cursor:pointer;color:var(--ink)}.shv .bx{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--edge);display:grid;place-items:center;font-size:12px;font-weight:700}.shv[aria-pressed=true] .bx{background:var(--red);border-color:var(--red);color:#fff}
 .slabs{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:10px}
 .slh{display:flex;justify-content:space-between;align-items:center;font-size:13px}
@@ -584,6 +586,10 @@ function collClick(t,e){
   else if(t.dataset.mtab){MTAB=t.dataset.mtab;MISS='';LAST?listView(...LAST):renderMine()}
   else if(t.dataset.miss!=null){MISS=MISS===t.dataset.miss?'':t.dataset.miss;listView(...LAST)}
   else if(t.dataset.share!=null)toggleShare();
+  else if(t.dataset.igsave!=null){const i=$('#igin');saveIg(i?i.value:'')}
+  else if(t.dataset.igedit!=null){IGEDIT=true;renderMine();const i=$('#igin');if(i)i.focus()}
+  else if(t.dataset.igcancel!=null){IGEDIT=false;renderMine()}
+  else if(t.dataset.igdel!=null)saveIg(null);
   else if(t.dataset.slabhave!=null)toggleSlabsHave();
   else if(t.dataset.copy!=null){navigator.clipboard&&navigator.clipboard.writeText(t.dataset.copy).then(()=>{t.textContent='Copied'})}}
 let MTAB='have';
@@ -611,12 +617,20 @@ function renderMine(){const el=$('#v-mine');if(!ME){const n=gCount();if(!n){el.i
     listView(el,`<h1>My collection</h1><div class="gsave"><span><b>Saved on this device only.</b> If you clear your browser or switch phones, it’s gone. Make a free account to keep it and share it.</span><button type="button" class="pill" data-auth="up">Sign up so you don’t lose it</button><button type="button" class="clear" data-auth="in">I have an account</button></div>`,COLL,false);return}
   const link=MYP?location.origin+'/#u='+MYP.share_slug:'';
   listView(el,`<h1>${esc(MYP&&MYP.handle?MYP.handle+"'s collection":'My collection')}</h1>
-  ${MYP?`<div class="share"><span>Share link${MYP.sharing?'':' (off)'}:</span>${MYP.sharing?`<code>${esc(link)}</code><button class="clear" data-copy="${esc(link)}">Copy</button>`:''}<button class="clear" data-share>${MYP.sharing?'Turn off sharing':'Turn on sharing'}</button></div>`:''}`,COLL,false)}
+  ${MYP?`<div class="share"><span>Share link${MYP.sharing?'':' (off)'}:</span>${MYP.sharing?`<code>${esc(link)}</code><button class="clear" data-copy="${esc(link)}">Copy</button>`:''}<button class="clear" data-share>${MYP.sharing?'Turn off sharing':'Turn on sharing'}</button></div>${igRow()}`:''}`,COLL,false)}
+// Instagram handle on the profile: shown on their shared collection page with a link to their IG.
+let IGEDIT=false;const igUrl=h=>'https://www.instagram.com/'+encodeURIComponent(h)+'/';
+function igRow(){const h=MYP&&MYP.instagram;
+  if(h&&!IGEDIT)return `<div class="share igrow"><span>Instagram:</span><a href="${igUrl(h)}" target="_blank" rel="noopener">@${esc(h)}</a><button class="clear" data-igedit>Change</button><button class="clear" data-igdel>Remove</button><span class="mt igtip">${MYP.sharing?'Shows on your shared collection. Put your share link in your Instagram bio so people can see it.':'Turn on sharing so people can see your collection and your Instagram.'}</span></div>`;
+  return `<div class="share igrow"><label for="igin">Instagram</label><span class="igat">@<input id="igin" maxlength="60" placeholder="yourhandle" value="${esc(h||'')}" autocomplete="off" spellcheck="false"></span><button class="pill" data-igsave>Save</button>${h?'<button class="clear" data-igcancel>Cancel</button>':''}<span class="mt igtip" id="igmsg">Add your Instagram to show it on your shared collection.</span></div>`}
+async function saveIg(v){const m=$('#igmsg');let h=v==null?null:String(v).trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@/,'').replace(/[/?#].*$/,'');
+  if(h==='')h=null;if(h&&!/^[A-Za-z0-9._]{1,30}$/.test(h)){if(m)m.textContent='Handles use letters, numbers, . and _ (up to 30).';return}
+  const r=await sb.from('profiles').update({instagram:h}).eq('id',ME.id).select().maybeSingle();if(r.error){if(m)m.textContent='Could not save. Try again.';return}MYP=r.data;IGEDIT=false;renderMine()}
 async function toggleShare(){if(!MYP)return;const v=!MYP.sharing;const r=await sb.from('profiles').update({sharing:v}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data)MYP=r.data;renderMine()}
 async function renderUser(slug){const el=$('#v-user');el.innerHTML='<p class="empty">Loading…</p>';if(!sbc()){el.innerHTML='<p class="empty">Could not load this list.</p>';return}
-  const r=await sb.rpc('shared_list',{slug});if(r.error||!r.data||!r.data.length){el.innerHTML='<h1>Shared list</h1><p class="empty">This list is empty, private, or the link is wrong.</p>';return}
+  const [r,pr]=await Promise.all([sb.rpc('shared_list',{slug}),sb.rpc('shared_profile',{slug})]);const ig=pr&&pr.data&&pr.data[0]&&pr.data[0].instagram;if(r.error||!r.data||!r.data.length){el.innerHTML='<h1>Shared list</h1><p class="empty">This list is empty, private, or the link is wrong.</p>';return}
   const m=new Map();r.data.forEach(i=>m.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));const who=r.data[0].handle||'A collector';
-  listView(el,`<h1>${esc(who)}'s haves and wants</h1><p class="mt">Shared from Jonin. ${ME?'':'<button class="clear" data-auth="up">Make your own list</button>'}</p>`,m,true)}
+  listView(el,`<h1>${esc(who)}'s haves and wants</h1>${ig?`<a class="igbadge" href="${igUrl(ig)}" target="_blank" rel="noopener"><span aria-hidden="true">📷</span> @${esc(ig)} on Instagram</a>`:''}<p class="mt">Shared from Jonin. ${ME?'':'<button class="clear" data-auth="up">Make your own list</button>'}</p>`,m,true)}
 gLoad();if(sbc()){sb.auth.getSession().then(({data})=>setUser(data.session?data.session.user:null));sb.auth.onAuthStateChange((ev,ses)=>{setUser(ses?ses.user:null);if(ev==='PASSWORD_RECOVERY'){const pw=prompt('Choose a new password (at least 8 characters)');if(pw&&pw.length>=8)sb.auth.updateUser({password:pw})}})}
 paintAcct();
 const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url',{headers:{apikey:SUPA_KEY,Range:`${i*1000}-${i*1000+999}`}}).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>a.flat());
