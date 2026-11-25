@@ -251,8 +251,7 @@ def mv_page(ch, ranked, sets_by_id, mv_chars):
                if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
         lock = f'/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}'
         band = ('$' + f'{price:,.2f}'.removesuffix('.00')) if price else (e(BANDS[b]) if 0 <= b < len(BANDS) else '—')
-        src = (f'<a href="{e(sale_url + ("&" if "?" in sale_url else "?") + EPN.lstrip("&"))}" target="_blank" rel="sponsored noopener">See the sale on eBay ↗</a>'
-               if sale_url else 'Private sale' if price else '')
+        src = AB.sale_link(sale_url, c['top'][6] if len(c['top']) > 6 else '').removeprefix(' · ') if price else ''
         rows.append(
             f'<li class="mvrow"><span class="mvn">{i + 1}</span><a class="mvart" href="/card/{slug(c)}/">{img}</a>'
             f'<div class="mvinfo"><h2><a href="/card/{slug(c)}/">{e(c["name"])}</a></h2>'
@@ -542,6 +541,7 @@ def main():
     chars = load_chars()
     chars_by_name = {nm: ch for ch in chars for nm in ch['names']}
     AB.setup(sys.modules[__name__])
+    AB.load_sales()
     articles = AB.load_articles()
     cards_by_key = {c['s'] + ':' + c['n']: c for c in d['cards']}
     AB.set_featured(articles, cards_by_key)

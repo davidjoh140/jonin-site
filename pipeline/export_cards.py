@@ -116,9 +116,40 @@ def reveal_top_prices(data, sales):
             x = best.get(c["s"] + ":" + c["n"])
             if x and len(c["top"]) == 4:
                 url = x.get("url") or ""
-                c["top"] += [_num(x["price"]), url if url.startswith("https://") else ""]
+                c["top"] += [_num(x["price"]), url if url.startswith("https://") else "", x.get("source") or ""]
                 shown += 1
     return shown
+
+
+ARTICLE_SALES = Path(__file__).resolve().parent / "article_sales.json"
+
+
+def article_sale_ids():
+    """Sale IDs that articles use ({{sale 123}} in pipeline/articles/*.md). Only these sales are written out."""
+    import re
+    ids = set()
+    for f in (Path(__file__).resolve().parent / "articles").glob("*.md"):
+        for grp in re.findall(r"\{\{sales?\s+([^}]+)\}\}", f.read_text(encoding="utf-8")):
+            ids.update(int(x) for x in re.findall(r"\d+", grp))
+    return ids
+
+
+def article_sales(sales, ids):
+    """{sale id: {c, p, d, v, src, url}} for the sales articles show (approved only)."""
+    out = {}
+    for x in sales:
+        if x.get("id") in ids and x.get("status") == "approved" and x.get("card_id"):
+            url = x.get("url") or ""
+            out[str(x["id"])] = {"c": x["card_id"], "p": _num(x["price"]), "d": (x.get("sold_at") or "")[:10],
+                                 "v": version_label(x), "src": x.get("source") or "",
+                                 "url": url if url.startswith("https://") else ""}
+    return dict(sorted(out.items(), key=lambda kv: int(kv[0])))
+
+
+def write_article_sales(sales):
+    text = json.dumps(article_sales(sales, article_sale_ids()), indent=1, sort_keys=False) + "\n"
+    if not ARTICLE_SALES.exists() or ARTICLE_SALES.read_text() != text:
+        ARTICLE_SALES.write_text(text)
 
 
 def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None, ranges=(), sales=()):
@@ -191,7 +222,7 @@ def image_url(path):
 def main():
     import supa
     with supa.Run("export_cards") as run:
-        sales = supa.select("sales", {"select": "id,card_id,price,sold_at,status,printing,edition,grader,grade,url",
+        sales = supa.select("sales", {"select": "id,card_id,price,sold_at,status,printing,edition,grader,grade,url,source",
                                       "status": "eq.approved"})
         data = build(supa.select("sets"), supa.select("cards"),
                      supa.select("scans", {"select": "*", "public": "eq.true"}),
@@ -201,6 +232,7 @@ def main():
                      supa.select("price_ranges"),
                      sales)
         revealed = reveal_top_prices(data, sales)
+        write_article_sales(sales)
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),
                      "with_image": sum(1 for c in data["cards"] if "img" in c),

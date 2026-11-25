@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Members, waitlist, private sales &amp; feedback — Jonin admin</title>
+<title>Members, waitlist, sales &amp; feedback — Jonin admin</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -89,32 +89,35 @@ async function loadWl(){let el=$('#wl');if(!el){app.insertAdjacentHTML('beforeen
   <div class="tw box" style="padding:0"><table><thead><tr><th>Email</th><th>Signed up</th><th>Interested in</th><th>From</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.email)}${x.signups>1?`<div class="tag">${x.signups} signups</div>`:''}</td><td>${day(x.first_at)}${x.last_at!==x.first_at?`<div class="tag">latest ${day(x.last_at)}</div>`:''}</td><td>${x.cards.length?x.cards.map(id=>`<a href="/#card=${encodeURIComponent(id)}" target="_blank">${esc(names[id]||id)}</a>`).join('<br>'):'<span class="tag">Premium in general</span>'}</td><td class="tag">${esc(x.sources.map(s=>s==='card_page'?'card alert button':s==='premium_page'?'Premium page':s).join(', '))}</td></tr>`).join('')||'<tr><td colspan="4" class="tag">No signups yet.</td></tr>'}</tbody></table></div>`;
   const cb=$('#wlcopy');if(cb)cb.onclick=async()=>{await navigator.clipboard.writeText(rows.map(x=>x.email).join(', '));cb.textContent='Copied ✓'};
 }
-// Private sales: sales David makes or sees outside eBay. They count everywhere an eBay sale does
-// (price bands, Premium estimates, most-valuable pages) once the site syncs (every ~15 min).
-let CARDS=null;
+// Add a sale: sales David enters by hand from any source (ALT, Fanatics Collect, eBay, private...). They count everywhere
+// a collected eBay sale does (price bands, Premium estimates, most-valuable pages) once the site syncs (every ~15 min).
+// Each sale's {{sale ID}} code drops it into an article (pipeline/articles/*.md).
+let CARDS=null;const SRCS=['Private','ALT','Fanatics Collect','eBay','Goldin','Heritage','PWCC','Card show','Other'];
 async function cardsList(){if(CARDS)return CARDS;const d=await fetch('/cards.json').then(r=>r.json());const sets=Object.fromEntries(d.sets.map(s=>[s.id,s.name]));
   CARDS=d.cards.map(c=>({id:c.s+':'+c.n,label:`${c.name} · ${c.n} · ${sets[c.s]||c.s}`,v:c.v||[],ed:(c.ed||[]).filter(Boolean)}));return CARDS}
 async function loadPs(){let el=$('#ps');if(!el){app.insertAdjacentHTML('beforeend','<div id="ps"></div>');el=$('#ps')}
-  const [cards,r]=await Promise.all([cardsList().catch(()=>[]),sb.rpc('admin_private_sales')]);
+  const [cards,r]=await Promise.all([cardsList().catch(()=>[]),sb.rpc('admin_hand_sales')]);
   const byId=Object.fromEntries(cards.map(c=>[c.id,c])),byLabel=Object.fromEntries(cards.map(c=>[c.label,c]));
   const today=new Date().toLocaleDateString('en-CA');
-  el.innerHTML=`<h2>Private sales</h2><p class="mt" style="margin-bottom:10px">Sales that didn't happen on eBay. They count like any approved sale: price bands, Premium estimates and the most-valuable pages. The site picks them up within about 15 minutes.</p>
+  el.innerHTML=`<h2>Add a sale</h2><p class="mt" style="margin-bottom:10px">Any confirmed sale: ALT, Fanatics, eBay, private. Counts like any approved sale and shows on the site within about 15 minutes. Copy a sale's code to put it in an article.</p>
   <form class="psale box" id="psf"><label class="wide"><span>Card (type a name or number)</span><input name="card" list="pscards" required autocomplete="off" placeholder="e.g. Sasuke Uchiha · PR088"></label>
   <label><span>Foil / printing</span><select name="pr"></select></label><label><span>Edition</span><select name="ed"></select></label>
   <label><span>Graded by</span><select name="gr">${['Raw','PSA','BGS','CGC','SGC','TAG','ACE'].map(g=>`<option>${g}</option>`).join('')}</select></label><label><span>Grade</span><input name="gd" placeholder="e.g. 10" disabled></label>
-  <label><span>Price (USD)</span><input name="price" type="number" min="0.01" step="0.01" required></label><label><span>Sold on</span><input name="d" type="date" value="${today}" max="${today}" required></label>
+  <label><span>Sold on (where)</span><select name="src">${SRCS.map(x=>`<option>${x}</option>`).join('')}</select></label><label><span>Link to the sale (optional)</span><input name="url" type="url" placeholder="https://…"></label>
+  <label><span>Price (USD)</span><input name="price" type="number" min="0.01" step="0.01" required></label><label><span>Date sold</span><input name="d" type="date" value="${today}" max="${today}" required></label>
   <label class="wide"><span>Note (private, optional)</span><input name="n" placeholder="e.g. bought from a collector at the show"></label><span></span><button>Add sale</button></form>
   <datalist id="pscards">${cards.map(c=>`<option value="${esc(c.label)}">`).join('')}</datalist><p class="msg" id="psm"></p>
-  ${r.error?`<p class="msg err">${esc(r.error.message)}</p>`:`<div class="tw box" style="padding:0;margin-top:12px"><table><thead><tr><th>Sold</th><th>Card</th><th>Version</th><th>Price</th><th>Note</th><th></th></tr></thead><tbody>${(r.data||[]).map(x=>`<tr><td>${day(x.sold_at)}</td><td>${esc(x.card_name||'')}<div class="tag">${esc(x.card_id)}</div></td><td>${esc([x.edition,x.printing,x.grader==='Raw'?'Raw':x.grader+' '+(x.grade||'')].filter(Boolean).join(' · '))}</td><td>$${(+x.price).toLocaleString('en-US',{maximumFractionDigits:2})}</td><td>${esc(x.note||'')}</td><td><button class="ghost" data-psdel="${x.id}">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="tag">No private sales yet.</td></tr>'}</tbody></table></div>`}`;
+  ${r.error?`<p class="msg err">${esc(r.error.message)}</p>`:`<div class="tw box" style="padding:0;margin-top:12px"><table><thead><tr><th>Sold</th><th>Card</th><th>Version</th><th>Price</th><th>Where</th><th>Note</th><th>Article code</th><th></th></tr></thead><tbody>${(r.data||[]).map(x=>`<tr><td>${day(x.sold_at)}</td><td>${esc(x.card_name||'')}<div class="tag">${esc(x.card_id)}</div></td><td>${esc([x.edition,x.printing,x.grader==='Raw'?'Raw':x.grader+' '+(x.grade||'')].filter(Boolean).join(' · '))}</td><td>$${(+x.price).toLocaleString('en-US',{maximumFractionDigits:2})}</td><td>${x.url&&/^https?:/.test(x.url)?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.source)} ↗</a>`:esc(x.source||'Private')}</td><td>${esc(x.note||'')}</td><td><button class="ghost" data-pscode="${x.id}">{{sale ${x.id}}}</button></td><td><button class="ghost" data-psdel="${x.id}">Delete</button></td></tr>`).join('')||'<tr><td colspan="8" class="tag">No hand-entered sales yet.</td></tr>'}</tbody></table></div>`}`;
   const f=$('#psf'),fill=()=>{const c=byLabel[f.card.value];f.pr.innerHTML=(c?c.v:[]).map(v=>`<option>${esc(v)}</option>`).join('')||'<option value="">—</option>';
     f.ed.innerHTML=(c&&c.ed.length?c.ed:['']).map(v=>`<option value="${esc(v)}">${esc(v||'—')}</option>`).join('')};
   f.card.oninput=fill;fill();f.gr.onchange=()=>{f.gd.disabled=f.gr.value==='Raw';if(f.gd.disabled)f.gd.value=''};
   f.onsubmit=async ev=>{ev.preventDefault();const m=$('#psm'),c=byLabel[f.card.value]||byId[f.card.value.trim()];
     if(!c){m.className='msg err';m.textContent='Pick a card from the list.';return}
-    const res=await sb.rpc('admin_add_private_sale',{p_card_id:c.id,p_price:+f.price.value,p_sold_at:f.d.value,p_printing:f.pr.value,p_edition:f.ed.value,p_grader:f.gr.value,p_grade:f.gd.value.trim(),p_note:f.n.value.trim()||null});
+    const res=await sb.rpc('admin_add_sale',{p_card_id:c.id,p_price:+f.price.value,p_sold_at:f.d.value,p_source:f.src.value,p_url:f.url.value.trim()||null,p_printing:f.pr.value,p_edition:f.ed.value,p_grader:f.gr.value,p_grade:f.gd.value.trim(),p_note:f.n.value.trim()||null});
     if(res.error){m.className='msg err';m.textContent=res.error.message;return}
-    await loadPs();const m2=$('#psm');m2.className='msg ok';m2.textContent=`Added: ${c.label} at $${f.price.value}. It shows on the site within about 15 minutes.`};
-  el.querySelectorAll('[data-psdel]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this private sale?'))return;const res=await sb.rpc('admin_delete_private_sale',{p_id:+b.dataset.psdel});if(res.error)alert(res.error.message);loadPs()});
+    await loadPs();const m2=$('#psm');m2.className='msg ok';m2.textContent=`Added sale #${res.data}: ${c.label} at $${f.price.value}. Article code: {{sale ${res.data}}}. It shows on the site within about 15 minutes.`};
+  el.querySelectorAll('[data-pscode]').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(`{{sale ${b.dataset.pscode}}}`);b.textContent='Copied ✓'});
+  el.querySelectorAll('[data-psdel]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this sale?'))return;const res=await sb.rpc('admin_delete_private_sale',{p_id:+b.dataset.psdel});if(res.error)alert(res.error.message);loadPs()});
 }
 let FBSHOW='new';
 async function loadFb(){const r=await sb.rpc('admin_feedback');let el=$('#fb');if(!el){app.insertAdjacentHTML('beforeend','<div id="fb"></div>');el=$('#fb')}

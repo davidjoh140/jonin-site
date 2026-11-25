@@ -9,6 +9,8 @@ Articles live in pipeline/articles/<slug>.md: a front-matter block, then the bod
   draft: true           (built at its URL but hidden: noindex, not listed, not in the sitemap, no "Featured in")
   ---
 Body: blank-line paragraphs, ## / ### headings, "- " lists, **bold**, *italic*, [text](url).
+Sales: {{sale 123}} on its own line = that exact sale (card scan, price, version, where/when, link). Sale IDs come
+       from the "Add a sale" list on jonin.cards/admin; build reads them from pipeline/article_sales.json (export_cards.py).
 Cards: {{card SET:NUM}} on its own line = a card block (scan, set, top sale, eBay sale link, card page);
        {{cards SET:NUM, SET:NUM}} on its own line = a row of card tiles; [[SET:NUM]] inline = a link to the card page.
 """
@@ -18,6 +20,15 @@ from urllib.parse import quote
 ARTICLES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'articles')
 INSTAGRAM = 'https://www.instagram.com/jonin.cards/'
 FEATURED = {}   # "SET:NUM" -> [(slug, title)] of published articles that mention the card
+SALES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'article_sales.json')
+SALES = {}      # sale id (str) -> {c, p, d, v, src, url}
+
+
+def load_sales():
+    import json
+    SALES.clear()
+    if os.path.exists(SALES_FILE):
+        SALES.update(json.load(open(SALES_FILE, encoding='utf-8')))
 B = None        # build_pages module, set by setup()
 
 
@@ -39,8 +50,13 @@ def parse_article(path):
     meta['draft'] = meta.get('draft', '').lower() in ('true', 'yes', '1')
     meta['body'] = body
     keys = []
-    for grp, inl in re.findall(r'\{\{cards?\s+([^}]+)\}\}|\[\[([^\]]+)\]\]', body):
-        keys += [k.strip() for k in (grp or inl).split(',') if k.strip()]
+    for kind, grp, inl in re.findall(r'\{\{(cards?|sales?)\s+([^}]+)\}\}|\[\[([^\]]+)\]\]', body):
+        for k in (grp or inl).split(','):
+            k = k.strip()
+            if kind.startswith('sale'):
+                k = SALES.get(k, {}).get('c', '')
+            if k:
+                keys.append(k)
     meta['refs'] = list(dict.fromkeys(keys))
     return meta
 
@@ -82,19 +98,30 @@ def inline_md(t, cards_by_key):
     return re.sub(r'(?<![*\w])\*(?!\s)(.+?)\*', r'<i>\1</i>', t)
 
 
-def card_block(c, s):
+def sale_link(url, src):
+    if not url:
+        return ' · Private sale' if src in ('', 'Private') else ' · ' + B.e(src)
+    ebay = 'ebay.com' in url
+    href = url + (("&" if "?" in url else "?") + B.EPN.lstrip("&") if ebay else '')
+    where = 'eBay' if ebay else (src if src and src not in ('Private', 'Other') else 'the sale')
+    return (f' · <a href="{B.e(href)}" target="_blank" rel="{"sponsored " if ebay else ""}noopener">'
+            f'See it on {B.e(where)} ↗</a>')
+
+
+def card_block(c, s, sale=None):
     e = B.e
     img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
            if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
     top = c.get('top') or []
-    price = top[4] if len(top) > 4 else None
-    sale_url = top[5] if len(top) > 5 else ''
+    if sale:
+        label, price, ver, day, url, src = 'Sold for', sale['p'], sale['v'], sale['d'], sale['url'], sale['src']
+    else:
+        label, price, ver, day = 'Top sale', (top[4] if len(top) > 4 else None), (top[2] if len(top) > 2 else ''), (top[3] if len(top) > 3 else '')
+        url, src = (top[5] if len(top) > 5 else ''), (top[6] if len(top) > 6 else '')
     sale = ''
     if price:
-        src = (f' · <a href="{e(sale_url + ("&" if "?" in sale_url else "?") + B.EPN.lstrip("&"))}" target="_blank" rel="sponsored noopener">See the sale ↗</a>'
-               if sale_url else ' · Private sale')
-        sale = (f'<dl><dt>Top sale</dt><dd><b class="band">{e(B.money(price))}</b></dd>'
-                f'<dt>Version</dt><dd>{e(top[2]) or "—"}</dd><dt>Sold</dt><dd>{e(top[3]) or "—"}{src}</dd></dl>')
+        sale = (f'<dl><dt>{label}</dt><dd><b class="band">{e(B.money(price))}</b></dd>'
+                f'<dt>Version</dt><dd>{e(ver) or "—"}</dd><dt>Sold</dt><dd>{e(day) or "—"}{sale_link(url, src)}</dd></dl>')
     card = B.slug(c)
     return (f'<figure class="acard"><a class="mvart" href="/card/{card}/">{img}</a><figcaption>'
             f'<h3><a href="/card/{card}/">{e(c["name"])}</a></h3>'
@@ -108,8 +135,14 @@ def article_body(a, cards_by_key, sets_by_id):
     out = []
     for block in re.split(r'\n\s*\n', a['body'].strip()):
         b = block.strip()
-        m = re.fullmatch(r'\{\{(cards?)\s+([^}]+)\}\}', b)
-        if m:
+        m = re.fullmatch(r'\{\{(cards?|sales?)\s+([^}]+)\}\}', b)
+        if m and m.group(1).startswith('sale'):
+            for k in m.group(2).split(','):
+                x = SALES.get(k.strip())
+                if x and x['c'] in cards_by_key:
+                    c = cards_by_key[x['c']]
+                    out.append(card_block(c, sets_by_id[c['s']], x))
+        elif m:
             cs = [cards_by_key[k.strip()] for k in m.group(2).split(',') if k.strip() in cards_by_key]
             if m.group(1) == 'card':
                 out += [card_block(c, sets_by_id[c['s']]) for c in cs]
@@ -155,7 +188,7 @@ def article_page(a, arts, cards_by_key, sets_by_id):
     desc = a.get('description') or title
     cover = cover_of(a, cards_by_key)
     img = cover['img'] if cover and re.match(r'^https://', cover.get('img') or '') else SITE + '/og.png'
-    words = len(re.findall(r'\w+', re.sub(r'\{\{.*?\}\}|\[\[.*?\]\]', '', a['body'])))
+    words = len(re.findall(r'\w+', re.sub(r'\{\{.*?\}\}|\[\[.*?\]\]', '', a['body'])))  # card/sale blocks not counted
     mentioned = [cards_by_key[k] for k in a['refs'] if k in cards_by_key]
     more = [x for x in arts if x is not a and not x['draft']][:4]
     more_html = ('<section class="others"><h2>More articles</h2><ul class="alist">'
