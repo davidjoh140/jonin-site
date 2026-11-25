@@ -104,3 +104,14 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .vgo{background:var(--acc);border:0;border-radius:10px;padding:11px;color:var(--bg);font:700 15px Inter,sans-serif;cursor:pointer}.vgo:disabled{opacity:.6}
 .verr{color:var(--acc2)!important}
 .cvotes{display:grid;gap:2px}.cvline a{white-space:nowrap}.cvrank{color:var(--acc)}
+/* Set completion (set-progress.js) */
+.spx{margin:0 0 22px;max-width:760px}.spx:empty{display:none}
+.spx-top{display:flex;align-items:baseline;gap:6px;color:var(--mute)}.spx-top b{color:var(--ink);font:800 22px "Baloo 2",sans-serif}
+.spx-pct{margin-left:auto;color:var(--acc);font-weight:700}.spx-done{color:var(--acc);font-weight:700}
+.spx-bar{height:10px;border-radius:99px;background:var(--panel);border:1px solid var(--line);overflow:hidden;margin:8px 0 10px}
+.spx-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--acc));border-radius:99px;transition:width .4s}
+.spx-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px}
+.spx-tog{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 13px Inter,sans-serif;cursor:pointer}.spx-tog[aria-pressed="true"]{border-color:var(--acc)}
+.spx-cta{color:var(--mute);margin:0}
+.tile.owned::after{content:"✓";position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;background:var(--acc);color:var(--bg);font:800 14px/24px Inter,sans-serif;text-align:center}
+.tile[hidden]{display:none}

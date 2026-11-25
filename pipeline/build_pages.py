@@ -382,7 +382,7 @@ def set_page(s, cards):
     if rar:
         facts.append(('Rarities', e(rar)))
     grid = ''.join(
-        f'<a class="tile" href="/card/{slug(c)}/">'
+        f'<a class="tile" href="/card/{slug(c)}/" data-card="{e(c["s"] + ":" + c["n"])}">'
         + (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])}" width="750" height="1050">'
            if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
         + f'<span class="tt">{e(c["name"])}</span><span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])}</span></a>' for c in cards)
@@ -392,7 +392,9 @@ def set_page(s, cards):
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
 {f'<p class="note">{e(s["notes"])}</p>' if s.get('notes') else ''}
 <p><a class="primary" href="/#set={quote(s['id'])}">Browse and filter this set</a></p></section>
+<section class="spx" id="set-progress" data-set="{e(s['id'])}" data-total="{len(cards)}" aria-live="polite"></section>
 <section class="grid">{grid}</section>
+<script src="/set-progress.js?v={file_version('set-progress.js')}" defer></script>
 '''
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},
