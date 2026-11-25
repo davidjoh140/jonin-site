@@ -37,6 +37,7 @@ h1{font:800 clamp(26px,3.2vw,34px)/1.15 "Baloo 2",sans-serif;margin:0 0 12px}
 .pill{min-height:36px;padding:7px 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;background:var(--panel);color:var(--ink);border:1px solid var(--edge)}
 .pill[aria-pressed=true]{background:var(--red);color:var(--ont);border-color:var(--red)}
 .bar .brk{flex-basis:100%;height:0}
+.ftog,.ftbrk{display:none}
 .sdd{position:relative;flex:0 1 440px;min-width:0}
 .sddb{all:unset;box-sizing:border-box;display:flex;align-items:center;width:100%;min-height:48px;padding:6px 40px 6px 12px;border:1.5px solid var(--acc);border-radius:10px;cursor:pointer;background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F57C00' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 14px center}
 .sddb:hover,.sddb:focus-visible,.sddb[aria-expanded="true"]{border-color:var(--acc2);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 20%,transparent)}
@@ -113,7 +114,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .chars>summary::-webkit-details-marker{display:none}
 .chars>summary::after{content:"▾";margin-left:auto;color:var(--mute);font-size:12px;transition:transform .15s}
 .chars:not([open])>summary{padding-bottom:2px}.chars:not([open])>summary::after{transform:rotate(-90deg)}
-.chars .qn{color:var(--mute);font-weight:400;font-size:12px}
+.chars .qn{color:var(--mute);font-weight:400;font-size:12px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chars .qn.on{color:var(--acc2)}
 .clist{display:flex;flex-direction:column;gap:2px}
 .crow{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:30px minmax(0,1fr) auto;grid-template-rows:auto 5px;column-gap:10px;row-gap:3px;align-items:center;padding:5px 8px 6px 5px;border-radius:9px;transition:background .12s,opacity .2s}
 .crow:hover{background:color-mix(in srgb,var(--c) 14%,transparent)}
@@ -151,7 +152,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .f-prism{background:conic-gradient(from 200deg at 50% 70%,#ff5f6d,#ffc371,#f9f871,#5ef0a0,#4cc9f0,#9d6bff,#ff5f6d)}
 .fchips{position:absolute;top:8px;right:8px;display:flex;gap:4px;padding:4px 5px;border-radius:7px;background:color-mix(in srgb,var(--deep) 88%,transparent);border:1px solid var(--line)}.fchips .fx{font-size:4.5px}
 .pv{display:flex;flex-wrap:wrap;gap:6px 14px}.pv span{display:inline-flex;align-items:center;gap:6px}.pv .fx{font-size:5px}
-@media(max-width:900px){#v-cards:not([hidden]){display:block}#v-cards>.lside{margin:0 0 16px}}
+@media(max-width:900px){#v-cards:not([hidden]){display:block}#v-cards>.lside{margin:0 0 16px}.ftog{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-weight:600;font-size:14px}.ftog:focus-visible{outline:2px solid var(--acc);outline-offset:2px}.ftog .fn{color:var(--acc2);font-weight:600}.ftog .chev{font-size:11px;color:var(--mute);transform:rotate(-90deg);transition:transform .15s}#fbar.fopen .ftog .chev{transform:none}#fbar:not(.fopen) #rars,#fbar:not(.fopen) #types,#fbar:not(.fopen) .brk{display:none!important}#fbar.fopen .ftbrk{display:block}.ftog{white-space:nowrap}.clist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:4px;max-height:min(46vh,360px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:2px}.crow{grid-template-columns:26px minmax(0,1fr) auto;column-gap:8px;padding:6px 6px 7px 4px;min-height:44px}.crow img,.crow .cdot{width:26px;height:26px}.crow .cn{font-size:13px}.chars:not([open]) .qn.on{color:var(--ink)}}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}nav{order:3;width:100%}aside{width:100%}}
 
 /* motion: springy presses, lifts and entrances */
@@ -255,7 +256,8 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
     <h1>Every card in the original Bandai Naruto CCG</h1>
     <input id="q" type="search" placeholder="Search a card or character — try Kakashi" aria-label="Search cards" autocomplete="off">
     <div class="picks"><div class="setpick"><span id="setlbl">Set</span><div class="sdd" id="sdd"><button type="button" id="setsel" class="sddb" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="setlbl setsel"><span class="sddo"><span class="nosym all">★</span><b>All sets</b></span></button><ul class="sddl" id="sddl" role="listbox" aria-labelledby="setlbl" tabindex="-1" hidden></ul></div></div><label class="setpick sortpick" for="sortsel"><span>Sort</span><select id="sortsel"></select></label></div>
-        <div class="bar">
+        <div class="bar" id="fbar">
+      <button type="button" class="ftog" id="ftog" aria-expanded="false" aria-controls="fbar">Filters<span class="fn" id="fn"></span><span class="chev" aria-hidden="true">▾</span></button><span class="brk ftbrk" aria-hidden="true"></span>
       <span id="rars" style="display:contents"></span>
       <span class="brk" aria-hidden="true"></span>
       <span id="types" style="display:contents"></span>
@@ -363,8 +365,11 @@ function sddPick(v){sddClose(true);if(v===S.set)return;S.set=v;writeHash();rende
 // Character panel: count of cards per character under every current filter except the character picks
 function paintChars(){const rows=[...document.querySelectorAll('#clist .crow')];if(!rows.length||!D)return;const keep=S.chars;S.chars=[];const base=D.cards.filter(match);S.chars=keep;
   const n=rows.map(b=>{const ws=b.dataset.q.split('|');let k=0;for(const c of base){const names=c.name.split(/\s*&\s*/).map(baseName);if(ws.some(w=>names.includes(w)))k++}return k}),mx=Math.max(1,...n);
+  {const q=$('#qn'),on=QUICK.filter(([l,v])=>S.chars.includes(v.replace(/^char:/,''))).map(([l])=>l);q.textContent=on.length?'· '+on.join(', '):'('+QUICK.length+')';q.classList.toggle('on',!!on.length)}
+  {const cl=$('#clist'),ord=rows.map((b,i)=>[b,n[i],i]).sort((a,b)=>b[1]-a[1]||a[2]-b[2]);if(ord.some(([b],i)=>cl.children[i]!==b))ord.forEach(([b])=>cl.appendChild(b))}
   rows.forEach((b,i)=>{b.setAttribute('aria-pressed',S.chars.includes(b.dataset.q));b.classList.toggle('zero',!n[i]);b.querySelector('.cnum').textContent=n[i];b.querySelector('.cbar i').style.width=(n[i]/mx*100).toFixed(1)+'%';b.title=n[i]+' card'+(n[i]===1?'':'s')})}
 function renderCards(reset){
+  {const k=S.rars.length+(S.type?1:0);$('#fn').textContent=k?'· '+k:''}
   if(reset){list=sorted(D.cards.filter(match));shown=0;$('#grid').innerHTML=''}
   const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
   {const ct=$('#count'),txt=list.length.toLocaleString()+' cards';if(ct.textContent!==txt){ct.textContent=txt;if(reset){ct.classList.remove('bump');void ct.offsetWidth;ct.classList.add('bump')}}}$('#more').hidden=shown>=list.length;
@@ -542,7 +547,8 @@ const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_image
 function applyLive(rows){if(!D||!rows||!rows.length)return false;const m={};rows.forEach(r=>{if(r&&r.url)m[r.card_id]=r.url});let n=0;D.cards.forEach(c=>{const u=m[c.s+':'+c.n];if(u&&/^https:\/\//.test(u)&&!c.img){c.img=u;n++}});return n>0}
 fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promise.race([LIVE,new Promise(r=>setTimeout(()=>r(null),2500))]);if(live)applyLive(live);else LIVE.then(rows=>{if(applyLive(rows))renderCards(true)});D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
   $('#clist').innerHTML=QUICK.map(([l,q])=>{const f=q.startsWith('char:')?'chars/'+l.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.webp':'',c=QCOL[l]||'#F57C00';return `<button type="button" class="crow" data-q="${esc(q.replace(/^char:/,''))}" aria-pressed="false" style="--c:${c}">${f?`<img src="${f}" alt="" width="30" height="30" loading="lazy" decoding="async" onerror="this.outerHTML='<span class=cdot></span>'">`:'<span class="cdot"></span>'}<span class="cn">${esc(l)}</span><span class="cnum">0</span><span class="cbar" aria-hidden="true"><i></i></span></button>`}).join('');$('#qn').textContent='('+QUICK.length+')';
-  {const d=$('#quick');let o=null;try{o=localStorage.getItem('jq')}catch(_){}d.open=o?o!=='1':!matchMedia('(max-width:900px)').matches;d.addEventListener('toggle',()=>{try{localStorage.setItem('jq',d.open?'0':'1')}catch(_){}})}
+  $('#ftog').addEventListener('click',e=>{e.stopPropagation();const o=$('#fbar').classList.toggle('fopen');$('#ftog').setAttribute('aria-expanded',String(o))});
+  {const d=$('#quick');let o=null;try{o=localStorage.getItem('jq')}catch(_){}d.open=matchMedia('(max-width:900px)').matches?false:o!=='1';d.addEventListener('toggle',()=>{try{localStorage.setItem('jq',d.open?'0':'1')}catch(_){}})}
   $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${k?rsym(k)+' ':''}${l}</button>`).join('');$('#types').innerHTML=TYPES.map(k=>`<button class="pill" data-ty="${k}" aria-pressed="false">${k||'All types'}</button>`).join('');if(matchMedia('(max-width:900px)').matches)$('#legend').open=false;
   $('#sortsel').innerHTML=SORTS.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');buildSetList();
   renderSets();const v=readHash();view(v);renderCards(true);{const m=location.hash.match(/(?:^#|&)card=([^&]+)/);if(m){const k=decodeURIComponent(m[1]),i=list.findIndex(c=>c.s+':'+c.n===k);if(i>=0)openCard(i);history.replaceState(null,'',location.pathname)}}let rf='';try{rf=document.referrer?new URL(document.referrer).hostname:''}catch(_){}track('view',{page:v,ref:rf.slice(0,80)||null})}).catch(()=>{$('#count').textContent='Could not load cards'});
