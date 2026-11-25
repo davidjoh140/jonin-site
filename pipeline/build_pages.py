@@ -73,11 +73,12 @@ HEAD = '''<!DOCTYPE html>
 </head>
 <body>
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/premium/">🔔 Alerts</a></nav></div></header>
+<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="#feedback" data-fb>💬 Feedback</a><a href="/premium/">🔔 Alerts</a></nav></div></header>
 <main>
 '''
 FOOT = '''</main>
 <footer>Jonin is a fan-made database for the original Bandai Naruto Collectible Card Game (2006–2013). Not affiliated with Bandai, Shueisha or Masashi Kishimoto. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you.</footer>
+<script src="/feedback.js?v=1" defer></script>
 </body></html>
 '''
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Members — Jonin admin</title>
+<title>Members &amp; feedback — Jonin admin</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -73,6 +73,17 @@ async function load(){
   app.querySelectorAll('[data-rev]').forEach(b=>b.onclick=async()=>{if(!confirm('Remove Premium from '+b.dataset.rev+'?'))return;const r=await sb.rpc('admin_revoke',{p_email:b.dataset.rev});if(r.error)alert(r.error.message);load()});
   app.querySelectorAll('[data-give]').forEach(b=>b.onclick=async()=>{const r=await sb.rpc('admin_grant',{p_email:b.dataset.give,p_until:null,p_note:null});if(r.error)alert(r.error.message);load()});
   $('#out').onclick=async e=>{e.preventDefault();await sb.auth.signOut();load()};
+  loadFb();
+}
+let FBSHOW='new';
+async function loadFb(){const r=await sb.rpc('admin_feedback');let el=$('#fb');if(!el){app.insertAdjacentHTML('beforeend','<div id="fb"></div>');el=$('#fb')}
+  if(r.error){el.innerHTML=`<h2>Feedback</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
+  const all=r.data||[],rows=all.filter(x=>FBSHOW==='all'?x.status!=='archived':x.status===FBSHOW),K={card:'🃏 Card info',idea:'💡 Idea',bug:'🐞 Bug',other:'💬 Other'};
+  const cnt=s=>all.filter(x=>x.status===s).length;
+  el.innerHTML=`<h2>Feedback</h2><p class="mt" style="margin-bottom:10px">${['new','done','all'].map(s=>`<button class="ghost" data-fbs="${s}" style="${FBSHOW===s?'color:var(--ink);border-color:var(--acc)':''}">${s==='new'?'New ('+cnt('new')+')':s==='done'?'Done ('+cnt('done')+')':'All'}</button>`).join(' ')}</p>
+  <div class="tw box" style="padding:0"><table><thead><tr><th>When</th><th>Type</th><th>Note</th><th>From</th><th></th></tr></thead><tbody>${rows.length?rows.map(x=>`<tr><td>${day(x.created_at)}</td><td>${K[x.kind]||esc(x.kind)}${x.card_id?`<div class="tag"><a href="/#card=${encodeURIComponent(x.card_id)}" target="_blank">${esc(x.card_id)}</a></div>`:''}</td><td style="max-width:460px"><div style="white-space:pre-wrap">${esc(x.message)}</div>${x.target||x.page?`<div class="tag" style="margin-top:4px">${x.page?`<a href="${esc(x.page.split('#')[0]+(x.selector?(x.page.includes('?')?'&':'?')+'fbspot='+encodeURIComponent(x.selector):''))}" target="_blank">${esc(x.page.split('?')[0]||'/')}</a>`:''}${x.target?' · 📍 '+esc(x.target):''}</div>`:''}</td><td>${esc(x.name||'')}${x.contact?`<div class="tag">${esc(x.contact)}</div>`:''}${!x.name&&!x.contact?'<span class="tag">anonymous</span>':''}</td><td style="white-space:nowrap">${x.status==='new'?`<button class="ghost" data-fbset="${x.id}" data-to="done">✓ Done</button>`:`<button class="ghost" data-fbset="${x.id}" data-to="new">↺ New</button>`} <button class="ghost" data-fbset="${x.id}" data-to="archived">Archive</button></td></tr>`).join(''):'<tr><td colspan="5" class="tag">Nothing here.</td></tr>'}</tbody></table></div>`;
+  el.querySelectorAll('[data-fbs]').forEach(b=>b.onclick=()=>{FBSHOW=b.dataset.fbs;loadFb()});
+  el.querySelectorAll('[data-fbset]').forEach(b=>b.onclick=async()=>{const r=await sb.rpc('admin_feedback_status',{p_id:+b.dataset.fbset,p_status:b.dataset.to});if(r.error)alert(r.error.message);loadFb()});
 }
 load();
 }
