@@ -129,7 +129,7 @@
     fetch(SUPA+'/rest/v1/feedback',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(row)})
       .then(function(r){if(r.ok)return;return r.json().catch(function(){return{}}).then(function(j){throw new Error(j.message||'failed')})})
       .then(function(){msg.className='jfb-msg ok';msg.textContent='Thanks! Your note was sent.';setTimeout(function(){if(!ov.hidden)close()},1600)})
-      .catch(function(x){go.disabled=false;msg.className='jfb-msg err';msg.textContent=/Too many/.test(x.message)?'Too many notes in a row. Try again in a few minutes.':'Could not send. Please try again.'});
+      .catch(function(x){go.disabled=false;msg.className='jfb-msg err';msg.textContent=/Too many/.test(x.message)?'Please wait 20 seconds before sending another note.':'Could not send. Please try again.'});
   });
 
   if(location.hash==='#feedback')setTimeout(function(){open({fresh:true})},300);

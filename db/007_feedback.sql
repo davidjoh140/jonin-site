@@ -1,5 +1,5 @@
 -- Applied to Supabase on 2026-11-25 (migration site_feedback). Kept here as the record.
 -- feedback: notes from the site's Feedback form. Anyone (anon/authenticated) can insert; nobody can read via the API.
 --   Checks: kind in idea/bug/card/other, message 2–4000 chars, short optional name/contact/card_id/page.
---   Trigger feedback_rate_limit: max 5 posts per visitor id per 10 minutes.
+--   Trigger feedback_rate_limit: one post per visitor id every 20 seconds (migration feedback_rate_limit_20s). Notes stay private to the owner.
 -- RPCs (owner only, is_admin()): admin_feedback() lists the latest 500; admin_feedback_status(id, 'new'|'done'|'archived').
