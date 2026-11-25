@@ -58,3 +58,10 @@ def test_export_keeps_format():
     assert out["sets"][0]["rar"] == {"Common": 2, "Rare": 1} and out["sets"][0]["code"] == ""
     assert out["cards"][0]["ed"] == [""] and out["cards"][0]["img"] == "U/psa/1.jpg"
     assert list(out["cards"][0]) == ["s", "n", "name", "t", "r", "src", "v", "ed", "img"]
+
+
+def test_bare_number_needs_full_name():
+    r = M.match("Naruto CCG The Third Hokage 968 S19 1st Edition Super Rare Foil", LOT_WORDS, allow_bare=True)
+    assert r and r[0]["id"] == "19:N-968" and r[4] == "1st Edition"
+    assert M.match("Naruto CCG 2006 Bandai Kakashi Hatake card", LOT_WORDS, allow_bare=True) is None
+    assert M.match("Naruto CCG The Third Hokage 968", LOT_WORDS) is None     # off unless asked

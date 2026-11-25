@@ -38,12 +38,16 @@ class Matcher:
             self.by_num[_key(c["number"])].append(c)
         self.sets = {s["id"]: s for s in sets}
 
-    def match(self, title, lot_words=()):
-        """Returns (card, confidence, reason, printing, edition) or None."""
+    def match(self, title, lot_words=(), allow_bare=False):
+        """Returns (card, confidence, reason, printing, edition) or None.
+        allow_bare: also try a bare number ("Third Hokage 968") when the title has no N-/J-/M- number;
+        then the card's name must be in the title."""
         t = " " + re.sub(r"\s+", " ", title.upper()) + " "
         if any(f" {w.upper()} " in t or w.upper() in t and " " in w for w in lot_words):
             return None
         nums = {_fmt(m) for m in NUM_RE.finditer(t)}
+        if not nums and allow_bare:
+            return self._bare(t)
         if len(nums) != 1:            # no number, or several cards in one listing
             return None
         num = nums.pop()
@@ -85,3 +89,29 @@ class Matcher:
         if edition and edition not in (card.get("editions") or []):
             edition = ""
         return card, round(min(conf, 0.99), 2), ", ".join(reason), printing, edition
+
+    def _bare(self, t):
+        """Bare 2-4 digit numbers: keep the card whose number and full name are both in the title."""
+        tw = set(words(GAME_PHRASES.sub(" ", t)))
+        hits = []
+        for m in re.finditer(r"(?<![\w.$/#-])(\d{2,4})(?![\w.%/-])", t):
+            n = int(m.group(1))
+            if 1990 <= n <= 2030 or n < 10:
+                continue
+            for pre in ("N", "J", "M"):
+                for c in self.by_num.get(_key(f"{pre}-{n:03d}"), []):
+                    nw = words(c["name"])
+                    if nw and all(w in tw for w in nw):
+                        hits.append(c)
+        ids = {c["id"] for c in hits}
+        if len(ids) != 1:             # nothing, or ambiguous (reprint in several sets / several cards)
+            return None
+        card = hits[0]
+        printing = ""
+        for w, p in FOIL_WORDS:
+            if w in t and p in (card.get("printings") or []):
+                printing = p
+        edition = "1st Edition" if re.search(r"1ST\s?(ED|EDITION)?\b", t) else "Unlimited" if "UNLIMITED" in t else ""
+        if edition and edition not in (card.get("editions") or []):
+            edition = ""
+        return card, 0.75, f"bare number {card['number']}, full name", printing, edition

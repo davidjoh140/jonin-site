@@ -65,7 +65,7 @@ def to_listing(it, matcher, t):
     title = it.get("title", "")
     if prices.skip_title(title):
         return None
-    hit = matcher.match(title, cfg.LOT_WORDS)
+    hit = matcher.match(title, cfg.LOT_WORDS, allow_bare=True)
     if not hit or hit[1] < cfg.MIN_CONFIDENCE:
         return None
     card, conf, reason, printing_m, _ = hit
