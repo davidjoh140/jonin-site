@@ -199,19 +199,24 @@ const FOILS={'Full foil':['flat','Flat foil'],'Diamond foil':['diamond','Diamond
 const rsym=k=>{const n={U:1,R:2,SR:3}[k];const inner=n?'<i></i>'.repeat(n):({C:'C',UR:'UR',P:'PR',F:'ST','':'?'}[k]??esc(k));return `<span class="rs rs-${esc(k||'X')}" title="${esc(RNAME[k]||k)}">${inner}</span>`};
 const foilsOf=c=>{const seen=new Set(),out=[];(c.v||[]).forEach(v=>{const f=FOILS[v];if(f&&!seen.has(f[0])){seen.add(f[0]);out.push(f)}});return out};
 const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['SR','Super Rare'],['P','Promo']];
-const QUICK=[['Naruto','char:Naruto Uzumaki'],['Sasuke','char:Sasuke Uchiha'],['Kakashi','char:Kakashi Hatake'],['Itachi','char:Itachi Uchiha'],['Gaara','char:Gaara of the Desert'],['Jiraiya','char:Jiraiya'],['Super Rares','rar:SR'],['Promos','rar:P']];
-let D=null,S={q:'',rar:'',set:'',type:'',quick:''},list=[],shown=0,sel=-1;
+// PLACEHOLDER character list (fan favorites that have cards); David to confirm. 'A|B' = either name, e.g. Minato also printed as The Fourth Hokage
+const QUICK=[['Naruto','char:Naruto Uzumaki'],['Sasuke','char:Sasuke Uchiha'],['Kakashi','char:Kakashi Hatake'],['Itachi','char:Itachi Uchiha'],['Gaara','char:Gaara of the Desert'],['Sakura','char:Sakura Haruno'],['Hinata','char:Hinata Hyuga'],['Jiraiya','char:Jiraiya'],['Minato','char:Minato Namikaze|The Fourth Hokage'],['Madara','char:Madara Uchiha'],['Obito','char:Obito Uchiha|Tobi'],['Pain','char:Pain|Nagato'],['Shikamaru','char:Shikamaru Nara'],['Rock Lee','char:Rock Lee'],['Neji','char:Neji Hyuga'],['Orochimaru','char:Orochimaru'],['Tsunade','char:Tsunade'],['Deidara','char:Deidara'],['Might Guy','char:Might Guy'],['Killer Bee','char:Killer Bee']];
+const S0=()=>({q:'',set:'',type:'',chars:[],rars:[]});
+let D=null,S=S0(),list=[],shown=0,sel=-1;
 const PAGE=120;
 const setName=id=>D.byId[id]?.name||id;
 const setLabel=s=>s.kind==='Main'?'Set '+s.id:s.kind==='Promo'?'Promo':s.id;
 const baseName=n=>n.replace(/\s*\(.*?\)\s*/g,'').trim();
-function readHash(){const h=decodeURIComponent(location.hash.slice(1));if(h==='sets')return 'sets';S={q:'',rar:'',set:'',type:'',quick:''};h.split('&').forEach(p=>{const[k,v]=p.split('=');if(k in S&&v)S[k]=v});return 'cards'}
-function writeHash(){const h=Object.entries(S).filter(([k,v])=>v).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');history.replaceState(null,'',h?'#'+h:location.pathname)}
+function readHash(){const h=location.hash.slice(1);if(h==='sets')return 'sets';S=S0();h.split('&').forEach(p=>{const i=p.indexOf('=');if(i<0)return;const k=p.slice(0,i),v=decodeURIComponent(p.slice(i+1));if(!v)return;
+  if(k==='chars'||k==='rars')S[k]=v.split(',').filter(Boolean);else if(k==='rar')S.rars=[v];else if(k==='quick'){const[a,b]=v.split(':');if(a==='char')S.chars=[b];if(a==='rar')S.rars=[b]}else if(k in S)S[k]=v});return 'cards'}
+function writeHash(){const h=Object.entries(S).filter(([k,v])=>Array.isArray(v)?v.length:v).map(([k,v])=>k+'='+encodeURIComponent(Array.isArray(v)?v.join(','):v)).join('&');history.replaceState(null,'',h?'#'+h:location.pathname)}
+const active=()=>Object.values(S).some(v=>Array.isArray(v)?v.length:v);
+const tog=(a,v)=>a.includes(v)?a.filter(x=>x!==v):[...a,v];
 function match(c){
   if(S.set&&c.s!==S.set)return false;
-  if(S.rar&&c.src!==S.rar)return false;
+  if(S.rars.length&&!S.rars.includes(c.src))return false;
   if(S.type&&c.t!==S.type)return false;
-  if(S.quick){const[k,v]=S.quick.split(':');if(k==='char'&&baseName(c.name)!==v)return false;if(k==='rar'&&c.src!==v)return false}
+  if(S.chars.length){const names=c.name.split(/\s*&\s*/).map(baseName);if(!S.chars.some(v=>v.split('|').some(w=>names.includes(w))))return false}
   if(S.q){const q=S.q.toLowerCase().split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)).toLowerCase();if(!q.every(w=>hay.includes(w)))return false}
   return true}
 function tile(c,i){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c);
@@ -220,10 +225,10 @@ function renderCards(reset){
   if(reset){list=D.cards.filter(match);shown=0;$('#grid').innerHTML=''}
   const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
   {const ct=$('#count'),txt=list.length.toLocaleString()+' cards';if(ct.textContent!==txt){ct.textContent=txt;if(reset){ct.classList.remove('bump');void ct.offsetWidth;ct.classList.add('bump')}}}$('#more').hidden=shown>=list.length;
-  $('#clear').hidden=!Object.values(S).some(Boolean);
+  $('#clear').hidden=!active();
   if(!list.length)$('#grid').innerHTML='<p class="empty">No cards match. <button class="clear" data-clear>Clear filters</button></p>';
-  document.querySelectorAll('#quick .pill').forEach(b=>b.setAttribute('aria-pressed',S.quick===b.dataset.q));
-  document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',S.rar===b.dataset.r));
+  document.querySelectorAll('#quick .pill').forEach(b=>b.setAttribute('aria-pressed',S.chars.includes(b.dataset.q)));
+  document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r?S.rars.includes(b.dataset.r):!S.rars.length));
   $('#setsel').value=S.set;$('#typesel').value=S.type;if(document.activeElement!==$('#q'))$('#q').value=S.q}
 function renderSets(){$('#sets').innerHTML=D.sets.map((s,k)=>`<button class="set in" style="--k:${Math.min(k,24)}" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(s.symbol)}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
 function view(v){$('#v-cards').hidden=v!=='cards';$('#v-sets').hidden=v!=='sets';document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v))}
@@ -243,13 +248,13 @@ $('#setsel').addEventListener('change',e=>{S.set=e.target.value;writeHash();rend
 $('#typesel').addEventListener('change',e=>{S.type=e.target.value;writeHash();renderCards(true)});
 $('#more').addEventListener('click',()=>renderCards(false));
 document.addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t)return;
-  if(t.dataset.q!=null){S.quick=S.quick===t.dataset.q?'':t.dataset.q;writeHash();renderCards(true);pop(t)}
-  else if(t.dataset.r!=null){S.rar=S.rar===t.dataset.r?'':t.dataset.r;writeHash();renderCards(true);pop(t)}
-  else if(t.id==='clear'||t.dataset.clear!=null){S={q:'',rar:'',set:'',type:'',quick:''};writeHash();renderCards(true)}
+  if(t.dataset.q!=null){S.chars=tog(S.chars,t.dataset.q);writeHash();renderCards(true);pop(t)}
+  else if(t.dataset.r!=null){S.rars=t.dataset.r?tog(S.rars,t.dataset.r):[];writeHash();renderCards(true);pop(t)}
+  else if(t.id==='clear'||t.dataset.clear!=null){S=S0();writeHash();renderCards(true)}
   else if(t.dataset.i!=null)openCard(+t.dataset.i);
   else if(t.dataset.step){openCard((sel+ +t.dataset.step+list.length)%list.length)}
   else if(t.dataset.close!=null||t.id==='ovbg')close();
-  else if(t.dataset.set){S={q:'',rar:'',set:t.dataset.set,type:'',quick:''};view('cards');writeHash();renderCards(true);scrollTo(0,0)}
+  else if(t.dataset.set){S=Object.assign(S0(),{set:t.dataset.set});view('cards');writeHash();renderCards(true);scrollTo(0,0)}
   else if(t.dataset.v){e.preventDefault();if(t.dataset.v==='sets'){history.replaceState(null,'','#sets');view('sets')}else{writeHash();view('cards')}}});
 document.addEventListener('keydown',e=>{if($('#ov').hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')openCard((sel+1)%list.length);if(e.key==='ArrowLeft')openCard((sel-1+list.length)%list.length)});
 new IntersectionObserver(es=>{if(es[0].isIntersecting&&!$('#more').hidden)renderCards(false)},{rootMargin:'600px'}).observe($('#more'));
@@ -259,7 +264,7 @@ const SUPA='https://cfzpayanhvvqtkuqfgof.supabase.co',SUPA_KEY='sb_publishable_Z
 const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url',{headers:{apikey:SUPA_KEY,Range:`${i*1000}-${i*1000+999}`}}).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>a.flat());
 function applyLive(rows){if(!D||!rows||!rows.length)return false;const m={};rows.forEach(r=>{if(r&&r.url)m[r.card_id]=r.url});let n=0;D.cards.forEach(c=>{const u=m[c.s+':'+c.n];if(u&&/^https:\/\//.test(u)&&c.img!==u){c.img=u;n++}});return n>0}
 fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promise.race([LIVE,new Promise(r=>setTimeout(()=>r(null),2500))]);if(live)applyLive(live);else LIVE.then(rows=>{if(applyLive(rows))renderCards(true)});D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
-  $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>`<button class="pill" data-q="${esc(q)}" aria-pressed="false">${esc(l)}</button>`).join(''));
+  $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>`<button class="pill" data-q="${esc(q.replace(/^char:/,''))}" aria-pressed="false">${esc(l)}</button>`).join(''));
   $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${k?rsym(k)+' ':''}${l}</button>`).join('');if(matchMedia('(max-width:900px)').matches)$('#legend').open=false;
   $('#setsel').insertAdjacentHTML('beforeend',D.sets.map(s=>`<option value="${esc(s.id)}">${esc(setLabel(s))} · ${esc(s.name)}</option>`).join(''));
   renderSets();const v=readHash();view(v);renderCards(true)}).catch(()=>{$('#count').textContent='Could not load cards'});
