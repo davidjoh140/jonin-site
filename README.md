@@ -35,3 +35,7 @@ Repo secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EBAY_CLIENT_ID`, `EBAY_CL
 - The `drain-scan-uploads` Edge Function, called every minute by pg_cron (`kick_scan_drain()`), moves staged images into the public `scans` Storage bucket (`ci/<set>/<number>_<printing>-<edition>-<asset>.webp`) and upserts the `scans` row by `ci_doc` (the Card Index doc id). `pipeline/drain_uploads.py` does the same from GitHub Actions as a backup. Rows that fail keep an `error` and stay staged.
 - jonin.cards reads images live from the `site_card_images` view (one best public image per card) with the publishable key, so a new scan shows within a minute or two. `cards.json` still carries `img` as the fallback.
 - Older scans (the first 255) live in `public/scans/<set>/<number>.webp`.
+
+## Rarity from the dots
+
+Main-set rarities follow the dots after the copyright line: none = Common, one = Uncommon, two = Rare, three = Super Rare. The 749 cards changed on 2026-11-25 are kept in `rarity_dot_fix` (with `old_rarity`) so the change can be reviewed or undone.
