@@ -219,7 +219,7 @@ def main():
                      '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                      + ''.join(f'<url><loc>{e(u)}</loc></url>\n' for u in urls) + '</urlset>\n')
     changed += write(os.path.join(ROOT, 'robots.txt'),
-                     f'User-agent: *\nAllow: /\n\nSitemap: {SITE}/sitemap.xml\n')
+                     f'User-agent: *\nAllow: /\nDisallow: /admin/\n\nSitemap: {SITE}/sitemap.xml\n')
     print(f'{len(keep_c)} card pages, {len(keep_s)} set pages, {changed} files written, {removed} stale folders removed')
 
 

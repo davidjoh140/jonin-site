@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Members — Jonin admin</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1B1622;--panel:#241E2D;--line:#352C40;--ink:#FFF4E6;--mute:#B8AEA6;--acc:#F57C00;--acc2:#FF9A3D;--red:#B5121B;--ok:#6CC24A}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif}
+a{color:var(--acc)}
+header{border-bottom:1px solid #2E2638}.hw{max-width:1120px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:20px}
+.logo{display:flex;align-items:center;gap:.06em;font:800 28px/1 "Baloo 2",sans-serif;color:var(--ink);text-decoration:none}.logo .jc{position:relative;height:1.42cap;width:1.02cap;flex:none;margin-right:.06em}.logo .jc i{position:absolute;inset:0;border-radius:.1em;box-shadow:.05em .05em 0 #0A080D}.logo .jc i:first-child{background:var(--acc);transform:rotate(10deg) translate(.2em,-.06em)}.logo .jc i:last-child{background:var(--red);transform:rotate(-8deg);display:flex;align-items:center;justify-content:center;font-style:normal;color:var(--ink)}.logo .jc b{text-box:trim-both cap alphabetic;margin-left:-.03em}.logo>span:last-child{text-box:trim-both cap alphabetic}
+main{max-width:1120px;margin:0 auto;padding:32px 20px 72px}
+h1{font:800 40px/1.05 "Baloo 2",sans-serif;margin:0 0 6px}h2{font:800 22px "Baloo 2",sans-serif;margin:28px 0 10px}
+.mt{color:var(--mute);margin:0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+form.grant{display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:10px;align-items:end}
+@media(max-width:760px){form.grant{grid-template-columns:1fr}}
+label span{display:block;font-size:12px;color:var(--mute);margin-bottom:4px}
+input{width:100%;min-height:42px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:15px Inter,sans-serif}
+input:focus{outline:none;border-color:var(--acc)}
+button{min-height:42px;padding:8px 16px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:#1B1622;font:600 14px Inter,sans-serif;cursor:pointer}
+button.ghost{background:none;color:var(--mute);border-color:var(--line);min-height:32px;padding:4px 10px}button.ghost:hover{color:var(--ink);border-color:#a33}
+.msg{margin:10px 0 0;font-size:14px}.msg.err{color:#ff8a80}.msg.ok{color:var(--ok)}
+.stats{display:flex;gap:28px;flex-wrap:wrap;margin:18px 0}.stats b{display:block;font:800 30px/1 "Baloo 2",sans-serif;color:var(--acc)}.stats span{color:var(--mute);font-size:13px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-weight:600;color:var(--mute);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.st{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;background:#2E2638}.st.active{background:#1F3A1A;color:var(--ok)}.st.invited{background:#3A2A10;color:var(--acc2)}.st.revoked,.st.expired{color:var(--mute)}
+.tag{font-size:12px;color:var(--mute)}
+.gate{max-width:440px}
+</style>
+</head>
+<body>
+<header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a><span class="tag">Admin</span></div></header>
+<main>
+  <h1>Premium members</h1>
+  <p class="mt">Everyone with Premium, free or paid. Give it to anyone by email; if they don't have an account yet, it turns on when they sign up with that email.</p>
+  <div id="app"><p class="mt" style="margin-top:20px">Loading…</p></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"></script>
+<script>
+{
+const SUPA='https://cfzpayanhvvqtkuqfgof.supabase.co',SUPA_KEY='sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe';
+const $=s=>document.querySelector(s),app=$('#app');
+if(!window.supabase){app.innerHTML='<p class="msg err">Could not load. Refresh the page.</p>';throw new Error('supabase-js missing')}
+const sb=window.supabase.createClient(SUPA,SUPA_KEY);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const day=d=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+function gate(msg){app.innerHTML=`<div class="box gate" style="margin-top:20px"><p style="margin-top:0">${esc(msg)}</p><form id="login"><label><span>Email</span><input name="e" type="email" required autocomplete="email"></label><label style="display:block;margin-top:10px"><span>Password</span><input name="p" type="password" required autocomplete="current-password"></label><button style="margin-top:12px">Sign in</button><p class="msg" id="lm"></p></form></div>`;
+  $('#login').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const r=await sb.auth.signInWithPassword({email:f.e.value.trim(),password:f.p.value});if(r.error){$('#lm').className='msg err';$('#lm').textContent=r.error.message}else load()}}
+async function load(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)return gate('Sign in with your Jonin account to manage members.');
+  const {data:adm}=await sb.rpc('is_admin');
+  if(!adm)return gate('This account doesn\'t have admin access. Sign in with the owner account.');
+  const {data,error}=await sb.rpc('admin_members');
+  if(error){app.innerHTML=`<p class="msg err">${esc(error.message)}</p>`;return}
+  const rows=data||[],n=s=>rows.filter(r=>r.status.startsWith(s)).length;
+  app.innerHTML=`<div class="stats"><div><b>${n('active')}</b><span>Active</span></div><div><b>${rows.filter(r=>r.status==='active'&&r.source==='free').length}</b><span>Free</span></div><div><b>${rows.filter(r=>r.status==='active'&&r.source==='paid').length}</b><span>Paid</span></div><div><b>${n('invited')}</b><span>Invited, no account yet</span></div></div>
+  <h2>Give Premium free</h2>
+  <form class="grant box" id="grant"><label><span>Email</span><input name="e" type="email" required placeholder="collector@email.com"></label><label><span>Ends (optional)</span><input name="u" type="date"></label><label><span>Note (optional)</span><input name="n" placeholder="e.g. WE ARE EARLY tester"></label><button>Give Premium</button></form>
+  <p class="msg" id="gm"></p>
+  <h2>Members</h2>
+  <div class="tw box" style="padding:0"><table><thead><tr><th>Email</th><th>Status</th><th>Free / paid</th><th>Since</th><th>Ends</th><th>Note</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.email)}${r.handle?`<div class="tag">@${esc(r.handle)}</div>`:''}</td><td><span class="st ${esc(r.status.split(' ')[0])}">${esc(r.status)}</span></td><td>${esc(r.source)}${r.founding?' <span class="tag">· founding</span>':''}</td><td>${day(r.since)}</td><td>${r.until?day(r.until):'<span class="tag">never</span>'}</td><td>${esc(r.note||'')}</td><td>${r.status==='revoked'?`<button class="ghost" data-give="${esc(r.email)}">Restore</button>`:`<button class="ghost" data-rev="${esc(r.email)}">${r.status.startsWith('invited')?'Cancel invite':'Remove'}</button>`}</td></tr>`).join('')||'<tr><td colspan="7" class="tag">No members yet.</td></tr>'}</tbody></table></div>
+  <p class="mt" style="margin-top:14px;font-size:13px">Signed in as ${esc(session.user.email)} · <a href="#" id="out">Sign out</a></p>`;
+  $('#grant').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const until=f.u.value?new Date(f.u.value+'T23:59:59').toISOString():null;
+    const r=await sb.rpc('admin_grant',{p_email:f.e.value,p_until:until,p_note:f.n.value.trim()||null});const m=$('#gm');
+    if(r.error){m.className='msg err';m.textContent=r.error.message;return}
+    await load();const m2=$('#gm');m2.className='msg ok';m2.textContent=r.data==='invited'?`${f.e.value} has no account yet. Premium turns on when they sign up with that email.`:`Premium is on for ${f.e.value}.`};
+  app.querySelectorAll('[data-rev]').forEach(b=>b.onclick=async()=>{if(!confirm('Remove Premium from '+b.dataset.rev+'?'))return;const r=await sb.rpc('admin_revoke',{p_email:b.dataset.rev});if(r.error)alert(r.error.message);load()});
+  app.querySelectorAll('[data-give]').forEach(b=>b.onclick=async()=>{const r=await sb.rpc('admin_grant',{p_email:b.dataset.give,p_until:null,p_note:null});if(r.error)alert(r.error.message);load()});
+  $('#out').onclick=async e=>{e.preventDefault();await sb.auth.signOut();load()};
+}
+load();
+}
+</script>
+</body>
+</html>
