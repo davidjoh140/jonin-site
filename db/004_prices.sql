@@ -3,3 +3,6 @@
 -- sales: one row per sold copy, tied to card + printing + edition + grader + grade; status pending/approved/rejected.
 -- listings: eBay listings being watched until they end (state active/sold/unsold/gone).
 -- price_ranges: free public range per exact card version, rebuilt by refresh_price_ranges().
+-- 2026-11-25 (migration price_ranges_private, approved by David): price_ranges is Premium data.
+-- Public read policy dropped and anon SELECT revoked; RLS with no policies means signed-in users see no rows either.
+-- The free site shows only the price band ("pb") that pipeline/export_cards.py writes into cards.json.
