@@ -32,7 +32,7 @@ SALES_MAX_CALLS_PER_RUN = 120      # PLACEHOLDER: eBay Browse calls per run (run
 SALES_MAX_SETTLE_PER_RUN = 150     # PLACEHOLDER: ended listings looked up per run
 
 # Extra title words that mean "not a real single card" for prices.
-SALES_SKIP_WORDS = ["kayou", "mythos", "proxy", "custom", "fan made", "fanmade", "orica", "reprint", "replica", "art card",
+SALES_SKIP_WORDS = ["kayou", "mythos", " 2x ", " 3x ", " 4x ", "proxy", "custom", "fan made", "fanmade", "orica", "reprint", "replica", "art card",
                     "sleeve", "playmat", "binder", "empty", "psa ready"]  # PLACEHOLDER
 
 # What a title that doesn't say counts as.
