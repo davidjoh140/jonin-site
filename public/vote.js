@@ -119,6 +119,7 @@
     $('form', ov).innerHTML =
       '<h2>' + (mode === 'up' ? 'Make a free account' : 'Sign in') + '</h2>' +
       '<p>' + (mode === 'up' ? (pending ? 'Make a free account to cast your vote. It counts as soon as you’re in.' : 'Vote for the coolest cards, and track your haves, wants and slabs.') : (pending ? 'Sign in to cast your vote.' : 'Welcome back.')) + '</p>' +
+      '<div class="oauth"><button type="button" class="oa" data-oauth="google"><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button><button type="button" class="oa" data-oauth="discord"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#5865F2" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.4 18.4 0 0 0-5.6 0L8.6 3a19.7 19.7 0 0 0-4.9 1.4C.6 9.1-.3 13.6.1 18.1a19.9 19.9 0 0 0 6 3l1.3-2.1a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a12.9 12.9 0 0 1-2 1l1.3 2.1a19.8 19.8 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.7zM8 15.4c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.6 8 10.6s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg>Continue with Discord</button></div><div class="orline"><span>or use email</span></div>' +
       (mode === 'up' ? '<label>Username<input name="handle" autocomplete="username" maxlength="24" required></label>' : '') +
       '<label>Email<input name="email" type="email" autocomplete="email" required></label>' +
       '<label>Password<input name="pw" type="password" autocomplete="' + (mode === 'up' ? 'new-password' : 'current-password') + '" minlength="8" required></label>' +
@@ -126,6 +127,23 @@
       '<p class="vswap">' + (mode === 'up' ? 'Have an account? <button type="button" class="vlink" data-vauth="in">Sign in</button>' : 'New here? <button type="button" class="vlink" data-vauth="up">Make a free account</button>') + '</p>';
   }
   ov.addEventListener('click', function (e) { if (e.target.classList.contains('vbg')) ov.hidden = true; });
+  // Only show one-click buttons for providers switched on in Supabase.
+  var OAUTH_ON = null;
+  function paintOauth() {
+    if (!OAUTH_ON) return;
+    var any = false;
+    Array.prototype.forEach.call(ov.querySelectorAll('[data-oauth]'), function (b) { b.hidden = !OAUTH_ON[b.dataset.oauth]; if (!b.hidden) any = true; });
+    var o = ov.querySelector('.oauth'), l = ov.querySelector('.orline'); if (o) o.hidden = !any; if (l) l.hidden = !any;
+  }
+  fetch(SUPA + '/auth/v1/settings', { headers: { apikey: KEY } }).then(function (r) { return r.json(); }).then(function (j) { OAUTH_ON = j.external || {}; paintOauth(); }).catch(function () { OAUTH_ON = {}; });
+  new MutationObserver(paintOauth).observe($('form', ov), { childList: true });
+  // One-click sign-in with Google or Discord; comes back to this character page (a pending vote is kept in this browser).
+  ov.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-oauth]'); if (!b || !sb) return; e.preventDefault(); b.disabled = true;
+    sb.auth.signInWithOAuth({ provider: b.dataset.oauth, options: { redirectTo: location.origin + location.pathname } }).then(function (r) {
+      if (r.error) { b.disabled = false; var er = $('.verr', ov); er.textContent = r.error.message || 'Could not start sign-in.'; er.hidden = false; }
+    });
+  });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') ov.hidden = true; });
   document.addEventListener('click', function (e) { var b = e.target.closest('[data-vauth]'); if (b) { e.preventDefault(); openAuth(b.dataset.vauth); } });
   $('form', ov).addEventListener('submit', function (e) {

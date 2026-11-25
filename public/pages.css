@@ -156,3 +156,6 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .featin{margin:14px 0 0;font-size:14px;color:var(--mute)}
 .draftnote{background:var(--buybg);border:1px solid var(--buyline);border-radius:10px;padding:8px 12px;font-size:13px;margin:0 0 14px}
 @media (max-width:620px){.post h1{font-size:30px}.acard{grid-template-columns:96px 1fr;gap:12px;padding:12px}.acard h3{font-size:18px}.share .ig{margin-left:0}.alist img,.alist.big img{width:60px}}
+.oauth{display:grid;gap:8px}.oa{display:flex;align-items:center;justify-content:center;gap:10px;padding:11px;border-radius:10px;border:1px solid var(--line);background:#fff;color:#1f1f1f;font:600 15px Inter,sans-serif;cursor:pointer}.oa:hover{filter:brightness(.95)}.oa:disabled{opacity:.6}
+.orline{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:12px}.orline:before,.orline:after{content:'';flex:1;height:1px;background:var(--line)}
+.oa[hidden],.oauth[hidden],.orline[hidden]{display:none}
