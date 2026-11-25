@@ -86,3 +86,10 @@ footer.c .igrow{justify-content:center}
 @media (max-width:620px){.share a.igbtn{margin-left:0}}
 header .hw>.igf~*{margin-left:0!important}
 .igbtn .h{color:var(--acc);font-weight:700}
+/* Header, kept on one row: Instagram is an icon here (the footer has the full "Follow @jonin.cards") */
+header .igf{padding:3px;gap:0}
+header .igf>span{display:none}
+header nav{gap:16px;white-space:nowrap}header nav>a,header nav>.pn{flex:none}
+@media (min-width:1025px){header .hw{flex-wrap:nowrap}}
+@media (max-width:1180px){header nav{gap:13px;font-size:14.5px}header .hw{gap:14px}}
+@media (max-width:1024px){header nav{max-width:100%;overflow-x:auto;scrollbar-width:none}header nav::-webkit-scrollbar{display:none}}
