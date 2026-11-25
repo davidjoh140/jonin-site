@@ -7,6 +7,7 @@ The file format is exactly what the site and the Card Index already read; approv
 optional "img" field on a card (its best public image).
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -25,8 +26,32 @@ def _s(v):
     return "" if v is None else v
 
 
-def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None):
-    """Pure transform: Supabase rows -> the cards.json object (same key order as before)."""
+def _num(v):
+    f = float(v)
+    return int(f) if f == int(f) else round(f, 2)
+
+
+def price_rows(ranges):
+    """price_ranges rows -> {card_id: [[printing, edition, grader, grade, low, high, sales, last_sold_date], ...]}
+    Ordered: edition, printing as listed on the card, raw before graded, higher grades first."""
+    out = {}
+    for r in ranges:
+        out.setdefault(r["card_id"], []).append(r)
+    def key(r):
+        try:
+            g = -float(re.match(r"[\d.]+", r.get("grade") or "0").group(0))
+        except (AttributeError, ValueError):
+            g = 0
+        return (r.get("edition") != "1st Edition", r.get("printing") or "", r.get("grader") != "Raw",
+                r.get("grader") or "", g)
+    return {cid: [[r.get("printing") or "", r.get("edition") or "", r.get("grader") or "Raw", r.get("grade") or "",
+                   _num(r["low"]), _num(r["high"]), r["sales_count"], (r.get("last_sold_at") or "")[:10]]
+                  for r in sorted(rows, key=key)] for cid, rows in out.items()}
+
+
+def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None, ranges=()):
+    """Pure transform: Supabase rows -> the cards.json object (same key order as before).
+    A card with recorded sales gets "px": its free price ranges (see price_rows)."""
     best = {}
     for sc in scans:
         if not sc.get("public"):
@@ -46,6 +71,7 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None)
             o["symbol"] = s["symbol_url"]
         out_sets.append(o)
     pnames = {p["id"]: p["name"] for p in products}
+    px = price_rows(ranges)
     out_cards = []
     for c in sorted(cards, key=lambda c: (c.get("sort") is None, c.get("sort"), c["id"])):
         o = {"s": c["set_id"], "n": c["number"], "name": c["name"], "t": _s(c.get("type")),
@@ -61,6 +87,8 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None)
         if c["id"] in best:
             u = best[c["id"]][1]["image_url"]
             o["img"] = url_for(u[len("storage:scans/"):]) if u.startswith("storage:scans/") else u
+        if c["id"] in px:
+            o["px"] = px[c["id"]]
         out_cards.append(o)
     out = {"sets": out_sets, "cards": out_cards}
     if version is not None:
@@ -79,10 +107,12 @@ def main():
                      supa.select("scans", {"select": "*", "public": "eq.true"}),
                      lambda p: supa.public_url("scans", p),
                      supa.select("products"),
-                     (supa.select("checklist_version") or [{}])[0].get("version"))
+                     (supa.select("checklist_version") or [{}])[0].get("version"),
+                     supa.select("price_ranges"))
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),
-                     "with_image": sum(1 for c in data["cards"] if "img" in c)}
+                     "with_image": sum(1 for c in data["cards"] if "img" in c),
+                     "with_prices": sum(1 for c in data["cards"] if "px" in c)}
         same = OUT.exists() and OUT.read_text() == text
         run.stats["changed"] = not same
         if "--check" in sys.argv:

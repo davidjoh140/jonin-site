@@ -38,3 +38,7 @@ dl.inline{grid-template-columns:repeat(auto-fill,minmax(130px,max-content) minma
 .tn{color:var(--mute);font-size:12px}.tt{font-size:14px;line-height:1.3}
 footer{max-width:1180px;margin:0 auto;padding:20px;color:var(--mute);font-size:12.5px;border-top:1px solid var(--line)}
 @media (max-width:760px){.cardpage{grid-template-columns:1fr}.cardpage .art{max-width:380px}h1{font-size:28px}header nav{display:none}}
+
+/* free price range */
+.px{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:8px}.px h3{margin:0;font:700 18px "Baloo 2",sans-serif;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.px h3 span{font:400 12px Inter,sans-serif;color:var(--mute)}.px table{width:100%;border-collapse:collapse;font-size:13px}.px td{padding:5px 0;border-top:1px solid var(--line)}.px td:last-child{text-align:right;font-weight:600;white-space:nowrap}.px td small{color:var(--mute);font-weight:400;margin-left:6px}.px .none{margin:0;color:var(--mute);font-size:13px}.pxlock{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:13px;border:1px dashed #6B3F10;border-radius:8px;padding:8px 10px}.pxlock:hover{border-color:var(--acc);color:var(--ink)}.pxlock b{color:var(--acc);font-weight:600}
+.cardpage .px{margin:18px 0}

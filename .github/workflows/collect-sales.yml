@@ -1,0 +1,25 @@
+# Records Naruto CCG sold prices from eBay into Supabase and rebuilds the free price ranges.
+# Confident sales go public in the range; the rest wait in `sales` (status pending) for David.
+name: Collect sold prices
+on:
+  schedule: [{ cron: "*/15 * * * *" }]   # PLACEHOLDER: every 15 minutes (GitHub may run it a few minutes late)
+  workflow_dispatch:
+concurrency: { group: collect-sales, cancel-in-progress: false }
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests pillow pytest
+      - run: cd pipeline && python -m pytest -q
+        env: { SUPABASE_URL: "test", SUPABASE_SERVICE_KEY: "test" }
+      - name: Collect
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          EBAY_REFRESH_TOKEN: ${{ secrets.EBAY_REFRESH_TOKEN }}
+        run: cd pipeline && python collect_sales.py

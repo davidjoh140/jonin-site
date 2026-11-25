@@ -1,0 +1,5 @@
+-- Applied to Supabase on 2026-11-25 (migrations price_data, price_ranges_fix_round,
+-- price_data_unique_keys, price_ranges_skip_unknown). Kept here as the record.
+-- sales: one row per sold copy, tied to card + printing + edition + grader + grade; status pending/approved/rejected.
+-- listings: eBay listings being watched until they end (state active/sold/unsold/gone).
+-- price_ranges: free public range per exact card version, rebuilt by refresh_price_ranges().

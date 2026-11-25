@@ -77,6 +77,30 @@ def ld_json(obj):
     return '<script type="application/ld+json">' + json.dumps(obj, ensure_ascii=False).replace('</', '<\\/') + '</script>'
 
 
+def money(v):
+    return '$' + (f'{round(v):,}' if v >= 100 else (f'{v:.2f}'.removesuffix('.00')))
+
+
+def price_block(c):
+    """Free "Market price" range (from cards.json px); the full sold list is Premium."""
+    rows = c.get('px') or []
+    eds, prs = len([x for x in (c.get('ed') or []) if x]) > 1, len(c.get('v') or []) > 1
+    lock = (f'<a class="pxlock" href="/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}">'
+            '<span>🔒 Every sold listing, with dates and photos</span><b>Premium →</b></a>')
+    if not rows:
+        return ('<section class="px"><h3>Market price</h3><p class="none">No sales recorded yet. '
+                f"We're tracking eBay sales for this card.</p>{lock}</section>")
+    n = sum(r[6] for r in rows)
+    trs = []
+    for p, ed, g, gr, lo, hi, k, _ in rows:
+        label = ' · '.join(x for x in [('1st Ed' if ed == '1st Edition' else ed) if eds and ed else '',
+                                         p if prs else '', 'Raw' if g == 'Raw' else f'{g} {gr}'] if x)
+        val = money(lo) if lo == hi else f'{money(lo)}–{money(hi)}'
+        trs.append(f'<tr><td>{e(label)}</td><td>{val}<small>{k} sale{"s" if k > 1 else ""}</small></td></tr>')
+    return (f'<section class="px"><h3>Market price<span>from {n} recorded sale{"s" if n > 1 else ""}</span></h3>'
+            f'<table>{"".join(trs)}</table>{lock}</section>')
+
+
 def card_page(c, s, prev, nxt):
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
@@ -108,6 +132,7 @@ def card_page(c, s, prev, nxt):
 <h1>{e(c["name"])}</h1>
 <p class="mt">{e(s["name"])} · {e(c["n"])} · {e(c["r"])}</p>
 <dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
+{price_block(c)}
 <div class="links">
 <a class="primary" href="/#card={quote(c['s'] + ':' + c['n'])}">Track it in your collection</a>
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="noopener">eBay sold · slabs</a>

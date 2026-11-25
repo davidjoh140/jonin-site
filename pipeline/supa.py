@@ -80,3 +80,20 @@ class Run:
             except Exception as e:
                 print("could not finish run log:", e)
         return False
+
+
+def upsert(table, rows, on_conflict):
+    """Insert rows, updating the given columns where `on_conflict` already exists."""
+    if not rows:
+        return
+    r = requests.post(f"{URL}/rest/v1/{table}", params={"on_conflict": on_conflict}, json=rows,
+                      headers=_h({"Prefer": "resolution=merge-duplicates,return=minimal",
+                                  "Content-Type": "application/json"}), timeout=60)
+    r.raise_for_status()
+
+
+def rpc(fn, args=None):
+    r = requests.post(f"{URL}/rest/v1/rpc/{fn}", json=args or {},
+                      headers=_h({"Content-Type": "application/json"}), timeout=120)
+    r.raise_for_status()
+    return r.json() if r.text else None
