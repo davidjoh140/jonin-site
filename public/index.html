@@ -175,6 +175,7 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
 .share{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:8px;font-size:13px}
 .share code{background:var(--bg);padding:6px 8px;border-radius:6px;font-size:12px;overflow-wrap:anywhere}
 .psay{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.links .psay a{flex-grow:0;padding:8px 10px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:30;background:#241E2D;border:1px solid #4A3E57;color:var(--ink);padding:12px 16px;border-radius:12px;font-size:14px;box-shadow:0 14px 40px -12px rgba(0,0,0,.8);animation:fade .2s ease both;max-width:calc(100% - 32px)}
 </style>
 </head>
 <body>
@@ -294,10 +295,11 @@ function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};
   <div><h2>${esc(c.name)}</h2><div class="mt">${esc(s.name||c.s)} · ${esc(c.n)} · ${esc(c.r)}</div></div>
   <div class="facts"><div><div>Set</div><div>${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</div></div><div><div>Rarity</div><div>${rsym(c.src)} ${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div><div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div class="pv">${(c.v||[]).map(v=>{const f=FOILS[v];return `<span>${f?`<span class="fx f-${f[0]}" aria-hidden="true"></span>`:''}${esc(v)}</span>`}).join('')}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
   <div class="mycoll" id="mycoll"></div>
-  <div class="links"><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a>${PSA[c.s]?`<a href="${PSA_POP+PSA[c.s]+psaFrag(c)}" target="_blank" rel="noopener">PSA pop report · ${esc(setLabel(s))}</a>`:c.s==='P'?`<span class="psay"><span class="mt">PSA pop report:</span> ${PSA_PROMO.map(([y,u])=>`<a href="${PSA_POP+u+psaFrag(c)}" target="_blank" rel="noopener">${y}</a>`).join('')}</span>`:'<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>'}</div>
+  <div class="links"><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a>${PSA[c.s]?`<a href="${PSA_POP+PSA[c.s]+psaFrag(c)}" target="_blank" rel="noopener" data-psa="${esc(c.n.replace(/-/g,''))}">PSA pop report · ${esc(setLabel(s))}</a>`:c.s==='P'?`<span class="psay"><span class="mt">PSA pop report:</span> ${PSA_PROMO.map(([y,u])=>`<a href="${PSA_POP+u+psaFrag(c)}" target="_blank" rel="noopener" data-psa="${esc(c.n.replace(/-/g,''))}">${y}</a>`).join('')}</span>`:'<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>'}</div>
   <a class="alert" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
   <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div></div></div>`;
   $('#ov').hidden=false;renderMyColl(c);track('card',{card_id:(c.s+':'+c.n).slice(0,24)});$('#panel').querySelector('[data-close]').focus()}
+let toastT;function toast(msg){let el=document.querySelector('.toast');if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el)}el.textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>el.remove(),6000)}
 function pop(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
 function close(){$('#ov').hidden=true;sel=-1}
 $('#q').addEventListener('input',e=>{S.q=e.target.value.trim();clearTimeout(trackT);if(S.q.length>=2){const t=S.q.slice(0,80);trackT=setTimeout(()=>track('search',{term:t}),1500)}writeHash();renderCards(true)});
@@ -305,6 +307,7 @@ $('#setsel').addEventListener('change',e=>{S.set=e.target.value;writeHash();rend
 $('#typesel').addEventListener('change',e=>{S.type=e.target.value;writeHash();renderCards(true)});
 $('#more').addEventListener('click',()=>renderCards(false));
 document.addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t)return;
+  if(t.dataset.psa){const n=t.dataset.psa,mac=/Mac|iPhone|iPad/.test(navigator.platform);try{navigator.clipboard&&navigator.clipboard.writeText(n)}catch(_){}toast(`Copied ${n}. On PSA's page press ${mac?'⌘':'Ctrl'}+F and paste to jump to the card.`);return}
   if(t.dataset.q!=null){S.chars=tog(S.chars,t.dataset.q);writeHash();renderCards(true);pop(t)}
   else if(t.dataset.r!=null){S.rars=t.dataset.r?tog(S.rars,t.dataset.r):[];writeHash();renderCards(true);pop(t)}
   else if(t.id==='clear'||t.dataset.clear!=null){S=S0();writeHash();renderCards(true)}
