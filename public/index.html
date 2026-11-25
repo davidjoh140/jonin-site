@@ -106,6 +106,33 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
 .pv{display:flex;flex-wrap:wrap;gap:6px 14px}.pv span{display:inline-flex;align-items:center;gap:6px}.pv .fx{font-size:5px}
 @media(max-width:900px){#v-cards:not([hidden]){display:block}#v-cards>.legend{position:static;max-height:none;margin:0 0 16px}}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}nav{order:3;width:100%}aside{width:100%}}
+
+/* motion: springy presses, lifts and entrances */
+:root{--spring:cubic-bezier(.34,1.56,.64,1);--ease:cubic-bezier(.22,1,.36,1)}
+.pill,.ib,.sell,.clear,select,.links a,.alert,.buy a{transition:transform .25s var(--spring),background-color .18s,border-color .18s,color .18s,box-shadow .2s}
+.pill:hover,.ib:hover{transform:translateY(-2px);border-color:#5A4A68}
+.pill:active,.ib:active,.sell:active,.clear:active,.links a:active,.alert:active{transform:scale(.93);transition-duration:.08s}
+.pill[aria-pressed=true]{box-shadow:0 6px 18px -6px rgba(181,18,27,.75)}
+.pill.pop{animation:pop .42s var(--spring)}
+@keyframes pop{0%{transform:scale(.88)}55%{transform:scale(1.1)}100%{transform:scale(1)}}
+.card .art{transition:transform .35s var(--spring),box-shadow .3s var(--ease),border-color .2s}
+.card:hover .art{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 16px 28px -14px rgba(0,0,0,.8),0 0 0 1px #4A3E57;border-color:#4A3E57}
+.card:active .art{transform:scale(.95);transition-duration:.1s}
+.card .nm{transition:color .2s}.card:hover .nm{color:var(--acc2)}
+.card.in{animation:rise .5s var(--ease) both;animation-delay:calc(var(--k,0)*22ms)}
+@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+.set{transition:transform .35s var(--spring),border-color .2s,box-shadow .3s}
+.set:hover{transform:translateY(-4px);box-shadow:0 14px 24px -14px rgba(0,0,0,.8)}.set:active{transform:scale(.96);transition-duration:.1s}
+.set.in{animation:rise .5s var(--ease) both;animation-delay:calc(var(--k,0)*25ms)}
+.ov:not([hidden]){animation:fade .2s ease both}
+.ov:not([hidden]) aside{animation:slide .45s var(--spring) both}
+@keyframes fade{from{opacity:0}}@keyframes slide{from{transform:translateX(70px);opacity:.4}}
+.count.bump{animation:bump .4s var(--spring)}
+@keyframes bump{40%{transform:scale(1.15);color:var(--ink)}}
+.count{display:inline-block}
+#q{transition:border-color .2s,box-shadow .25s}#q:focus{box-shadow:0 0 0 4px rgba(181,18,27,.22)}
+.legend summary::after{transition:transform .3s var(--spring),margin .3s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -188,17 +215,17 @@ function match(c){
   if(S.q){const q=S.q.toLowerCase().split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)).toLowerCase();if(!q.every(w=>hay.includes(w)))return false}
   return true}
 function tile(c,i){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c);
-  return `<button class="card" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div><div class="nm">${esc(c.name)}</div><div class="mt">${esc(setLabel(D.byId[c.s]||{id:c.s}))} · ${esc(c.n)} · ${rsym(c.src)}</div></button>`}
+  return `<button class="card in" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div><div class="nm">${esc(c.name)}</div><div class="mt">${esc(setLabel(D.byId[c.s]||{id:c.s}))} · ${esc(c.n)} · ${rsym(c.src)}</div></button>`}
 function renderCards(reset){
   if(reset){list=D.cards.filter(match);shown=0;$('#grid').innerHTML=''}
   const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
-  $('#count').textContent=list.length.toLocaleString()+' cards';$('#more').hidden=shown>=list.length;
+  {const ct=$('#count'),txt=list.length.toLocaleString()+' cards';if(ct.textContent!==txt){ct.textContent=txt;if(reset){ct.classList.remove('bump');void ct.offsetWidth;ct.classList.add('bump')}}}$('#more').hidden=shown>=list.length;
   $('#clear').hidden=!Object.values(S).some(Boolean);
   if(!list.length)$('#grid').innerHTML='<p class="empty">No cards match. <button class="clear" data-clear>Clear filters</button></p>';
   document.querySelectorAll('#quick .pill').forEach(b=>b.setAttribute('aria-pressed',S.quick===b.dataset.q));
   document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',S.rar===b.dataset.r));
   $('#setsel').value=S.set;$('#typesel').value=S.type;if(document.activeElement!==$('#q'))$('#q').value=S.q}
-function renderSets(){$('#sets').innerHTML=D.sets.map(s=>`<button class="set" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(s.symbol)}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
+function renderSets(){$('#sets').innerHTML=D.sets.map((s,k)=>`<button class="set in" style="--k:${Math.min(k,24)}" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(s.symbol)}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
 function view(v){$('#v-cards').hidden=v!=='cards';$('#v-sets').hidden=v!=='sets';document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v))}
 function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};const q=encodeURIComponent('naruto ccg '+c.name+' '+c.n.replace(/-/g,''));
   $('#panel').innerHTML=`<div class="nav3"><button class="ib" data-step="-1" aria-label="Previous card">‹</button><button class="ib" data-step="1" aria-label="Next card">›</button><span></span><button class="ib" data-close aria-label="Close">✕</button></div>
@@ -209,14 +236,15 @@ function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};
   <a class="alert" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
   <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div>`;
   $('#ov').hidden=false;$('#panel').querySelector('[data-close]').focus()}
+function pop(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
 function close(){$('#ov').hidden=true;sel=-1}
 $('#q').addEventListener('input',e=>{S.q=e.target.value.trim();writeHash();renderCards(true)});
 $('#setsel').addEventListener('change',e=>{S.set=e.target.value;writeHash();renderCards(true)});
 $('#typesel').addEventListener('change',e=>{S.type=e.target.value;writeHash();renderCards(true)});
 $('#more').addEventListener('click',()=>renderCards(false));
 document.addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t)return;
-  if(t.dataset.q!=null){S.quick=S.quick===t.dataset.q?'':t.dataset.q;writeHash();renderCards(true)}
-  else if(t.dataset.r!=null){S.rar=t.dataset.r;writeHash();renderCards(true)}
+  if(t.dataset.q!=null){S.quick=S.quick===t.dataset.q?'':t.dataset.q;writeHash();renderCards(true);pop(t)}
+  else if(t.dataset.r!=null){S.rar=S.rar===t.dataset.r?'':t.dataset.r;writeHash();renderCards(true);pop(t)}
   else if(t.id==='clear'||t.dataset.clear!=null){S={q:'',rar:'',set:'',type:'',quick:''};writeHash();renderCards(true)}
   else if(t.dataset.i!=null)openCard(+t.dataset.i);
   else if(t.dataset.step){openCard((sel+ +t.dataset.step+list.length)%list.length)}
