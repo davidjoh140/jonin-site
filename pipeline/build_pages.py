@@ -69,12 +69,12 @@ HEAD = '''<!DOCTYPE html>
 <meta name="twitter:card" content="{tw}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/pages.css?v={cssv}"><link rel="stylesheet" href="/themes.css?v=2"><script src="/theme.js?v=2"></script>
+<link rel="stylesheet" href="/pages.css?v={cssv}"><link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v={premv}"><script src="/theme.js?v=2"></script>
 {ld}
 </head>
 <body>
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/news/">News</a><a href="/articles/">Articles</a><a href="#feedback" data-fb>💬 Feedback</a><a href="/premium/">🔔 Alerts</a></nav></div></header>
+<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/news/">News</a><a href="/articles/">Articles</a><a href="#feedback" data-fb>💬 Feedback</a><div class="pn"><a class="pnb" href="/premium/"><svg class="lk" viewBox="0 0 14 16" aria-hidden="true"><path class="sh" d="M4 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="1" y="7" width="12" height="9" rx="2.2" fill="currentColor"/></svg>Premium</a><div class="pdd"><div><h4>What Premium unlocks</h4><ul><li>Exact prices by edition, foil and grade</li><li>Every sold listing, linked to the sale</li><li>Price estimates and sort by market value</li><li>Alerts for the cards you&#39;re hunting</li><li>Buy and sell posts from the Naruto CCG marketplaces</li></ul><a class="go" href="/premium/">See Premium →</a></div></div></div></nav></div></header>
 <main>
 '''
 FOOT = '''</main>
@@ -105,8 +105,9 @@ def price_block(c):
     """Free "Market price": one price band for the whole card. Exact prices by edition, foil and grade,
     and every sold listing, are Premium."""
     pb = c.get('pb')
-    lock = (f'<a class="pxlock" href="/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}">'
-            '<span>🔒 Exact prices by edition, foil and grade, plus every sold listing</span><b>Premium →</b></a>')
+    lock = (f'<a class="pxt" href="/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}" '
+            'aria-label="See exact prices and sold listings with Premium">'
+            '<div class="rows" aria-hidden="true"><div><span>1st Edition · Foil · PSA 9</span><b>$000.00</b></div><div><span>Unlimited · Raw · NM</span><b>$00.00</b></div><div><span>1st Edition · Raw · LP</span><b>$00.00</b></div></div><span class="cta"><span><svg class="lk" viewBox="0 0 14 16" aria-hidden="true"><path class="sh" d="M4 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="1" y="7" width="12" height="9" rx="2.2" fill="currentColor"/></svg>Exact prices &amp; sold listings</span><small>Every sale by edition, foil and grade</small></span>' '</a>')
     if pb is None or not 0 <= pb < len(BANDS):
         return f'<section class="px"><h3>Market price</h3>{lock}</section>'
     return (f'<section class="px"><h3>Market price<span>across all versions</span></h3>'
@@ -529,7 +530,7 @@ def set_links(sets):
 
 def main():
     global HEAD
-    HEAD = HEAD.replace('{cssv}', css_version())
+    HEAD = HEAD.replace('{cssv}', css_version()).replace('{premv}', file_version('prem.css'))
     d = json.load(open(os.path.join(ROOT, 'cards.json'), encoding='utf-8'))
     global BANDS
     BANDS = d.get('bands') or BANDS

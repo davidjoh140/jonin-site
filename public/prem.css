@@ -1,0 +1,29 @@
+/* Premium header button (lock opens on hover, feature dropdown) and the blurred sold-listings teaser.
+   Shared by the homepage, every built page and /premium/. */
+.pn{position:relative;display:inline-flex;align-items:center}
+.pn>.pnb{display:inline-flex;align-items:center;gap:6px;padding:3px 11px 3px 9px;border-radius:999px;border:1px solid color-mix(in srgb,var(--acc) 50%,transparent);background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc)!important;font-weight:600;text-decoration:none;transition:background .2s,border-color .2s}
+.pn>.pnb:hover,.pn:focus-within>.pnb{background:color-mix(in srgb,var(--acc) 22%,transparent);border-color:var(--acc)}
+.pn>.pnb.on{background:color-mix(in srgb,var(--acc) 22%,transparent)}
+.lk{width:13px;height:16px;flex:none;overflow:visible}
+.lk .sh{transform-box:view-box;transform-origin:10px 7px;transition:transform .28s cubic-bezier(.3,1.6,.5,1)}
+.pn:hover .lk .sh,.pn:focus-within .lk .sh,.pxt:hover .lk .sh,.pxt:focus-visible .lk .sh{transform:translateY(-2.5px) rotate(-28deg)}
+.pdd{position:absolute;right:-8px;top:100%;padding-top:10px;width:300px;z-index:40;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .18s,transform .18s,visibility 0s .18s}
+.pdd>div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px 12px;box-shadow:0 18px 40px rgba(0,0,0,.45);text-align:left}
+.pdd h4{margin:0 0 8px;font:700 17px "Baloo 2",sans-serif;color:var(--ink)}
+.pdd ul{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:7px}
+.pdd li{display:flex;gap:8px;font:400 13px/1.35 Inter,sans-serif;color:var(--ink)}
+.pdd li::before{content:"✓";color:var(--acc);font-weight:700;flex:none}
+.pdd a.go{display:block;text-align:center;padding:8px 10px;border-radius:9px;background:var(--acc);color:var(--ont,#1A0F02)!important;font:600 13px Inter,sans-serif;text-decoration:none}
+.pdd a.go:hover{filter:brightness(1.08)}
+@media (hover:hover) and (min-width:601px){.pn:hover .pdd,.pn:focus-within .pdd{opacity:1;visibility:visible;transform:none;transition:opacity .18s,transform .18s}}
+
+/* Blurred sold listings: free visitors see the shape of what Premium shows, not the data. */
+.pxt{position:relative;display:block;border-radius:9px;border:1px solid var(--line);overflow:hidden;text-decoration:none;color:var(--ink)}
+.pxt .rows{padding:6px 12px;filter:blur(4.5px);opacity:.75;user-select:none;pointer-events:none;transition:filter .25s,opacity .25s}
+.pxt .rows div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font:400 13px Inter,sans-serif}
+.pxt .rows div:last-child{border-bottom:0}.pxt .rows b{color:var(--acc)}
+.pxt .cta{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:color-mix(in srgb,var(--panel) 35%,transparent);text-align:center;padding:8px}
+.pxt .cta span{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;background:var(--panel);border:1px solid color-mix(in srgb,var(--acc) 55%,transparent);color:var(--acc);font:600 13px Inter,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.pxt .cta small{font:400 11.5px Inter,sans-serif;color:var(--mute)}
+.pxt:hover .rows,.pxt:focus-visible .rows{filter:blur(3.5px);opacity:.9}
+.pxt:hover .cta span{border-color:var(--acc)}
