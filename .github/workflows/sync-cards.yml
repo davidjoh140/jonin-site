@@ -4,6 +4,9 @@ name: Sync card list from Supabase
 on:
   schedule: [{ cron: "*/30 * * * *" }]
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore: ["public/cards.json"]
 permissions:
   contents: write
 concurrency: { group: sync-cards, cancel-in-progress: false }
