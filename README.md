@@ -11,7 +11,7 @@ Public card database for the original Bandai Naruto CCG (2006–2013).
 
 Supabase is the only master card list. Nothing else is edited by hand.
 
-- `pipeline/export_cards.py` rebuilds `public/cards.json` from Supabase. The **Sync card list** workflow runs it every 30 minutes and commits when something changed, so jonin.cards always matches Supabase. `--check` reports whether they differ.
+- `pipeline/export_cards.py` rebuilds `public/cards.json` from Supabase. The **Sync card list** workflow runs it every 15 minutes (when GitHub's schedule fires) and on every push, and commits when something changed, so jonin.cards always matches Supabase. `--check` reports whether they differ.
 - Scrapers read the card list from Supabase at the start of every run, and scan rows point at `cards.id` with foreign keys, so an image can only be attached to a card that exists.
 - Checklist fixes (e.g. from RetroTCG) go into `checklist_changes` for review, never straight into a separate list.
 - `checklist_version` goes up on every change to sets or cards, so any copy can tell it's stale.
@@ -31,4 +31,7 @@ Repo secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EBAY_CLIENT_ID`, `EBAY_CL
 - Supabase is the master. Card list edits (new cards, rarities, printings, decks) are made in Supabase only, never by hand in the Card Index or `public/cards.json`.
 - `public/cards.json` is the export of Supabase. The Card Index artifact is republished with that exact same file, so the site and the Card Index are byte-for-byte identical.
 - The export carries `version` (Supabase `checklist_version`). The Card Index compares it with Supabase on load and shows a banner when it has fallen behind.
-- New Card Index scans are copied to `public/scans/<set>/<number>.webp` with a matching public row in `scans`.
+- Scans flow on their own: when David (admin) has the Card Index open, it sends every scan that Supabase doesn't have yet (or whose image changed) into the `scan_uploads` staging table, resized to 500px webp, through the Supabase connector. It re-checks every 10 minutes while open.
+- The `drain-scan-uploads` Edge Function, called every minute by pg_cron (`kick_scan_drain()`), moves staged images into the public `scans` Storage bucket (`ci/<set>/<number>_<printing>-<edition>-<asset>.webp`) and upserts the `scans` row by `ci_doc` (the Card Index doc id). `pipeline/drain_uploads.py` does the same from GitHub Actions as a backup. Rows that fail keep an `error` and stay staged.
+- jonin.cards reads images live from the `site_card_images` view (one best public image per card) with the publishable key, so a new scan shows within a minute or two. `cards.json` still carries `img` as the fallback.
+- Older scans (the first 255) live in `public/scans/<set>/<number>.webp`.
