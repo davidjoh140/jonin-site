@@ -276,7 +276,8 @@ let VIEW='cards',D=null,S=S0(),list=[],shown=0,sel=-1;
 const PAGE=120;
 const setName=id=>D.byId[id]?.name||id;
 const setLabel=s=>s.kind==='Main'?'Set '+s.id:s.kind==='Promo'?'Promo':s.id;
-const setTag=id=>{const s=D.byId[id]||{id,name:id};return `<span class="stag">${s.symbol?`<img class="ssym" src="${esc(s.symbol)}" alt="" loading="lazy">`:''}<span>${esc(s.name||id)}</span></span>`};
+const SYMV='2';const symUrl=u=>u?u+(u.includes('?')?'&':'?')+'v='+SYMV:'';
+const setTag=id=>{const s=D.byId[id]||{id,name:id};return `<span class="stag">${s.symbol?`<img class="ssym" src="${esc(symUrl(s.symbol))}" alt="" loading="lazy">`:''}<span>${esc(s.name||id)}</span></span>`};
 const baseName=n=>n.replace(/\s*\(.*?\)\s*/g,'').trim();
 function readHash(){const h=location.hash.slice(1);if(h==='sets')return 'sets';if(h==='mine')return 'mine';if(h.startsWith('u='))return 'user';S=S0();h.split('&').forEach(p=>{const i=p.indexOf('=');if(i<0)return;const k=p.slice(0,i),v=decodeURIComponent(p.slice(i+1));if(!v)return;
   if(k==='chars'||k==='rars')S[k]=v.split(',').filter(Boolean);else if(k==='rar')S.rars=[v];else if(k==='quick'){const[a,b]=v.split(':');if(a==='char')S.chars=[b];if(a==='rar')S.rars=[b]}else if(k in S)S[k]=v});return 'cards'}
@@ -301,7 +302,7 @@ function renderCards(reset){
   document.querySelectorAll('#quick .pill').forEach(b=>b.setAttribute('aria-pressed',S.chars.includes(b.dataset.q)));
   document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r?S.rars.includes(b.dataset.r):!S.rars.length));
   $('#setsel').value=S.set;document.querySelectorAll('#types .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ty===S.type));if(document.activeElement!==$('#q'))$('#q').value=S.q}
-function renderSets(){$('#sets').innerHTML=D.sets.map((s,k)=>`<button class="set in" style="--k:${Math.min(k,24)}" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(s.symbol)}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
+function renderSets(){$('#sets').innerHTML=D.sets.map((s,k)=>`<button class="set in" style="--k:${Math.min(k,24)}" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(symUrl(s.symbol))}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
 function view(v){const was=VIEW;VIEW=v;$('#v-cards').hidden=v!=='cards';$('#v-sets').hidden=v!=='sets';$('#v-mine').hidden=v!=='mine';$('#v-user').hidden=v!=='user';if(v==='cards'&&(was==='mine'||was==='user'))renderCards(true);if(v==='mine')renderMine();if(v==='user')renderUser(decodeURIComponent(location.hash.slice(3)));document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v))}
 const money=v=>'$'+(v>=100?Math.round(v).toLocaleString():(+v).toFixed(2).replace(/\.00$/,''));
 function priceBlock(c){const rows=c.px||[],eds=(c.ed||[]).filter(Boolean).length>1,prs=(c.v||[]).length>1;

@@ -29,8 +29,11 @@ def set_slug(s):
     return s['id'].lower()
 
 
+SYMV = '2'  # bump when symbol images change so browsers drop cached copies
+
+
 def sym_img(s):
-    return f'<img class="ssym" src="{e(s["symbol"])}" alt="" loading="lazy">' if s.get('symbol') else ''
+    return f'<img class="ssym" src="{e(s["symbol"])}?v={SYMV}" alt="" loading="lazy">' if s.get('symbol') else ''
 
 
 def set_label(s):
@@ -168,7 +171,7 @@ def set_page(s, cards):
         + (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])}" width="750" height="1050">'
            if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
         + f'<span class="tt">{e(c["name"])}</span><span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])}</span></a>' for c in cards)
-    sym = f'<img class="sym" src="{e(s["symbol"])}" alt="">' if s.get('symbol') else ''
+    sym = f'<img class="sym" src="{e(s["symbol"])}?v={SYMV}" alt="">' if s.get('symbol') else ''
     body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/#sets">Sets</a> › {e(s["name"])}</nav>
 <section class="sethead"><h1>{sym}{e(s["name"])}</h1>
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
