@@ -2,3 +2,4 @@
 -- admin_waitlist() (owner only, is_admin()): one row per email from premium_waitlist with first/latest signup,
 --   signup count, cards they asked about and where they signed up. Shown on /admin/ → Premium waitlist.
 -- premium_waitlist: anon/authenticated keep INSERT only (select/update/delete grants revoked).
+-- notified_at (migration waitlist_notified): set by the hourly scheduled task "Jonin Premium signups → email" once David has been emailed about a signup.
