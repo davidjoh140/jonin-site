@@ -38,30 +38,23 @@
 .pdd a.go{display:block;text-align:center;padding:8px 10px;border-radius:7px;background:linear-gradient(#D6483B,#B02E24);color:#FFF4E0!important;font:600 13px Inter,sans-serif;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
 .pdd a.go:hover{filter:brightness(1.08)}
 @media (hover:hover) and (min-width:601px){
-  /* Hover sequence: lock pops open (0-.4s), lock fades out as a tiny rolled scroll takes its place (.38-.58s),
-     the scroll flies down and grows into the full dropdown (.56-.92s), then the paper unrolls (.9s on).
-     --fx/--fy: offset from the scroll's resting spot back to the lock icon in the button. */
+  /* Hover sequence: lock pops open (0-.4s), then the lock itself becomes the scroll: it fades as a closed scroll
+     the same size appears right on top of it (.38s), which grows and drops into place (.38-.8s), then the paper
+     unrolls (.78s on). --fx/--fy: offset from the scroll's resting spot back to the lock icon in the button. */
   .pn{--fx:51px;--fy:-40px}
-  .pn>.pnb{position:relative}
-  .pn>.pnb::before{content:"";position:absolute;left:9px;top:50%;width:16px;height:8px;margin-top:-4px;border-radius:4px/3px;pointer-events:none;
-    background:linear-gradient(90deg,#22160F 0 1.5px,#C8372D 1.5px 4px,transparent 4px 12px,#C8372D 12px 14.5px,#22160F 14.5px),linear-gradient(#FFF8E8,#E8D6AC 55%,#B89E6A);
-    opacity:0;transform:scale(.3) rotate(-20deg);transition:opacity .1s,transform .1s}
   .pn .lk{transition:opacity .2s .1s,transform .25s cubic-bezier(.3,1.6,.6,1) .1s}
-  .pn:hover .lk,.pn:focus-within .lk{opacity:0;transform:scale(.4) rotate(12deg);transition:opacity .16s .38s,transform .18s ease-in .38s}
-  .pn:hover>.pnb::before,.pn:focus-within>.pnb::before{animation:minis .26s ease-out .38s both}
-  .pn:hover .pdd,.pn:focus-within .pdd{visibility:visible;opacity:1;transition:opacity 0s .56s,visibility 0s .56s}
-  .pn:hover .scr,.pn:focus-within .scr{animation:scrfly .36s cubic-bezier(.3,1.25,.55,1) .56s both}
-  .pn:hover .paper,.pn:focus-within .paper{grid-template-rows:1fr;transition:grid-template-rows .6s cubic-bezier(.22,.9,.3,1) .9s}
+  .pn:hover .lk,.pn:focus-within .lk{opacity:0;transform:scale(1.15);transition:opacity .1s .4s,transform .12s ease-out .38s}
+  .pn:hover .pdd,.pn:focus-within .pdd{visibility:visible;opacity:1;transition:opacity 0s .38s,visibility 0s .38s}
+  .pn:hover .scr,.pn:focus-within .scr{animation:scrfly .42s cubic-bezier(.3,1.2,.55,1) .38s both}
+  .pn:hover .paper,.pn:focus-within .paper{grid-template-rows:1fr;transition:grid-template-rows .6s cubic-bezier(.22,.9,.3,1) .78s}
   .paper{transition:grid-template-rows 0s .2s}
   .pn:hover .pdd li,.pn:focus-within .pdd li{opacity:1;transform:none;transition:opacity .25s,transform .25s}
-  .pn:hover .pdd li:nth-child(1){transition-delay:1.05s}.pn:hover .pdd li:nth-child(2){transition-delay:1.11s}.pn:hover .pdd li:nth-child(3){transition-delay:1.17s}
-  .pn:hover .pdd li:nth-child(4){transition-delay:1.23s}.pn:hover .pdd li:nth-child(5){transition-delay:1.29s}
+  .pn:hover .pdd li:nth-child(1){transition-delay:.93s}.pn:hover .pdd li:nth-child(2){transition-delay:.99s}.pn:hover .pdd li:nth-child(3){transition-delay:1.05s}
+  .pn:hover .pdd li:nth-child(4){transition-delay:1.11s}.pn:hover .pdd li:nth-child(5){transition-delay:1.17s}
 }
-/* Tiny scroll in the button: pops in where the lock was, holds, then hands off to the big scroll. */
-@keyframes minis{0%{opacity:0;transform:scale(.3) rotate(-20deg)}50%{opacity:1;transform:scale(1.15) rotate(0)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:translateY(5px) scale(1.4)}}
-/* Big scroll starts as the tiny closed scroll sitting on the button, then flies to its place at full size. */
-@keyframes scrfly{from{transform:translate(var(--fx),var(--fy)) scale(.053,.27);opacity:.9}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){.paper,.pdd,.pdd li,.lk,.lk *,.scr,.pnb::before{transition:none!important;animation:none!important}.pn .lk{opacity:1!important;transform:none!important}}
+/* The scroll starts as the closed scroll at the lock's size and spot, fading in over the vanishing lock, then grows into place. */
+@keyframes scrfly{0%{transform:translate(var(--fx),var(--fy)) scale(.06,.55);opacity:0}18%{transform:translate(var(--fx),var(--fy)) scale(.07,.6);opacity:1}100%{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.paper,.pdd,.pdd li,.lk,.lk *,.scr{transition:none!important;animation:none!important}.pn .lk{opacity:1!important;transform:none!important}}
 
 /* Blurred sold listings: free visitors see the shape of what Premium shows, not the data. */
 .pxt{position:relative;display:block;border-radius:9px;border:1px solid var(--line);overflow:hidden;text-decoration:none;color:var(--ink)}
