@@ -291,10 +291,10 @@ function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};
   <div class="links"><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a><a href="https://www.psacard.com/pop" target="_blank" rel="noopener">PSA pop report</a></div>
   <a class="alert" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
   <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div></div></div>`;
-  $('#ov').hidden=false;renderMyColl(c);$('#panel').querySelector('[data-close]').focus()}
+  $('#ov').hidden=false;renderMyColl(c);track('card',{card_id:(c.s+':'+c.n).slice(0,24)});$('#panel').querySelector('[data-close]').focus()}
 function pop(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
 function close(){$('#ov').hidden=true;sel=-1}
-$('#q').addEventListener('input',e=>{S.q=e.target.value.trim();writeHash();renderCards(true)});
+$('#q').addEventListener('input',e=>{S.q=e.target.value.trim();clearTimeout(trackT);if(S.q.length>=2){const t=S.q.slice(0,80);trackT=setTimeout(()=>track('search',{term:t}),1500)}writeHash();renderCards(true)});
 $('#setsel').addEventListener('change',e=>{S.set=e.target.value;writeHash();renderCards(true)});
 $('#typesel').addEventListener('change',e=>{S.type=e.target.value;writeHash();renderCards(true)});
 $('#more').addEventListener('click',()=>renderCards(false));
@@ -314,6 +314,11 @@ new IntersectionObserver(es=>{if(es[0].isIntersecting&&!$('#more').hidden)render
 // Live scan images: read straight from the Jonin database (Supabase), so new scans show up without waiting
 // for cards.json to be rebuilt. Public read-only view + publishable key (safe to ship in the page).
 const SUPA='https://cfzpayanhvvqtkuqfgof.supabase.co',SUPA_KEY='sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe';
+// Visitor counter: anonymous events (page view, search term, card opened) into Supabase site_events (insert-only).
+// The visitor id is a random string kept in this browser, nothing personal.
+const VID=(()=>{try{let v=localStorage.getItem('jv');if(!v){v=Math.random().toString(36).slice(2,12);localStorage.setItem('jv',v)}return v}catch(_){return ''}})();
+function track(kind,o){try{fetch(SUPA+'/rest/v1/site_events',{method:'POST',keepalive:true,headers:{apikey:SUPA_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(Object.assign({kind,visitor:VID},o))}).catch(()=>{})}catch(_){}}
+let trackT;
 // ---------- accounts: haves & wants (Supabase auth; each person's rows are private to them, RLS) ----------
 let sb=null,ME=null,MYP=null;const COLL=new Map();
 const cid=c=>c.s+':'+c.n;
@@ -399,7 +404,7 @@ fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promis
   $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>`<button class="pill" data-q="${esc(q.replace(/^char:/,''))}" aria-pressed="false" style="--c:${QCOL[l]||'#F57C00'};--ct:${qct(QCOL[l]||'#F57C00')}">${esc(l)}</button>`).join(''));
   $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${k?rsym(k)+' ':''}${l}</button>`).join('');if(matchMedia('(max-width:900px)').matches)$('#legend').open=false;
   $('#setsel').insertAdjacentHTML('beforeend',D.sets.map(s=>`<option value="${esc(s.id)}">${esc(setLabel(s))} · ${esc(s.name)}</option>`).join(''));
-  renderSets();const v=readHash();view(v);renderCards(true)}).catch(()=>{$('#count').textContent='Could not load cards'});
+  renderSets();const v=readHash();view(v);renderCards(true);let rf='';try{rf=document.referrer?new URL(document.referrer).hostname:''}catch(_){}track('view',{page:v,ref:rf.slice(0,80)||null})}).catch(()=>{$('#count').textContent='Could not load cards'});
 }
 </script>
 </body>
