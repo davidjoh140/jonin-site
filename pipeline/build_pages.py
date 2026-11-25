@@ -56,10 +56,10 @@ def card_q(c):
 IG_URL = 'https://www.instagram.com/jonin.cards/'
 IG_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg>'
 IG_HEADER = '<a class="igf" href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener" aria-label="Follow Jonin on Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg><span>Follow<span class="h"> @jonin.cards</span></span></a>'
-IG_FOOT = '<div class="igrow"><a class="igbtn" href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg>Follow @jonin.cards</a><span>New finds, top sales and set spotlights on Instagram.</span></div>'
+IG_FOOT = '<div class="igrow"><a class="igbtn" href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg><span>Follow <b class="h">@jonin.cards</b></span></a><span>New finds, top sales and set spotlights on Instagram.</span></div>'
 
 IG_END = ('<div class="igend"><p>Get Naruto CCG news and top sales in your feed.</p>'
-          f'<a class="igbtn" href="{IG_URL}" target="_blank" rel="noopener">{IG_SVG}Follow @jonin.cards</a></div>\n')
+          f'<a class="igbtn" href="{IG_URL}" target="_blank" rel="noopener">{IG_SVG}<span>Follow <b class="h">@jonin.cards</b></span></a></div>\n')
 
 HEAD = '''<!DOCTYPE html>
 <html lang="en">
