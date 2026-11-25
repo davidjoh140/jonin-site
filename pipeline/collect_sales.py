@@ -25,7 +25,7 @@ import requests
 import prices
 import settings as cfg
 import supa
-from find_scans import EBAY, Budget, OutOfCalls, big, ebay_token
+from find_scans import EBAY, Budget, OutOfCalls, big, ebay_token, fetch_image
 from match import Matcher
 
 TRADING = "https://api.ebay.com/ws/api.dll"
@@ -162,6 +162,24 @@ def ebay_item(utok, external_id):
     return {"record": record, "summary": summary}
 
 
+def fill_thumbs(limit=200):
+    """Save a small copy of each waiting sale's listing photo, so the Buying Desk can show it
+    (the Buying Desk page can't load images from eBay directly)."""
+    rows = supa.select("sales", {"select": "id,image_url", "status": "eq.pending", "thumb_b64": "is.null",
+                                 "image_url": "not.is.null", "limit": str(limit)})
+    done = 0
+    for r in rows[:limit]:
+        url = re.sub(r"\$_\d+\.(JPG|jpg|PNG|png)", r"$_57.\1", big(r["image_url"]))   # ask eBay for a larger copy
+        try:
+            _, thumb = fetch_image(url)
+        except Exception as e:
+            print("photo failed for sale", r["id"], e)
+            thumb = ""                                # don't retry forever
+        supa.update("sales", {"id": r["id"]}, {"thumb_b64": thumb})
+        done += 1
+    return done
+
+
 def last_full_sweep():
     rows = supa.select("pipeline_runs", {"select": "started_at,stats", "job": "eq.collect_sales",
                                          "error": "is.null", "order": "started_at.desc", "limit": "50"})
@@ -267,6 +285,7 @@ def main():
                 supa.insert("sales", [row], ignore_duplicates=True, returning=False)
                 stats[sale["status"]] += 1
             supa.update("listings", {"external_id": li["external_id"]}, {"state": state})
+        stats["thumbs"] = fill_thumbs()
         stats["ranges"] = supa.rpc("refresh_price_ranges")
         print(stats)
 
