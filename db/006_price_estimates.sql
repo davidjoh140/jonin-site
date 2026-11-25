@@ -1,0 +1,8 @@
+-- Applied to Supabase on 2026-11-25 (migrations price_estimates, price_ranges_also_refresh_estimates). Kept here as the record.
+-- price_estimates: Premium price estimate per exact version (card + printing + edition + grader + grade).
+--   estimate = average of approved sales weighted toward the newest: a sale's weight halves every 30 days (PLACEHOLDER),
+--   using sales from the last 365 days, or the last 3 sales if none are that recent (PLACEHOLDER). Also sales_count,
+--   last_sold_at, last_price. Members-only read (same rule as price_ranges); anon has no access.
+-- refresh_price_estimates(half_life_days default 30) rebuilds it; refresh_price_ranges() now calls it at the end.
+-- Site (David, 2026-11-25): Premium members see estimates instead of the price band; grid tiles show the RAW estimate of the
+--   card's most-sold version, and "Market value" sorting uses that number.
