@@ -161,3 +161,18 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .oa[hidden],.oauth[hidden],.orline[hidden]{display:none}
 .spx-master{display:flex;align-items:baseline;gap:6px;color:var(--mute);font-size:14px}.spx-master b{color:var(--ink)}.spx-master .spx-pct{margin-left:auto}
 .spx-why{cursor:help;opacity:.7}.spx-bar.thin{height:6px;margin-top:6px}
+/* Most valuable hub (/most-valuable/) */
+.mvlistcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:0 0 18px;max-width:980px}
+.mvlistcard h2{font:700 24px/1.2 "Baloo 2",sans-serif;margin:0 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mvlistcard h2 a{display:inline-flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}.mvlistcard h2 a:hover{color:var(--acc)}
+.mvlistcard h2 span{color:var(--mute);font:500 13px Inter,sans-serif}
+.mvlistcard .face{width:44px;height:44px;border-radius:50%;object-fit:cover}
+.mvminis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.mvmini{position:relative;display:grid;gap:3px;text-decoration:none;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px}
+.mvmini:hover{border-color:var(--acc);color:var(--ink)}
+.mvmini img,.mvmini .noimg{width:100%;height:auto;aspect-ratio:5/7;border-radius:8px;display:block;margin-bottom:6px}
+.mvmini .mvn{position:absolute;top:4px;left:8px;font-size:30px;text-shadow:0 2px 6px #000}
+.mvmini b{font:700 16px/1.2 "Baloo 2",sans-serif}.mvmini .mt{margin:0;font-size:12px}
+.mvmini .band{font:700 20px/1.1 "Baloo 2",sans-serif;color:var(--acc)}
+.mvlistcard .btns{margin:0}
+@media (max-width:620px){.mvminis{gap:8px}.mvmini{padding:6px}.mvmini b{font-size:13px}.mvmini .band{font-size:15px}.mvmini .mt{display:none}.mvmini .mvn{font-size:22px}}

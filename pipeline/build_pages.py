@@ -273,12 +273,12 @@ def mv_page(ch, ranked, sets_by_id, mv_chars):
     others_html = (f'<section class="others"><h2>Most valuable cards of other characters</h2><div class="chips">{others}</div></section>'
                    if others else '')
     updated = f' · latest sale counted {e(upd)}' if upd else ''
-    body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/characters/">Characters</a> › <a href="/character/{ch["slug"]}/">{e(ch["name"])}</a> › Most valuable</nav>
+    body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/characters/">Characters</a> › <a href="/character/{ch["slug"]}/">{e(ch["name"])}</a> › <a href="/most-valuable/">Most valuable</a></nav>
 <section class="sethead charhead"><h1><img class="face" src="/chars/{ch["slug"]}.webp" alt="" width="56" height="56">Most valuable {e(ch["name"])} cards</h1>
 <p class="lede">The top {n} {e(ch["name"])} cards in the original Bandai Naruto CCG, ranked by the highest price each card has sold for. Each card gets one spot, counted by its best-selling version (edition, foil or grade).</p>
 <p class="mt">Updates on its own as new sales come in{updated}.</p></section>
 <ol class="mvlist">{"".join(rows)}</ol>
-<p class="btns" style="margin-top:26px"><a class="primary" href="/character/{ch["slug"]}/">All {e(ch["label"])} cards</a></p>
+<p class="btns" style="margin-top:26px"><a class="primary" href="/character/{ch["slug"]}/">All {e(ch["label"])} cards</a><a class="ghostbtn" href="/most-valuable/">💰 Every most-valuable list</a></p>
 {others_html}
 '''
     img = next((c['img'] for c in ranked if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
@@ -292,6 +292,47 @@ def mv_page(ch, ranked, sets_by_id, mv_chars):
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(img), tw='summary_large_image', ld=ld) + body + FOOT
 
 
+def mv_index(mv_chars, ranked, sets_by_id):
+    """/most-valuable/: every character's most-valuable list on one page (a list of lists), for search."""
+    url = f'{SITE}/most-valuable/'
+    names = ', '.join(c['label'] for c in mv_chars)
+    title = 'Most expensive Naruto cards: top lists by character | Jonin'
+    desc = (f'The most valuable cards in the original Bandai Naruto CCG, ranked by highest recorded sale. '
+            f'Top {MOST_VALUABLE_TOP} lists for {names}, updated as new sales come in.')
+
+    def price(c):
+        p = c['top'][4] if len(c['top']) > 4 else None
+        return ('$' + f'{p:,.2f}'.removesuffix('.00')) if p else (e(BANDS[c['top'][1]]) if 0 <= c['top'][1] < len(BANDS) else '')
+
+    def mini(c, i):
+        img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
+               if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
+        return (f'<a class="mvmini" href="/card/{slug(c)}/"><span class="mvn">{i + 1}</span>{img}'
+                f'<b>{e(c["name"])}</b><span class="mt">{e(c["n"])} · {e(sets_by_id[c["s"]]["name"])}</span><span class="band">{price(c)}</span></a>')
+    blocks = []
+    for ch in mv_chars:
+        r = ranked[ch['slug']]
+        lu = f'/character/{ch["slug"]}/most-valuable/'
+        blocks.append(
+            f'<section class="mvlistcard"><h2><a href="{lu}"><img class="face" src="/chars/{ch["slug"]}.webp" alt="" width="44" height="44">'
+            f'Most valuable {e(ch["name"])} cards</a><span>Top {len(r)}</span></h2>'
+            f'<div class="mvminis">{"".join(mini(c, i) for i, c in enumerate(r[:3]))}</div>'
+            f'<p class="btns"><a class="primary" href="{lu}">See the full top {len(r)} →</a></p></section>')
+    body = ('<nav class="crumb"><a href="/">All cards</a> › Most valuable</nav>\n'
+            '<section class="sethead"><h1>Most expensive Naruto cards</h1>\n'
+            '<p class="lede">The most valuable cards in the original Bandai Naruto CCG (2006–2013), one list per character, '
+            'ranked by the highest price each card has sold for. Lists update on their own as new sales come in.</p></section>\n'
+            + ''.join(blocks)
+            + '\n<p class="mt" style="margin-top:22px">More characters are coming. <a href="/characters/">Browse every character</a>.</p>\n')
+    img = next((c['img'] for ch in mv_chars for c in ranked[ch['slug']] if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'ItemList', 'name': title, 'description': desc, 'url': url, 'numberOfItems': len(mv_chars),
+         'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'name': f"Most valuable {ch['name']} cards",
+                              'url': f'{SITE}/character/{ch["slug"]}/most-valuable/'} for i, ch in enumerate(mv_chars)]},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('Most valuable', url))]})
+    return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(img), tw='summary_large_image', ld=ld) + body + FOOT
+
+
 def chars_index(chars, counts):
     url = f'{SITE}/characters/'
     title = 'Naruto CCG cards by character | Jonin'
@@ -300,13 +341,13 @@ def chars_index(chars, counts):
     cells = ''.join(f'<a class="ccell" href="/character/{c["slug"]}/"><img src="/char-art/{c["slug"]}.webp" alt="" width="480" height="360" loading="lazy">'
                     f'<b>{e(c["name"])}</b><span>{counts[c["slug"]]} cards</span></a>' for c in chars)
     mv = [c for c in chars if c.get('mv')]
-    mvrow = (f'<section class="others" id="most-valuable"><h2>Most valuable cards<span>Top {MOST_VALUABLE_TOP} by highest sale</span></h2><div class="chips">'
+    mvrow = (f'<section class="others" id="most-valuable"><h2><a href="/most-valuable/">Most valuable cards</a><span>Top {MOST_VALUABLE_TOP} by highest sale</span></h2><div class="chips">'
              + ''.join(f'<a class="chip" href="/character/{c["slug"]}/most-valuable/"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">Most valuable {e(c["label"])} cards</a>' for c in mv)
              + '</div></section>') if mv else ''
     body = f'''<nav class="crumb"><a href="/">All cards</a> › Characters</nav>
 <section class="sethead"><h1>Naruto CCG cards by character</h1>
 <p class="lede">Every character card in the original Bandai Naruto CCG (2006–2013), grouped by character. Pick a character to see all of their cards set by set.</p>
-{'<p class="btns"><a class="primary" href="#most-valuable">💰 Most valuable cards</a></p>' if mv else ''}</section>
+{'<p class="btns"><a class="primary" href="/most-valuable/">💰 Most valuable cards</a></p>' if mv else ''}</section>
 <section class="cindex">{cells}</section>
 {mvrow}'''
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
@@ -585,6 +626,11 @@ def main():
             shutil.rmtree(mvdir)
     chars = [ch for ch in chars if ch['slug'] in keep_ch]
     changed += write(os.path.join(ROOT, 'characters', 'index.html'), chars_index(chars, counts))
+    mvidx = os.path.join(ROOT, 'most-valuable')
+    if mv_chars:
+        changed += write(os.path.join(mvidx, 'index.html'), mv_index(mv_chars, ranked, sets_by_id))
+    elif os.path.isdir(mvidx):
+        shutil.rmtree(mvidx)
     for pg in load_pages():
         changed += write(os.path.join(ROOT, pg['slug'], 'index.html'), plain_page(pg))
     arts = load_news()
@@ -609,7 +655,7 @@ def main():
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
     urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
-           [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
+           ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
     lm = lastmods(urls)
