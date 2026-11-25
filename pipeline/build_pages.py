@@ -8,7 +8,7 @@ Output is deterministic (no timestamps), so the sync workflow only commits real 
 Stale card/set folders (cards removed or renumbered) are deleted.
 usage: python pipeline/build_pages.py
 """
-import html, json, os, re, shutil, sys
+import datetime, hashlib, html, json, os, re, shutil, sys
 from urllib.parse import quote
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public')
@@ -86,6 +86,12 @@ def ld_json(obj):
     return '<script type="application/ld+json">' + json.dumps(obj, ensure_ascii=False).replace('</', '<\\/') + '</script>'
 
 
+def crumbs(*items):
+    """BreadcrumbList structured data: items are (name, url) pairs, last one is the page itself."""
+    return {'@type': 'BreadcrumbList', 'itemListElement': [
+        {'@type': 'ListItem', 'position': i + 1, 'name': n, 'item': u} for i, (n, u) in enumerate(items)]}
+
+
 def money(v):
     return '$' + (f'{round(v):,}' if v >= 100 else (f'{v:.2f}'.removesuffix('.00')))
 
@@ -123,9 +129,11 @@ def card_page(c, s, prev, nxt):
             ('Printings', ''.join(f'<span class="pv">{e(v)}</span>' for v in (c.get('v') or [])))]
     if c.get('note'):
         rows.append(('Note', e(c['note'])))
-    ld = ld_json({'@context': 'https://schema.org', '@type': 'Thing', 'name': f"{c['name']} ({c['n']})",
-                  'description': desc, 'url': url, **({'image': img} if img else {}),
-                  'isPartOf': {'@type': 'CreativeWork', 'name': f"Naruto CCG · {s['name']}", 'url': f'{SITE}/set/{set_slug(s)}/'}})
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'Thing', 'name': f"{c['name']} ({c['n']})",
+         'description': desc, 'url': url, **({'image': img} if img else {}),
+         'isPartOf': {'@type': 'CreativeWork', 'name': f"Naruto CCG · {s['name']}", 'url': f'{SITE}/set/{set_slug(s)}/'}},
+        crumbs(('Naruto CCG cards', SITE + '/'), (s['name'], f'{SITE}/set/{set_slug(s)}/'), (f"{c['name']} {c['n']}", url))]})
     nav = ''.join([
         f'<a class="pn" href="/card/{slug(prev)}/" rel="prev">‹ {e(prev["n"])} {e(prev["name"])}</a>' if prev else '<span></span>',
         f'<a class="pn" href="/card/{slug(nxt)}/" rel="next">{e(nxt["n"])} {e(nxt["name"])} ›</a>' if nxt else '<span></span>'])
@@ -176,7 +184,9 @@ def set_page(s, cards):
 <p><a class="primary" href="/#set={quote(s['id'])}">Browse and filter this set</a></p></section>
 <section class="grid">{grid}</section>
 '''
-    ld = ld_json({'@context': 'https://schema.org', '@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url})
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('Sets', SITE + '/#sets'), (s['name'], url))]})
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
 
 
@@ -187,6 +197,42 @@ def write(path, text):
         open(path, 'w', encoding='utf-8').write(text)
         return 1
     return 0
+
+
+LASTMOD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lastmod.json')
+
+
+def page_path(u):
+    rel = u[len(SITE) + 1:]
+    return os.path.join(ROOT, rel, 'index.html') if rel else os.path.join(ROOT, 'index.html')
+
+
+def lastmods(urls):
+    """Sitemap <lastmod> per page: the date a page's content last changed. pipeline/lastmod.json keeps a
+    hash and date per URL; the date only moves when the hash does, so unchanged builds stay identical."""
+    old = json.load(open(LASTMOD)) if os.path.exists(LASTMOD) else {}
+    today, new = datetime.date.today().isoformat(), {}
+    for u in urls:
+        p = page_path(u)
+        h = hashlib.sha1(open(p, 'rb').read()).hexdigest()[:16] if os.path.exists(p) else ''
+        prev = old.get(u)
+        new[u] = prev if prev and prev[0] == h else [h, today]
+    return new
+
+
+def set_links(sets):
+    """Plain set links for the homepage, so search engines find every set page without running JavaScript."""
+    groups, order = {}, []
+    for s in sets:
+        k = s.get('kind') or 'Other'
+        if k not in groups:
+            groups[k] = []
+            order.append(k)
+        groups[k].append(f'<a href="/set/{set_slug(s)}/">{e(s["name"])}</a>')
+    names = {'Main': 'Main sets', 'Promo': 'Promos', 'Tournament pack': 'Tournament packs', 'Tin': 'Collector tins'}
+    return ('<!--setlinks--><nav class="setlinks" aria-label="All sets"><h2>All Naruto CCG sets</h2>'
+            + ''.join(f'<p><b>{e(names.get(k, k))}</b> {" · ".join(groups[k])}</p>' for k in order)
+            + '</nav><!--/setlinks-->')
 
 
 def main():
@@ -214,11 +260,19 @@ def main():
             if name not in keep:
                 shutil.rmtree(os.path.join(base, name))
                 removed += 1
+    home = os.path.join(ROOT, 'index.html')
+    hs = open(home, encoding='utf-8').read()
+    hs2 = re.sub(r'<!--setlinks-->.*?<!--/setlinks-->', lambda m: set_links(sets), hs, flags=re.S)
+    if hs2 == hs and '<!--setlinks-->' not in hs:
+        hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
+    changed += write(home, hs2)
     urls = [SITE + '/'] + [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
+    lm = lastmods(urls)
+    changed += write(LASTMOD, json.dumps(lm, indent=0, sort_keys=True) + '\n')
     changed += write(os.path.join(ROOT, 'sitemap.xml'),
                      '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                     + ''.join(f'<url><loc>{e(u)}</loc></url>\n' for u in urls) + '</urlset>\n')
+                     + ''.join(f'<url><loc>{e(u)}</loc><lastmod>{lm[u][1]}</lastmod></url>\n' for u in urls) + '</urlset>\n')
     changed += write(os.path.join(ROOT, 'robots.txt'),
                      f'User-agent: *\nAllow: /\nDisallow: /admin/\n\nSitemap: {SITE}/sitemap.xml\n')
     print(f'{len(keep_c)} card pages, {len(keep_s)} set pages, {changed} files written, {removed} stale folders removed')
