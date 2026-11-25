@@ -14,29 +14,20 @@
 .pn:hover .lk .bd,.pxt:hover .lk .bd{animation:lkclunk .42s ease-out .1s}
 @keyframes lkclunk{0%{transform:none}25%{transform:rotate(-7deg)}55%{transform:rotate(5deg)}80%{transform:rotate(-2deg)}100%{transform:none}}
 
-/* Dropdown: a plain paper scroll. The lock on the Premium button unlocks slowly, then the scroll unrolls below it. */
-.pdd{position:absolute;right:-14px;top:100%;padding-top:10px;width:304px;z-index:40;visibility:hidden;opacity:0;transition:opacity .15s,visibility 0s .15s}
-.scr{filter:drop-shadow(0 12px 20px rgba(0,0,0,.4))}
-.rod{display:block;height:12px;border-radius:6px;background:linear-gradient(#FBF4E2,#E6D3A8 70%,#CDB585)}
-.paper{display:grid;grid-template-rows:0fr;margin:0 6px;transition:grid-template-rows 0s .15s}
-.paper>.in{overflow:hidden;min-height:0}
-.pad{padding:14px 18px 13px;text-align:left;background:#F5EAD0}
+/* Dropdown: a plain card that fades in under the Premium button. Kept simple on purpose (David: KISS). */
+.pdd{position:absolute;right:-14px;top:100%;padding-top:8px;width:304px;white-space:normal;z-index:40;visibility:hidden;opacity:0;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility 0s .15s}
+.rod{display:none}
+.pad{padding:14px 18px 14px;text-align:left;background:#F5EAD0;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
 .pdd h4{margin:0 0 8px;font:700 17px "Baloo 2",sans-serif;color:#2A1C12}
 .pdd ul{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:7px}
 .pdd li{display:flex;gap:8px;font:500 13px/1.35 Inter,sans-serif;color:#3B2A1C}
 .pdd li::before{content:"✓";color:#C8372D;font-weight:800;flex:none}
 .pdd a.go{display:block;text-align:center;padding:8px 10px;border-radius:7px;background:#C8372D;color:#FFF4E0!important;font:600 13px Inter,sans-serif;text-decoration:none}
 .pdd a.go:hover{filter:brightness(1.08)}
-@media (hover:hover) and (min-width:601px){
-  /* Slow unlock on the Premium button: shackle lifts (0-.35s), swings open (.3-.9s). */
-  .pn:hover .lk .lift,.pn:focus-within .lk .lift{transition:transform .35s ease-out}
-  .pn:hover .lk .sh,.pn:focus-within .lk .sh{transition:transform .6s cubic-bezier(.3,1.4,.5,1) .3s}
-  .pn:hover .lk .bd{animation:lkclunk .7s ease-out .25s}
-  /* Then the scroll appears rolled up (.8s) and unrolls (.85-1.6s). */
-  .pn:hover .pdd,.pn:focus-within .pdd{visibility:visible;opacity:1;transition:opacity .2s .8s,visibility 0s .8s}
-  .pn:hover .paper,.pn:focus-within .paper{grid-template-rows:1fr;transition:grid-template-rows .75s cubic-bezier(.3,.7,.3,1) .85s}
+@media (hover:hover) and (min-width:1025px){
+  .pn:hover .pdd,.pn:focus-within .pdd{visibility:visible;opacity:1;transform:none;transition:opacity .15s .1s,transform .15s .1s,visibility 0s .1s}
 }
-@media (prefers-reduced-motion:reduce){.paper,.pdd,.lk *{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion:reduce){.pdd,.lk *{transition:none!important;animation:none!important}}
 
 /* Blurred sold listings: free visitors see the shape of what Premium shows, not the data. */
 .pxt{position:relative;display:block;border-radius:9px;border:1px solid var(--line);overflow:hidden;text-decoration:none;color:var(--ink)}
