@@ -44,3 +44,21 @@ footer{max-width:1180px;margin:0 auto;padding:20px;color:var(--mute);font-size:1
 .cardpage .px{margin:18px 0}
 
 .stag{display:inline-flex;align-items:center;gap:6px}.ssym{height:14px;width:auto;max-width:28px;object-fit:contain;flex:none}dd .stag .ssym{height:18px;max-width:36px}
+/* Character pages (/character/..., /characters/) */
+.charhead h1 .face{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--line)}
+.lede{color:var(--ink);max-width:760px;margin:6px 0 14px;font-size:16px}
+.cgroup{margin:34px 0 0}
+.cgroup h2,.others h2{font:700 22px/1.2 "Baloo 2",sans-serif;margin:0 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cgroup h2 a{color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:8px}.cgroup h2 a:hover{color:var(--acc)}
+.cgroup h2 .ssym{height:22px;width:auto}
+.cgroup h2 span,.others h2 span{color:var(--mute);font:500 13px Inter,sans-serif}
+.others{margin:44px 0 0;padding-top:22px;border-top:1px solid var(--line2)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 5px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink);text-decoration:none;font-size:13px}
+.chip:hover{border-color:var(--acc);color:var(--ink)}
+.chip img{width:24px;height:24px;border-radius:50%;object-fit:cover}
+.cindex{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.ccell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink);text-align:center}
+.ccell:hover{border-color:var(--acc);color:var(--ink)}
+.ccell img{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:4px}
+.ccell b{font-weight:600}.ccell span{color:var(--mute);font-size:13px}

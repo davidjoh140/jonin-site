@@ -73,7 +73,7 @@ HEAD = '''<!DOCTYPE html>
 </head>
 <body>
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="#feedback" data-fb>💬 Feedback</a><a href="/premium/">🔔 Alerts</a></nav></div></header>
+<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="#feedback" data-fb>💬 Feedback</a><a href="/premium/">🔔 Alerts</a></nav></div></header>
 <main>
 '''
 FOOT = '''</main>
@@ -112,7 +112,128 @@ def price_block(c):
             f'<p class="band">{e(BANDS[pb])}</p>{lock}</section>')
 
 
-def card_page(c, s, prev, nxt):
+NOTES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'character_notes.json')
+RANK = {'Super Rare': 0, 'Promo': 1, 'Rare': 2, 'Uncommon': 3, 'Starter': 4, 'Common': 5}
+
+
+def base_name(n):
+    return re.sub(r'\s*\(.*?\)\s*', ' ', n).strip()
+
+
+def load_chars():
+    """The character list is the homepage's QUICK list (label, 'char:Name|Alias'), so the sidebar,
+    the faces in public/chars/ and these pages always agree."""
+    src = open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read()
+    m = re.search(r'const QUICK=(\[.*?\]);', src)
+    out = []
+    for label, q in json.loads(m.group(1).replace("'", '"')) if m else []:
+        if q.startswith('char:'):
+            names = q[5:].split('|')
+            out.append({'label': label, 'name': names[0], 'names': names,
+                        'slug': re.sub(r'[^a-z0-9]+', '-', label.lower()).strip('-')})
+    return out
+
+
+def char_cards(ch, cards):
+    want = set(ch['names'])
+    return [c for c in cards if any(base_name(x) in want for x in re.split(r'\s*&\s*', c['name']))]
+
+
+def char_links_for(c, chars_by_name):
+    seen, out = set(), []
+    for x in re.split(r'\s*&\s*', c['name']):
+        ch = chars_by_name.get(base_name(x))
+        if ch and ch['slug'] not in seen:
+            seen.add(ch['slug'])
+            out.append(f'<a href="/character/{ch["slug"]}/">{e(ch["name"])}</a>')
+    return ', '.join(out)
+
+
+def year(rel):
+    m = re.search(r'(19|20)\d\d', rel or '')
+    return m.group(0) if m else ''
+
+
+def tile(c, s):
+    img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
+           if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
+    return (f'<a class="tile" href="/card/{slug(c)}/">{img}<span class="tt">{e(c["name"])}</span>'
+            f'<span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])} · {e(c["r"])}</span></a>')
+
+
+def char_page(ch, cs, sets_by_id, chars, notes):
+    url = f'{SITE}/character/{ch["slug"]}/'
+    n = len(cs)
+    in_sets = [sid for sid in sets_by_id if any(c['s'] == sid for c in cs)]
+    main_sets = [sid for sid in in_sets if sets_by_id[sid].get('kind') == 'Main']
+    first, last = (sets_by_id[main_sets[0]], sets_by_id[main_sets[-1]]) if main_sets else (None, None)
+    rc = {}
+    for c in cs:
+        rc[c['r']] = rc.get(c['r'], 0) + 1
+    rar = ', '.join(f'{rc[r]} {r}{"s" if rc[r] > 1 and r not in ("Common", "Uncommon") else ""}'
+                    for r in sorted(rc, key=lambda r: RANK.get(r, 9)) if r != 'Unknown')
+    title = f"{ch['name']} Naruto CCG cards: all {n} cards | Jonin"
+    span = (f" from {first['name']} ({year(first.get('rel'))}) to {last['name']} ({year(last.get('rel'))})"
+            if first and last and first is not last else f" in {first['name']}" if first else '')
+    desc = (f"Every {ch['name']} card in the original Bandai Naruto CCG: {n} cards across {len(in_sets)} sets{span}. "
+            f"Rarities, printings, foils and 1st Editions.")
+    intro = (f"{e(ch['name'])} appears on {n} card{'s' if n != 1 else ''} in the original Bandai Naruto CCG, "
+             f"across {len(in_sets)} set{'s' if len(in_sets) != 1 else ''}{e(span)}"
+             + (f": {e(rar)}." if rar else '.'))
+    note = notes.get(ch['slug'], '').strip()
+    facts = [('Cards', str(n)), ('Sets', str(len(in_sets)))]
+    if first:
+        fc = next(c for c in cs if c['s'] == first['id'])
+        facts.append(('First card', f'<a href="/card/{slug(fc)}/">{e(fc["name"])} {e(fc["n"])}</a> · {e(first["name"])}'))
+    if len(ch['names']) > 1:
+        facts.append(('Also printed as', e(', '.join(ch['names'][1:]))))
+    key = sorted([c for c in cs if c['r'] in ('Super Rare', 'Promo')],
+                 key=lambda c: (-(c.get('pb') if c.get('pb') is not None else -1), RANK.get(c['r'], 9)))[:8] if n >= 15 else []
+    groups = ''.join(
+        f'<section class="cgroup"><h2><a href="/set/{set_slug(sets_by_id[sid])}/">{sym_img(sets_by_id[sid])}{e(sets_by_id[sid]["name"])}</a>'
+        f'<span>{e(set_label(sets_by_id[sid]))}{" · " + e(year(sets_by_id[sid].get("rel"))) if sets_by_id[sid].get("rel") else ""}</span></h2>'
+        f'<div class="grid">{"".join(tile(c, sets_by_id[sid]) for c in cs if c["s"] == sid)}</div></section>'
+        for sid in in_sets)
+    face = f'/chars/{ch["slug"]}.webp'
+    others = ''.join(f'<a class="chip" href="/character/{o["slug"]}/"><img src="/chars/{o["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(o["label"])}</a>'
+                     for o in chars if o is not ch)
+    body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/characters/">Characters</a> › {e(ch["name"])}</nav>
+<section class="sethead charhead"><h1><img class="face" src="{face}" alt="" width="56" height="56">{e(ch["name"])} cards</h1>
+<p class="lede">{intro}</p>
+{f'<p class="lede">{e(note)}</p>' if note else ''}
+<dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
+<p><a class="primary" href="/#quick={quote('char:' + '|'.join(ch['names']))}">Browse and filter {e(ch['label'])} cards</a></p></section>
+{f'<section class="cgroup"><h2>Key cards<span>Super Rares and promos</span></h2><div class="grid">{"".join(tile(c, sets_by_id[c["s"]]) for c in key)}</div></section>' if key else ''}
+{groups}
+<section class="others"><h2>More characters</h2><div class="chips">{others}</div></section>
+'''
+    img = next((c['img'] for c in key + cs if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url, 'image': img,
+         'about': {'@type': 'Thing', 'name': ch['name']}},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('Characters', SITE + '/characters/'), (ch['name'], url))]})
+    return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(img), tw='summary_large_image', ld=ld) + body + FOOT
+
+
+def chars_index(chars, counts):
+    url = f'{SITE}/characters/'
+    title = 'Naruto CCG cards by character | Jonin'
+    desc = ('Browse every card in the original Bandai Naruto CCG by character: Naruto, Sasuke, Kakashi, Itachi, Gaara '
+            f'and {len(chars) - 5} more, with every printing, foil and 1st Edition.')
+    cells = ''.join(f'<a class="ccell" href="/character/{c["slug"]}/"><img src="/chars/{c["slug"]}.webp" alt="" width="64" height="64" loading="lazy">'
+                    f'<b>{e(c["name"])}</b><span>{counts[c["slug"]]} cards</span></a>' for c in chars)
+    body = f'''<nav class="crumb"><a href="/">All cards</a> › Characters</nav>
+<section class="sethead"><h1>Naruto CCG cards by character</h1>
+<p class="lede">Every character card in the original Bandai Naruto CCG (2006–2013), grouped by character. Pick a character to see all of their cards set by set.</p></section>
+<section class="cindex">{cells}</section>
+'''
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('Characters', url))]})
+    return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
+
+
+def card_page(c, s, prev, nxt, chars_by_name=None):
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
     eds = [x for x in (c.get('ed') or []) if x]
@@ -128,6 +249,9 @@ def card_page(c, s, prev, nxt):
             ('Number', e(c['n'])), ('Rarity', e(c['r'])), ('Type', e(c['t'])),
             ('Editions', e(', '.join(eds) or '—')),
             ('Printings', ''.join(f'<span class="pv">{e(v)}</span>' for v in (c.get('v') or [])))]
+    cl = char_links_for(c, chars_by_name or {})
+    if cl:
+        rows.insert(1, ('Character', cl))
     if c.get('note'):
         rows.append(('Note', e(c['note'])))
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
@@ -245,17 +369,30 @@ def main():
     for c in d['cards']:
         if c['s'] in by_set:
             by_set[c['s']].append(c)
+    chars = load_chars()
+    chars_by_name = {nm: ch for ch in chars for nm in ch['names']}
     changed, keep_c, keep_s = 0, set(), set()
     for s in sets:
         cs = by_set[s['id']]
         for i, c in enumerate(cs):
             keep_c.add(slug(c))
             changed += write(os.path.join(ROOT, 'card', slug(c), 'index.html'),
-                             card_page(c, s, cs[i - 1] if i else None, cs[i + 1] if i + 1 < len(cs) else None))
+                             card_page(c, s, cs[i - 1] if i else None, cs[i + 1] if i + 1 < len(cs) else None, chars_by_name))
         keep_s.add(set_slug(s))
         changed += write(os.path.join(ROOT, 'set', set_slug(s), 'index.html'), set_page(s, cs))
+    sets_by_id = {x['id']: x for x in sets}
+    notes = json.load(open(NOTES, encoding='utf-8')) if os.path.exists(NOTES) else {}
+    keep_ch, counts = set(), {}
+    for ch in chars:
+        cs = char_cards(ch, d['cards'])
+        counts[ch['slug']] = len(cs)
+        if cs:
+            keep_ch.add(ch['slug'])
+            changed += write(os.path.join(ROOT, 'character', ch['slug'], 'index.html'), char_page(ch, cs, sets_by_id, chars, notes))
+    chars = [ch for ch in chars if ch['slug'] in keep_ch]
+    changed += write(os.path.join(ROOT, 'characters', 'index.html'), chars_index(chars, counts))
     removed = 0
-    for sub, keep in (('card', keep_c), ('set', keep_s)):
+    for sub, keep in (('card', keep_c), ('set', keep_s), ('character', keep_ch)):
         base = os.path.join(ROOT, sub)
         for name in sorted(os.listdir(base)) if os.path.isdir(base) else []:
             if name not in keep:
@@ -267,7 +404,8 @@ def main():
     if hs2 == hs and '<!--setlinks-->' not in hs:
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
-    urls = [SITE + '/'] + [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
+    urls = [SITE + '/', SITE + '/characters/'] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
+           [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
     lm = lastmods(urls)
     changed += write(LASTMOD, json.dumps(lm, indent=0, sort_keys=True) + '\n')
