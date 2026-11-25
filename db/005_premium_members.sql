@@ -1,0 +1,8 @@
+-- Applied to Supabase on 2026-11-25 (migration premium_member_admin). Kept here as the record.
+-- memberships: + source ('free' | 'paid'), + note. David's account marked free / "Owner test account".
+-- admins: who can open /admin/ (David's user id). RLS on, no policies.
+-- premium_invites: Premium given to an email with no account yet; trigger on_signup_claim_premium on auth.users
+--   turns it into a membership when that email signs up.
+-- RPCs (owner only, checked with is_admin()): admin_members(), admin_grant(email, until, note), admin_revoke(email).
+--   Execute revoked from anon; non-admins get "not allowed".
+-- price_ranges: policy "members read price ranges" lets active members (active, until null or future) read exact prices.
