@@ -25,3 +25,10 @@ Supabase is the only master card list. Nothing else is edited by hand.
 - Don't re-run `db/seed.sql` once scans exist: it deletes every scan.
 
 Repo secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`, `PSA_TOKEN`.
+
+## Card Index sync (one copy of the card list)
+
+- Supabase is the master. Card list edits (new cards, rarities, printings, decks) are made in Supabase only, never by hand in the Card Index or `public/cards.json`.
+- `public/cards.json` is the export of Supabase. The Card Index artifact is republished with that exact same file, so the site and the Card Index are byte-for-byte identical.
+- The export carries `version` (Supabase `checklist_version`). The Card Index compares it with Supabase on load and shows a banner when it has fallen behind.
+- New Card Index scans are copied to `public/scans/<set>/<number>.webp` with a matching public row in `scans`.
