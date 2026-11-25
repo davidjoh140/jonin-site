@@ -123,7 +123,7 @@ def price_block(c):
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from settings import MOST_VALUABLE_CHARACTERS, MOST_VALUABLE_TOP
+from settings import MOST_VALUABLE_CHARACTERS, MOST_VALUABLE_TOP, CHARACTER_EXTRA_NAMES
 import articles_build as AB
 import lists_build as LB
 featured_in = lambda c: AB.featured_in(c)
@@ -145,20 +145,26 @@ def load_chars():
     for label, q in json.loads(m.group(1).replace("'", '"')) if m else []:
         if q.startswith('char:'):
             names = q[5:].split('|')
-            out.append({'label': label, 'name': names[0], 'names': names,
-                        'slug': re.sub(r'[^a-z0-9]+', '-', label.lower()).strip('-')})
+            slug = re.sub(r'[^a-z0-9]+', '-', label.lower()).strip('-')
+            out.append({'label': label, 'name': names[0], 'names': names, 'slug': slug,
+                        'extra': CHARACTER_EXTRA_NAMES.get(slug, [])})
     return out
 
 
 def char_cards(ch, cards):
-    want = set(ch['names'])
-    return [c for c in cards if any(base_name(x) in want for x in re.split(r'\s*&\s*', c['name']))]
+    want, exact = set(ch['names']), set(ch.get('extra') or [])
+    return [c for c in cards if any(x.strip() in exact or base_name(x) in want for x in re.split(r'\s*&\s*', c['name']))]
+
+
+def char_of(x, chars_by_name):
+    """The character a card-name part belongs to: an exact extra name first (e.g. "Susano'o (Sasuke)"), then its base name."""
+    return chars_by_name.get(x.strip()) or chars_by_name.get(base_name(x))
 
 
 def char_links_for(c, chars_by_name):
     seen, out = set(), []
     for x in re.split(r'\s*&\s*', c['name']):
-        ch = chars_by_name.get(base_name(x))
+        ch = char_of(x, chars_by_name)
         if ch and ch['slug'] not in seen:
             seen.add(ch['slug'])
             out.append(f'<a href="/character/{ch["slug"]}/">{e(ch["name"])}</a>')
@@ -388,7 +394,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None):
         rows.insert(1, ('Character', cl))
         chs = []
         for x in re.split(r'\s*&\s*', c['name']):
-            ch = (chars_by_name or {}).get(base_name(x))
+            ch = char_of(x, chars_by_name or {})
             if ch and ch['slug'] + ':' + ch['label'] not in chs:
                 chs.append(ch['slug'] + ':' + ch['label'])
         rows.insert(2, ('Votes', f'<span class="cvotes" data-card="{e(c["s"] + ":" + c["n"])}" data-chars="{e(",".join(chs))}">…</span>'))
@@ -592,7 +598,7 @@ def main():
         if c['s'] in by_set:
             by_set[c['s']].append(c)
     chars = load_chars()
-    chars_by_name = {nm: ch for ch in chars for nm in ch['names']}
+    chars_by_name = {nm: ch for ch in chars for nm in ch['names'] + ch['extra']}
     AB.setup(sys.modules[__name__])
     AB.load_sales()
     articles = AB.load_articles()
