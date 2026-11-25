@@ -53,3 +53,5 @@ PRICE_BAND_CUTOFFS = [10, 50, 200]   # PLACEHOLDER: Under $10 / $10â€“50 / $50â€
 # sale (eBay or private, any version, all time), one spot per card.
 MOST_VALUABLE_CHARACTERS = ["naruto", "sasuke", "itachi"]   # character slugs; add more here
 MOST_VALUABLE_TOP = 5
+VOTE_MIN_VOTERS = 5   # people who must vote for a character before its Most popular page goes live (David confirmed 5; matches vote.js MIN_VOTERS)
+POPULAR_TOP = 10      # cards on a character's Most popular page (placeholder, David to confirm)

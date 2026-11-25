@@ -122,6 +122,28 @@ def reveal_top_prices(data, sales):
 
 
 ARTICLE_SALES = Path(__file__).resolve().parent / "article_sales.json"
+VOTES = Path(__file__).resolve().parent / "votes.json"
+
+
+def vote_tallies(rows):
+    """{character: {voters, cards: [[card_id, votes], ...]}} plus "_all" across characters. Counts only, no user ids."""
+    out, people = {}, {}
+    for r in rows:
+        ch, cid, uid = r.get("character"), r.get("card_id"), r.get("user_id")
+        if not ch or not cid:
+            continue
+        for k in (ch, "_all"):
+            t = out.setdefault(k, {})
+            t[cid] = t.get(cid, 0) + 1
+            people.setdefault(k, set()).add(uid)
+    return {k: {"voters": len(people[k]), "cards": sorted(([c, n] for c, n in t.items()), key=lambda x: (-x[1], x[0]))}
+            for k, t in sorted(out.items())}
+
+
+def write_votes(rows):
+    text = json.dumps(vote_tallies(rows), separators=(",", ":"), sort_keys=True) + "\n"
+    if not VOTES.exists() or VOTES.read_text() != text:
+        VOTES.write_text(text)
 
 
 def article_sale_ids():
@@ -233,6 +255,7 @@ def main():
                      sales)
         revealed = reveal_top_prices(data, sales)
         write_article_sales(sales)
+        write_votes(supa.select("card_votes", {"select": "character,card_id,user_id"}))
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),
                      "with_image": sum(1 for c in data["cards"] if "img" in c),
