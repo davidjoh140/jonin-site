@@ -97,14 +97,14 @@ def price_block(c):
     if not rows:
         return ('<section class="px"><h3>Market price</h3><p class="none">No sales recorded yet. '
                 f"We're tracking eBay sales for this card.</p>{lock}</section>")
-    n = sum(r[6] for r in rows)
+    # Free view shows price ranges only; sale counts and individual sales are Premium.
     trs = []
     for p, ed, g, gr, lo, hi, k, _ in rows:
         label = ' · '.join(x for x in [('1st Ed' if ed == '1st Edition' else ed) if eds and ed else '',
                                          p if prs else '', 'Raw' if g == 'Raw' else f'{g} {gr}'] if x)
         val = money(lo) if lo == hi else f'{money(lo)}–{money(hi)}'
-        trs.append(f'<tr><td>{e(label)}</td><td>{val}<small>{k} sale{"s" if k > 1 else ""}</small></td></tr>')
-    return (f'<section class="px"><h3>Market price<span>from {n} recorded sale{"s" if n > 1 else ""}</span></h3>'
+        trs.append(f'<tr><td>{e(label)}</td><td>{val}</td></tr>')
+    return (f'<section class="px"><h3>Market price<span>price range</span></h3>'
             f'<table>{"".join(trs)}</table>{lock}</section>')
 
 
