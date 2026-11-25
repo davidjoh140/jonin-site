@@ -18,3 +18,7 @@ create policy "own slabs insert" on public.collection_slabs for insert with chec
 create policy "own slabs update" on public.collection_slabs for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own slabs delete" on public.collection_slabs for delete using (user_id = auth.uid());
 grant select, insert, update, delete on public.collection_slabs to authenticated;
+
+-- Setting: slabs count toward haves. Each slab records whether it added a have, so removing it takes exactly that one back.
+alter table public.profiles add column if not exists slabs_count_as_haves boolean not null default false;
+alter table public.collection_slabs add column if not exists counted boolean not null default false;

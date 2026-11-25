@@ -191,6 +191,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .mk .h{color:#7ee2a8;border-color:#2f6b4a}.mk .w{color:#ff9db0;border-color:#6b2f3c}.mk .sl{color:#ffd38a;border-color:#7a5a1f}
 .gsave{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:color-mix(in srgb,var(--acc) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);border-radius:10px;padding:10px 12px;font-size:13px}
 .gsave .pill{min-height:34px}
+.shv{all:unset;box-sizing:border-box;width:100%;display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:12px 0 0;font-size:13px;cursor:pointer;color:var(--ink)}.shv .bx{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--edge);display:grid;place-items:center;font-size:12px;font-weight:700}.shv[aria-pressed=true] .bx{background:var(--red);border-color:var(--red);color:#fff}
 .slabs{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:10px}
 .slh{display:flex;justify-content:space-between;align-items:center;font-size:13px}
 .slab{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
@@ -476,9 +477,11 @@ let trackT;
 // ---------- accounts: haves & wants (Supabase auth; each person's rows are private to them, RLS) ----------
 let sb=null,ME=null,MYP=null,MEMBER=false;const COLL=new Map();
 // Guest collection: signed-out visitors can mark haves, wants and slabs. It lives in this browser until they sign up, then moves into their account.
-let SLABS=[],SLABFORM='';const GKEY='jonin_guest_v1';
-function gLoad(){try{const g=JSON.parse(localStorage.getItem(GKEY)||'{}');(g.items||[]).forEach(([k,q])=>COLL.set(k,q));SLABS=Array.isArray(g.slabs)?g.slabs:[]}catch(_){}}
-function gSave(){try{if(!COLL.size&&!SLABS.length)localStorage.removeItem(GKEY);else localStorage.setItem(GKEY,JSON.stringify({items:[...COLL],slabs:SLABS}))}catch(_){}}
+let SLABS=[],SLABFORM='',GSH=false;const GKEY='jonin_guest_v1';
+function gLoad(){try{const g=JSON.parse(localStorage.getItem(GKEY)||'{}');(g.items||[]).forEach(([k,q])=>COLL.set(k,q));SLABS=Array.isArray(g.slabs)?g.slabs:[];GSH=!!g.slabsHave}catch(_){}}
+function gSave(){try{if(!COLL.size&&!SLABS.length&&!GSH)localStorage.removeItem(GKEY);else localStorage.setItem(GKEY,JSON.stringify({items:[...COLL],slabs:SLABS,slabsHave:GSH}))}catch(_){}}
+// Profile setting: slabs count toward haves. Each slab remembers if it added a have, so removing it takes exactly that one back.
+const slabsHave=()=>ME?!!(MYP&&MYP.slabs_count_as_haves):GSH;
 function gCount(){return new Set([...COLL.keys()].map(k=>k.split('|')[0]).concat(SLABS.map(s=>s.card_id))).size}
 const plural=(n,w)=>n+' '+w+(n===1?'':'s');
 function nudge(){if(ME)return;let seen=null;try{seen=sessionStorage.getItem('jnudge')}catch(_){}if(seen)return;try{sessionStorage.setItem('jnudge','1')}catch(_){}
@@ -489,7 +492,8 @@ function toast(msg){const t=document.createElement('div');t.className='gtoast';t
 async function mergeGuest(g){const rows=[];
   g.items.forEach(([k,q])=>{const a=k.split('|');const cur=COLL.get(k)||0;const n=Math.max(cur,q);if(n!==cur){COLL.set(k,n);rows.push({user_id:ME.id,card_id:a[0],printing:a[1],edition:a[2],kind:a[3],qty:n,updated_at:new Date().toISOString()})}});
   let ok=true;if(rows.length){const r=await sb.from('collection_items').upsert(rows);if(r.error)ok=false}
-  if(g.slabs.length){const r=await sb.from('collection_slabs').insert(g.slabs.map(s=>({card_id:s.card_id,printing:s.printing,edition:s.edition,grader:s.grader,grade:s.grade,cert:s.cert||null}))).select('id,card_id,printing,edition,grader,grade,cert');if(r.error)ok=false;else SLABS=SLABS.concat(r.data||[])}
+  if(g.slabs.length){const r=await sb.from('collection_slabs').insert(g.slabs.map(s=>({card_id:s.card_id,printing:s.printing,edition:s.edition,grader:s.grader,grade:s.grade,cert:s.cert||null,counted:!!s.counted}))).select('id,card_id,printing,edition,grader,grade,cert,counted');if(r.error)ok=false;else SLABS=SLABS.concat(r.data||[])}
+  if(g.slabsHave&&MYP&&!MYP.slabs_count_as_haves){const r=await sb.from('profiles').update({slabs_count_as_haves:true}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data)MYP=r.data}
   if(ok){try{localStorage.removeItem(GKEY)}catch(_){}const n=new Set(g.items.map(([k])=>k.split('|')[0]).concat(g.slabs.map(s=>s.card_id))).size;if(n)toast('Saved '+plural(n,'card')+' from this device to your account.')}}
 const cid=c=>c.s+':'+c.n;
 const ck=(id,p,e,k)=>id+'|'+p+'|'+e+'|'+k;
@@ -497,15 +501,14 @@ function qtyOf(c,kind){let n=0;for(const [k,v] of COLL)if(k.startsWith(cid(c)+'|
 function marks(c){if(!ME&&!COLL.size&&!SLABS.length)return '<span class="mk"></span>';const h=qtyOf(c,'have'),w=qtyOf(c,'want');const sl=SLABS.filter(x=>x.card_id===cid(c));return `<span class="mk">${h?`<span class="h" title="You have ${h}">✓ ${h}</span>`:''}${w?'<span class="w" title="On your wants">♡</span>':''}${sl.length?`<span class="sl" title="${esc(sl.map(x=>x.grader+' '+x.grade).join(', '))}">▣ ${esc(sl[0].grader+' '+sl[0].grade)}${sl.length>1?' +'+(sl.length-1):''}</span>`:''}</span>`}
 function refreshMarks(){document.querySelectorAll('.card[data-i]').forEach(b=>{const c=list[+b.dataset.i];const m=b.querySelector('.mk');if(c&&m)m.outerHTML=marks(c)})}
 function sbc(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPA,SUPA_KEY);return sb}
-async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],slabs:SLABS.slice()}:null;ME=u;COLL.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;
-  if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));
-    if(guest&&(guest.items.length||guest.slabs.length))await mergeGuest(guest)}else gLoad();
+async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;
+  if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));
+    if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest)}else gLoad();
   EST=null;if(MEMBER)await loadEstimates();if(VIEW==='cards'&&D)renderCards(true);
   if(sel>=0&&list[sel]){const px=$('#panel .px');if(px)px.outerHTML=priceBlock(list[sel]);loadExact(list[sel])}
   paintAcct();refreshMarks();if(sel>=0&&list[sel])renderMyColl(list[sel]);if(VIEW==='mine'){if(ME||gCount())renderMine();else{history.replaceState(null,'',location.pathname);view('cards')}}}
 function paintAcct(){const n=ME?0:gCount();$('#acct').innerHTML=ME?`<a href="#mine" data-v="mine" class="pill">My collection</a><button class="clear" data-signout>Sign out</button>`:n?`<a href="#mine" data-v="mine" class="pill">My collection · ${n}</a><button class="pill" data-auth="up">Sign up to save</button>`:`<button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button>`;
-  const b=$('#ctaband');if(!b)return;let off=false;try{off=localStorage.getItem('jcta')==='1'}catch(_){}
-  // PLACEHOLDER: the band stays hidden for good once dismissed; David to decide if it should come back later.
+  const b=$('#ctaband');if(!b)return;let off=false;try{off=Date.now()-(+localStorage.getItem('jcta')||0)<864e5}catch(_){} // closed banner comes back after a day
   b.hidden=!!ME||off;if(b.hidden)return;
   b.innerHTML=n?`<b>Don’t lose your collection</b><span class="sp1">You’ve marked ${plural(n,'card')} on this device. Make a free account to keep them safe, see them on any device and share your list.</span><button class="pill" data-auth="up">Sign up free</button><button class="x" data-ctax aria-label="Dismiss">×</button>`
     :`<b>Track your Naruto CCG collection</b><span class="sp1">Mark your haves and wants, log your slabs, and vote for the coolest cards of every character. Free.</span><button class="pill" data-auth="up">Make a free account</button><button class="x" data-ctax aria-label="Dismiss">×</button>`}
@@ -558,17 +561,19 @@ function renderMyColl(c){const box=$('#mycoll');if(!box)return;const n=gCount();
 async function saveSlab(c){const f=$('#slabf');if(!f)return;const msg=$('#slabmsg');const cs=combos(c),j=f.querySelector('[name=v]')?+f.querySelector('[name=v]').value:0;const [p,e]=cs[j]||['Normal',''];
   const grade=f.querySelector('[name=gr]').value.trim(),cert=f.querySelector('[name=ce]').value.trim(),grader=f.querySelector('[name=g]').value;
   if(!grade){msg.textContent='Add the grade.';return}
-  const row={card_id:cid(c),printing:p,edition:e||'',grader,grade:grade.slice(0,12),cert:cert.slice(0,30)||null};
-  if(ME){msg.textContent='Saving…';const r=await sb.from('collection_slabs').insert(row).select('id,card_id,printing,edition,grader,grade,cert').single();if(r.error){msg.textContent='Could not save. Try again.';return}SLABS.push(r.data)}
+  const row={card_id:cid(c),printing:p,edition:e||'',grader,grade:grade.slice(0,12),cert:cert.slice(0,30)||null,counted:slabsHave()};
+  if(ME){msg.textContent='Saving…';const r=await sb.from('collection_slabs').insert(row).select('id,card_id,printing,edition,grader,grade,cert,counted').single();if(r.error){msg.textContent='Could not save. Try again.';return}SLABS.push(r.data)}
   else{SLABS.push(Object.assign({id:'g'+Date.now()},row));gSave();paintAcct();nudge()}
-  SLABFORM='';renderMyColl(c);refreshMarks()}
+  SLABFORM='';if(row.counted){const k=ck(row.card_id,row.printing,row.edition,'have');await setItem(c,row.printing,row.edition,'have',(COLL.get(k)||0)+1)}renderMyColl(c);refreshMarks()}
 async function delSlab(c,id){const i=SLABS.findIndex(s=>String(s.id)===id);if(i<0)return;const [old]=SLABS.splice(i,1);renderMyColl(c);refreshMarks();
-  if(!ME){gSave();paintAcct();return}const r=await sb.from('collection_slabs').delete().eq('id',old.id);if(r.error){SLABS.splice(i,0,old);renderMyColl(c);refreshMarks()}}
+  const unhave=()=>{if(!old.counted)return;const k=ck(old.card_id,old.printing,old.edition,'have');return setItem(c,old.printing,old.edition,'have',Math.max(0,(COLL.get(k)||0)-1))};
+  if(!ME){gSave();await unhave();paintAcct();return}const r=await sb.from('collection_slabs').delete().eq('id',old.id);if(r.error){SLABS.splice(i,0,old);renderMyColl(c);refreshMarks();return}await unhave()}
+async function toggleSlabsHave(){const v=!slabsHave();if(!ME){GSH=v;gSave();renderMine();return}if(!MYP)return;const r=await sb.from('profiles').update({slabs_count_as_haves:v}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data)MYP=r.data;renderMine()}
 function collClick(t,e){
   if(t.dataset.auth){e.preventDefault();openAuth(t.dataset.auth)}
   else if(t.dataset.authclose!=null)$('#authov').hidden=true;
   else if(t.dataset.signout!=null)sb&&sb.auth.signOut();
-  else if(t.dataset.ctax!=null){try{localStorage.setItem('jcta','1')}catch(_){}$('#ctaband').hidden=true}
+  else if(t.dataset.ctax!=null){try{localStorage.setItem('jcta',String(Date.now()))}catch(_){}$('#ctaband').hidden=true}
   else if(t.dataset.slabadd!=null){const c=list[sel];if(!c)return;SLABFORM=cid(c);renderMyColl(c);const g=$('#slabf [name=gr]');if(g)g.focus()}
   else if(t.dataset.slabcancel!=null){const c=list[sel];SLABFORM='';if(c)renderMyColl(c)}
   else if(t.dataset.slabsave!=null){const c=list[sel];if(c)saveSlab(c)}
@@ -579,6 +584,7 @@ function collClick(t,e){
   else if(t.dataset.mtab){MTAB=t.dataset.mtab;MISS='';LAST?listView(...LAST):renderMine()}
   else if(t.dataset.miss!=null){MISS=MISS===t.dataset.miss?'':t.dataset.miss;listView(...LAST)}
   else if(t.dataset.share!=null)toggleShare();
+  else if(t.dataset.slabhave!=null)toggleSlabsHave();
   else if(t.dataset.copy!=null){navigator.clipboard&&navigator.clipboard.writeText(t.dataset.copy).then(()=>{t.textContent='Copied'})}}
 let MTAB='have';
 function cardsWith(kind,src){const ids=new Set();for(const k of src.keys()){const a=k.split('|');if(a[3]===kind)ids.add(a[0])}return D.cards.filter(c=>ids.has(cid(c)))}
@@ -595,6 +601,7 @@ function listView(el,title,src,ro){LAST=[el,title,src,ro];const st=collStats(src
   const stat=(n,l)=>`<div><b>${n.toLocaleString()}</b><span>${l}</span></div>`;
   el.innerHTML=`${title}
   <div class="row"><button class="pill" data-mtab="have" aria-pressed="${MTAB==='have'}">Haves · ${st.have.size}</button><button class="pill" data-mtab="want" aria-pressed="${MTAB==='want'}">Wants · ${st.want.size}</button>${ro?'':`<button class="pill" data-mtab="slab" aria-pressed="${MTAB==='slab'}">Slabs · ${SLABS.length}</button>`}</div>
+  ${MTAB==='slab'&&!ro?`<button type="button" class="shv" data-slabhave aria-pressed="${slabsHave()}"><span class="bx" aria-hidden="true">${slabsHave()?'✓':''}</span><span>Count my slabs as haves (and toward set completion). Adding a slab adds 1 to that version’s haves; removing it takes 1 away.</span></button>`:''}
   ${MTAB==='slab'&&SLABS.length?`<div class="cstats">${stat(SLABS.length,'slabs')}${stat(slabIds.size,'different cards')}${GRADERS.filter(g=>SLABS.some(x=>x.grader===g)).map(g=>stat(SLABS.filter(x=>x.grader===g).length,g)).join('')}</div>`:''}
   ${MTAB==='have'&&st.have.size?`<div class="cstats">${stat(st.have.size,'different cards')}${stat(st.copies,'total copies')}${stat(st.first,'1st Edition copies')}${stat(st.foil,'foil copies')}${stat(st.per.length,'sets started')}${stat(st.done,'sets complete')}<div><b>—</b><span>value · coming with prices</span></div></div>`:''}
   ${MTAB==='have'&&st.per.length?`<div class="sp">${st.per.map(({s,n,t,miss})=>`<div class="spc${MISS===s.id?' on':''}"><button data-set="${esc(s.id)}" title="Browse this set"><span><b>${esc(setLabel(s))}</b> · ${esc(s.name)}</span><span class="mt">${n} / ${t} cards · ${Math.floor(n/t*100)}%</span><span class="bar2"><i style="width:${Math.min(100,n/t*100)}%"></i></span></button>${miss.length?`<button class="msb" data-miss="${esc(s.id)}" aria-pressed="${MISS===s.id}">${MISS===s.id?'Hide missing':'Missing · '+miss.length}</button>`:'<span class="msb done">Complete ✓</span>'}</div>`).join('')}</div>`:''}

@@ -4,7 +4,7 @@
    Uses the same Supabase project and login as the rest of jonin.cards, so a session from the homepage carries over. */
 (function () {
   var SUPA = 'https://cfzpayanhvvqtkuqfgof.supabase.co', KEY = 'sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe';
-  var MIN_VOTERS = 5; // PLACEHOLDER: people who must vote before a character's Top 3 shows. David to confirm.
+  var MIN_VOTERS = 5; // people who must vote before a character's Top 3 shows (David confirmed 5)
   var box = document.getElementById('vote-top');
   if (!box) return;
   var CHAR = box.dataset.character, CNAME = box.dataset.name || 'this character';
