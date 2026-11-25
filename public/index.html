@@ -139,7 +139,7 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
 .card:hover .art{transform:translateY(-3px) rotate(-.6deg);box-shadow:0 16px 28px -14px rgba(0,0,0,.8),0 0 0 1px #4A3E57;border-color:#4A3E57}
 .card:active .art{transform:scale(.98);transition-duration:.1s}
 .card .nm{transition:color .2s}
-.tpx{font:700 17px "Baloo 2",sans-serif;color:var(--acc);line-height:1.1}.tpx.none{font:500 12px Inter,sans-serif;color:var(--mute)}.card:hover .nm{color:var(--acc2)}
+.tpx{font:700 17px "Baloo 2",sans-serif;color:var(--acc);line-height:1.1}.tpx.none{height:18.7px}.card:hover .nm{color:var(--acc2)}
 .card.in{animation:rise .5s var(--ease) both;animation-delay:calc(var(--k,0)*12ms)}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .set{transition:transform .35s var(--spring),border-color .2s,box-shadow .3s}
@@ -251,7 +251,7 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
   <button class="bg" data-authclose aria-label="Close"></button>
   <form class="authbox" id="authform" novalidate></form>
 </div>
-<footer>Jonin is an independent fan reference. Naruto © Masashi Kishimoto / Shueisha; the Naruto CCG was published by Bandai. Not affiliated with either.</footer>
+<footer>Jonin is an independent fan reference. Naruto © Masashi Kishimoto / Shueisha; the Naruto CCG was published by Bandai. Not affiliated with either. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you.</footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"></script>
 <script>
 {
@@ -295,7 +295,7 @@ function match(c){
   return true}
 // Price band on each grid tile (free). Exact prices are Premium.
 const BANDS0=['Under $10','$10–50','$50–200','$200+'],band=c=>{const b=(D&&D.bands)||BANDS0;return c.pb==null?null:b[c.pb]??null};
-const tpx=c=>{const bd=band(c);return bd?`<div class="tpx">${esc(bd)}</div>`:'<div class="tpx none">No sales yet</div>'};
+const tpx=c=>{const bd=band(c);return bd?`<div class="tpx">${esc(bd)}</div>`:'<div class="tpx none"></div>'};
 function tile(c,i){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c);
   return `<button class="card in" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div>${tpx(c)}<div class="nm">${esc(c.name)}</div><div class="mt">${setTag(c.s)}</div><div class="mt">${esc(c.n)} · ${rsym(c.src)}</div></button>`}
 // Sort options. PLACEHOLDER choices for David to confirm: rarity order (UR > SR > R > U > C, then Promo, Starter, unknown),
@@ -328,10 +328,12 @@ async function loadExact(c){if(!MEMBER||!sbc())return;const box=$('#pxexact');if
   const rows=(r.data||[]).sort((a,b)=>(a.edition!=='1st Edition')-(b.edition!=='1st Edition')||String(a.printing).localeCompare(b.printing)||(a.grader!=='Raw')-(b.grader!=='Raw')||(parseFloat(b.grade)||0)-(parseFloat(a.grade)||0));
   b.innerHTML=rows.length?`<table>${pxRows(c,rows)}</table>`:'<p class="none">No exact prices yet.</p>'}
 // Free view: one price band per card. Exact prices by edition, foil and grade, and sold listings, are Premium.
+// eBay Partner Network tracking (campaign 5339245160). customid shows which part of the site the click came from.
+const EPN='mkevt=1&amp;mkcid=1&amp;mkrid=711-53200-19255-0&amp;campid=5339245160&amp;toolid=10001&amp;customid=jonin-site';
 function priceBlock(c){const bd=band(c);
-  if(MEMBER){if(!bd)return `<div class="px"><h3>Market price<span>⭐ Premium</span></h3><p class="none">No sales recorded yet. We're tracking eBay sales for this card.</p></div>`;return `<div class="px"><h3>Market price<span>⭐ Premium · exact prices</span></h3><p class="band">${esc(bd)}</p><div id="pxexact"><p class="none">Loading exact prices…</p></div></div>`}
+  if(MEMBER){if(!bd)return '';return `<div class="px"><h3>Market price<span>⭐ Premium · exact prices</span></h3><p class="band">${esc(bd)}</p><div id="pxexact"><p class="none">Loading exact prices…</p></div></div>`}
   const lock=`<a class="pxlock" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span>🔒 Exact prices by edition, foil and grade, plus every sold listing</span><b>Premium →</b></a>`;
-  if(!bd)return `<div class="px"><h3>Market price</h3><p class="none">No sales recorded yet. We're tracking eBay sales for this card.</p>${lock}</div>`;
+  if(!bd)return `<div class="px"><h3>Market price</h3>${lock}</div>`;
   return `<div class="px"><h3>Market price<span>across all versions</span></h3><p class="band">${esc(bd)}</p>${lock}</div>`}
 function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};const q=encodeURIComponent('naruto ccg '+c.name+' '+c.n.replace(/-/g,''));
   $('#panel').innerHTML=`<div class="nav3"><button class="ib" data-step="-1" aria-label="Previous card">‹</button><button class="ib" data-step="1" aria-label="Next card">›</button><span></span><button class="ib" data-close aria-label="Close">✕</button></div><div class="pvwrap"><div class="pvart">${/^https:\/\//.test(c.img||'')?`<div class="art big"><img src="${esc(c.img)}" alt="${esc(c.name)} card scan"></div>`:`<div class="art big"><span class="num" style="font-size:34px">${esc(c.n)}</span><span class="ty">${esc(c.t)} · scan coming soon</span></div>`}</div><div class="pvinfo">
@@ -339,7 +341,7 @@ function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};
   <div class="facts"><div><div>Set</div><div>${setTag(s.id)}<br><span class="mt">${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</span></div></div><div><div>Rarity</div><div>${rsym(c.src)} ${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div><div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div class="pv">${(c.v||[]).map(v=>{const f=FOILS[v];return `<span>${f?`<span class="fx f-${f[0]}" aria-hidden="true"></span>`:''}${esc(v)}</span>`}).join('')}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
   ${priceBlock(c)}
   <div class="mycoll" id="mycoll"></div>
-  <div class="links"><a href="/card/${encodeURIComponent((c.s+'-'+c.n).toLowerCase())}/">Card page · share link</a><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a>${PSA[c.s]?`<a href="${PSA_POP+PSA[c.s]+psaFrag(c)}" target="_blank" rel="noopener">PSA pop report · ${esc(setLabel(s))}</a>`:c.s==='P'?`<span class="psay"><span class="mt">PSA pop report:</span> ${PSA_PROMO.map(([y,u])=>`<a href="${PSA_POP+u+psaFrag(c)}" target="_blank" rel="noopener">${y}</a>`).join('')}</span>`:'<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>'}</div>
+  <div class="links"><a href="/card/${encodeURIComponent((c.s+'-'+c.n).toLowerCase())}/">Card page · share link</a><a href="https://www.ebay.com/sch/i.html?_nkw=${q}&amp;${EPN}" target="_blank" rel="sponsored noopener">See listings on eBay</a>${PSA[c.s]?`<a href="${PSA_POP+PSA[c.s]+psaFrag(c)}" target="_blank" rel="noopener">PSA pop report · ${esc(setLabel(s))}</a>`:c.s==='P'?`<span class="psay"><span class="mt">PSA pop report:</span> ${PSA_PROMO.map(([y,u])=>`<a href="${PSA_POP+u+psaFrag(c)}" target="_blank" rel="noopener">${y}</a>`).join('')}</span>`:'<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>'}</div>
   <a class="alert" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
   <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div></div></div>`;
   $('#ov').hidden=false;renderMyColl(c);loadExact(c);track('card',{card_id:(c.s+':'+c.n).slice(0,24)});$('#panel').querySelector('[data-close]').focus()}

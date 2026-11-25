@@ -19,6 +19,8 @@ PSA_POP = 'https://www.psacard.com/pop/tcg-cards/'
 PSA = json.loads(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'psa_sets.json')).read())
 SOLD = 'https://www.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_sop=13&_nkw='
 NOT_KO = ' -kayou -mythos -proxy -custom -orica -fan'
+# eBay Partner Network tracking (campaign 5339245160); customid tells card-page clicks apart in EPN reports.
+EPN = '&mkevt=1&mkcid=1&mkrid=711-53200-19255-0&campid=5339245160&toolid=10001&customid=jonin-card-page'
 
 
 def slug(c):
@@ -42,7 +44,7 @@ def set_label(s):
 
 def sold(q, kind):
     extra = ' (psa,bgs,cgc,sgc)' if kind == 'slab' else ' -psa -bgs -cgc -sgc'
-    return SOLD + quote('naruto ' + q + extra + NOT_KO)
+    return SOLD + quote('naruto ' + q + extra + NOT_KO) + EPN
 
 
 def card_q(c):
@@ -75,7 +77,7 @@ HEAD = '''<!DOCTYPE html>
 <main>
 '''
 FOOT = '''</main>
-<footer>Jonin is a fan-made database for the original Bandai Naruto Collectible Card Game (2006–2013). Not affiliated with Bandai, Shueisha or Masashi Kishimoto.</footer>
+<footer>Jonin is a fan-made database for the original Bandai Naruto Collectible Card Game (2006–2013). Not affiliated with Bandai, Shueisha or Masashi Kishimoto. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you.</footer>
 </body></html>
 '''
 
@@ -98,8 +100,7 @@ def price_block(c):
     lock = (f'<a class="pxlock" href="/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}">'
             '<span>🔒 Exact prices by edition, foil and grade, plus every sold listing</span><b>Premium →</b></a>')
     if pb is None or not 0 <= pb < len(BANDS):
-        return ('<section class="px"><h3>Market price</h3><p class="none">No sales recorded yet. '
-                f"We're tracking eBay sales for this card.</p>{lock}</section>")
+        return f'<section class="px"><h3>Market price</h3>{lock}</section>'
     return (f'<section class="px"><h3>Market price<span>across all versions</span></h3>'
             f'<p class="band">{e(BANDS[pb])}</p>{lock}</section>')
 
@@ -138,8 +139,8 @@ def card_page(c, s, prev, nxt):
 {price_block(c)}
 <div class="links">
 <a class="primary" href="/#card={quote(c['s'] + ':' + c['n'])}">Track it in your collection</a>
-<a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="noopener">eBay sold · slabs</a>
-<a href="{e(sold(card_q(c), 'raw'))}" target="_blank" rel="noopener">eBay sold · raw</a>
+<a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener">eBay sold · slabs</a>
+<a href="{e(sold(card_q(c), 'raw'))}" target="_blank" rel="sponsored noopener">eBay sold · raw</a>
 {psa}
 <a href="/premium/?card={quote(c['s'] + ':' + c['n'])}&amp;name={quote(c['name'])}">🔔 Alerts for this card</a>
 </div>
