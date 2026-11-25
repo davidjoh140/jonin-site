@@ -77,7 +77,7 @@ HEAD = '''<!DOCTYPE html>
 <main>
 '''
 FOOT = '''</main>
-<footer>Jonin is a fan-made database for the original Bandai Naruto Collectible Card Game (2006–2013). Not affiliated with Bandai, Shueisha or Masashi Kishimoto. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you.</footer>
+<footer>Jonin is a fan-made database for the original Bandai Naruto Collectible Card Game (2006–2013). Not affiliated with Bandai, Shueisha or Masashi Kishimoto. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you. <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a></footer>
 <script src="/feedback.js?v=1" defer></script>
 </body></html>
 '''
@@ -456,6 +456,28 @@ def news_index(arts):
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
 
 
+PAGES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pages')
+
+
+def load_pages():
+    out = []
+    for f in sorted(os.listdir(PAGES)) if os.path.isdir(PAGES) else []:
+        if f.endswith('.html'):
+            raw = open(os.path.join(PAGES, f), encoding='utf-8').read()
+            m = re.match(r'\s*<!--meta\s*(\{.*?\})\s*-->\s*(.*)$', raw, re.S)
+            if m:
+                meta = json.loads(m.group(1)); meta['body'] = m.group(2); out.append(meta)
+    return out
+
+
+def plain_page(a):
+    url = f"{SITE}/{a['slug']}/"
+    body = (f'<nav class="crumb"><a href="/">All cards</a> › {e(a["title"])}</nav>\n'
+            f'<article class="news"><h1>{e(a["title"])}</h1><p class="mt">Last updated {fmt_date(a["updated"])}</p>\n{a["body"]}</article>\n')
+    return HEAD.format(title=e(a['title'] + ' | Jonin'), desc=e(a['description']), url=url, img=e(SITE + '/og.png'),
+                       tw='summary', ld='') + body + FOOT
+
+
 def write(path, text):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     old = open(path, encoding='utf-8').read() if os.path.exists(path) else None
@@ -544,6 +566,8 @@ def main():
             shutil.rmtree(mvdir)
     chars = [ch for ch in chars if ch['slug'] in keep_ch]
     changed += write(os.path.join(ROOT, 'characters', 'index.html'), chars_index(chars, counts))
+    for pg in load_pages():
+        changed += write(os.path.join(ROOT, pg['slug'], 'index.html'), plain_page(pg))
     arts = load_news()
     keep_n = set()
     for a in arts:
