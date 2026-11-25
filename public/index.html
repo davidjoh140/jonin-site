@@ -5,39 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jonin — Naruto CCG card database</title>
 <meta name="description" content="Every card in the original Bandai Naruto Collectible Card Game (2006–2013): sets, rarities, printings and 1st Editions.">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#1B1622">
+<meta property="og:title" content="Jonin — Naruto CCG card database">
+<meta property="og:description" content="Every card in the original Bandai Naruto CCG: sets, rarities, printings and 1st Editions.">
+<meta property="og:image" content="https://jonin.cards/og.png">
+<meta property="og:url" content="https://jonin.cards/">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f1012;--panel:#17181b;--line:#2a2c31;--ink:#ececec;--mute:#9a9ea6;--acc:#e8772e;--acc2:#f39a5c}
+:root{--bg:#1B1622;--panel:#241E2D;--line:#352C40;--ink:#FFF4E6;--mute:#B8AEA6;--acc:#F57C00;--acc2:#FF9A3D;--red:#B5121B;--red2:#8E0E15}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
 a{color:var(--acc)}a:hover{color:var(--acc2)}
 button{font-family:inherit}
-header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid #23252a}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid #2E2638}
 .hw{max-width:1320px;margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:20px}
-.logo{font:700 22px "Space Grotesk",sans-serif;letter-spacing:.12em;color:var(--ink);text-decoration:none}.logo span{color:var(--acc)}
+.logo{display:flex;align-items:center;gap:.06em;font:800 28px/1 "Baloo 2",sans-serif;color:var(--ink);text-decoration:none}.logo .jc{position:relative;height:1.42cap;width:1.02cap;flex:none;margin-right:.06em}.logo .jc i{position:absolute;inset:0;border-radius:.1em;box-shadow:.05em .05em 0 #0A080D}.logo .jc i:first-child{background:var(--acc);transform:rotate(10deg) translate(.2em,-.06em)}.logo .jc i:last-child{background:var(--red);transform:rotate(-8deg);display:flex;align-items:center;justify-content:center;font-style:normal;color:var(--ink)}.logo .jc b{text-box:trim-both cap alphabetic;margin-left:-.03em}.logo>span:last-child{text-box:trim-both cap alphabetic}
 nav{display:flex;gap:18px;flex-grow:1}nav a{color:var(--mute);text-decoration:none;font-weight:500}nav a.on{color:var(--ink)}
-.sell{color:var(--ink);text-decoration:none;border:1px solid #34373d;padding:9px 14px;border-radius:8px;font-weight:500}
+.sell{color:#fff;background:var(--red);text-decoration:none;border:1px solid var(--red);padding:9px 14px;border-radius:8px;font-weight:600}.sell:hover{background:var(--red2);border-color:var(--red2);color:#fff}
 main{max-width:1320px;margin:0 auto;padding:24px 20px 64px}
-h1{font:700 clamp(24px,3vw,30px)/1.15 "Space Grotesk",sans-serif;margin:0 0 12px}
-#q{width:100%;background:var(--panel);border:1px solid #2c2f34;border-radius:10px;padding:14px 16px;color:var(--ink);font:16px Inter,sans-serif;outline:none}
-#q:focus{border-color:var(--acc)}
+h1{font:800 clamp(26px,3.2vw,34px)/1.15 "Baloo 2",sans-serif;margin:0 0 12px}
+#q{width:100%;background:var(--panel);border:1px solid #3A3046;border-radius:10px;padding:14px 16px;color:var(--ink);font:16px Inter,sans-serif;outline:none}
+#q:focus{border-color:var(--red)}
 .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
 .lbl{color:var(--mute);font-size:13px;margin-right:2px}
-.pill{min-height:36px;padding:7px 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;background:var(--panel);color:var(--ink);border:1px solid #2c2f34}
-.pill[aria-pressed=true]{background:var(--acc);color:#141414;border-color:var(--acc)}
-.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;padding:12px 0;border-top:1px solid #23252a;border-bottom:1px solid #23252a}
-select{background:var(--panel);color:var(--ink);border:1px solid #2c2f34;border-radius:8px;padding:8px 10px;font:13px Inter,sans-serif;min-height:36px}
+.pill{min-height:36px;padding:7px 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;background:var(--panel);color:var(--ink);border:1px solid #3A3046}
+.pill[aria-pressed=true]{background:var(--red);color:#fff;border-color:var(--red)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;padding:12px 0;border-top:1px solid #2E2638;border-bottom:1px solid #2E2638}
+select{background:var(--panel);color:var(--ink);border:1px solid #3A3046;border-radius:8px;padding:8px 10px;font:13px Inter,sans-serif;min-height:36px}
 .count{margin-left:auto;color:var(--mute);font-size:13px}
 .clear{background:none;border:0;color:var(--acc);cursor:pointer;font-size:13px;padding:8px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px;margin-top:20px}
 .card{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px}
 .card:focus-visible .art{outline:2px solid var(--acc);outline-offset:2px}
-.art{aspect-ratio:5/7;background:#1b1c20;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;overflow:hidden;padding:10px;text-align:center}
+.art{aspect-ratio:5/7;background:#221C2A;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;overflow:hidden;padding:10px;text-align:center}
 .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.art .num{font:700 20px "Space Grotesk",sans-serif;color:#4a4d55}
-.art .ty{font-size:10px;letter-spacing:.08em;color:#6f737b;text-transform:uppercase}
-.art.sr{border-color:#5a3a22}
+.art .num{font:700 20px "Baloo 2",sans-serif;color:#5E5468}
+.art .ty{font-size:10px;letter-spacing:.08em;color:#8A7F92;text-transform:uppercase}
+.art.sr{border-color:#6B3F10}
 .tag{position:absolute;top:8px;right:8px;background:var(--bg);border:1px solid var(--acc);color:var(--acc);font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
 .nm{font-weight:600;font-size:14px;line-height:1.3}
 .mt{color:var(--mute);font-size:12px}
@@ -45,31 +54,31 @@ select{background:var(--panel);color:var(--ink);border:1px solid #2c2f34;border-
 .empty{color:var(--mute);text-align:center;padding:48px 0}
 .sets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:16px}
 .set{all:unset;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:4px}
-.set:hover{border-color:#3a3d44}.set .top{display:flex;justify-content:space-between;align-items:center}
-.set .no{font:700 28px "Space Grotesk",sans-serif;color:var(--acc);line-height:1}
+.set:hover{border-color:#4A3E57}.set .top{display:flex;justify-content:space-between;align-items:center}
+.set .no{font:700 28px "Baloo 2",sans-serif;color:var(--acc);line-height:1}
 .set img{height:26px;border-radius:4px}
 .set h3{margin:0;font-size:16px}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10;display:flex;justify-content:flex-end}
 .ov[hidden]{display:none}
 .ov .bg{flex-grow:1;background:none;border:0}
-aside{width:460px;max-width:100%;height:100%;overflow-y:auto;background:#141518;border-left:1px solid #26282c;padding:18px 22px 32px;display:flex;flex-direction:column;gap:14px}
+aside{width:460px;max-width:100%;height:100%;overflow-y:auto;background:#17121D;border-left:1px solid #30283A;padding:18px 22px 32px;display:flex;flex-direction:column;gap:14px}
 .nav3{display:flex;gap:8px}.nav3 span{flex-grow:1}
-.ib{background:#1d1f23;border:1px solid #2c2f34;color:var(--ink);border-radius:8px;width:44px;height:44px;cursor:pointer;font-size:16px}
+.ib{background:#2A2333;border:1px solid #3A3046;color:var(--ink);border-radius:8px;width:44px;height:44px;cursor:pointer;font-size:16px}
 .big{aspect-ratio:5/7;width:70%;align-self:center}
-aside h2{margin:0;font:700 24px "Space Grotesk",sans-serif}
-.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:var(--panel);border:1px solid #26282c;border-radius:10px;padding:14px}
+aside h2{margin:0;font:700 24px "Baloo 2",sans-serif}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:var(--panel);border:1px solid #30283A;border-radius:10px;padding:14px}
 .facts div div:first-child{color:var(--mute);font-size:12px}
-.links{display:flex;gap:8px;flex-wrap:wrap}.links a{flex-grow:1;text-align:center;border:1px solid #34373d;color:var(--ink);text-decoration:none;padding:12px;border-radius:8px}
-.buy{background:#1d1712;border:1px solid #4a3320;border-radius:10px;padding:16px;display:grid;gap:6px}
-.buy b{font:700 17px "Space Grotesk",sans-serif}.buy span{color:#b8b2aa;font-size:13px}
+.links{display:flex;gap:8px;flex-wrap:wrap}.links a{flex-grow:1;text-align:center;border:1px solid #43384F;color:var(--ink);text-decoration:none;padding:12px;border-radius:8px}
+.buy{background:#2A1418;border:1px solid #5A1C22;border-radius:10px;padding:16px;display:grid;gap:6px}
+.buy b{font:700 17px "Baloo 2",sans-serif}.buy span{color:#b8b2aa;font-size:13px}
 .more{display:block;margin:24px auto 0;padding:12px 18px}
-footer{border-top:1px solid #23252a;color:var(--mute);font-size:12px;text-align:center;padding:24px 20px}
+footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:center;padding:24px 20px}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}nav{order:3;width:100%}aside{width:100%}}
 </style>
 </head>
 <body>
 <header><div class="hw">
-  <a class="logo" href="#">JONIN<span>.</span></a>
+  <a class="logo" href="#" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
   <nav><a href="#" data-v="cards" class="on">Cards</a><a href="#sets" data-v="sets">Sets</a></nav>
   <a class="sell" href="https://sell.jonin.cards">Sell to Jonin</a>
 </div></header>
