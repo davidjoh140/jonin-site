@@ -120,12 +120,24 @@ def dumps(obj):
     return json.dumps(obj, ensure_ascii=True, separators=(",", ":"))
 
 
+MIRROR = OUT.parent / "img" / "scans"   # filled by mirror_images.py
+SITE = "https://jonin.cards"
+
+
+def image_url(path):
+    """A scan's address: the copy on jonin.cards (Cloudflare Pages) when mirrored, else Supabase Storage."""
+    if (MIRROR / path).is_file():
+        return f"{SITE}/img/scans/{path}"
+    import supa
+    return supa.public_url("scans", path)
+
+
 def main():
     import supa
     with supa.Run("export_cards") as run:
         data = build(supa.select("sets"), supa.select("cards"),
                      supa.select("scans", {"select": "*", "public": "eq.true"}),
-                     lambda p: supa.public_url("scans", p),
+                     image_url,
                      supa.select("products"),
                      (supa.select("checklist_version") or [{}])[0].get("version"),
                      supa.select("price_ranges"))

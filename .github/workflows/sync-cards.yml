@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore: ["public/cards.json", "public/card/**", "public/set/**", "public/sitemap.xml", "public/robots.txt"]
+    paths-ignore: ["public/cards.json", "public/card/**", "public/set/**", "public/sitemap.xml", "public/robots.txt", "public/img/**"]
 permissions:
   contents: write
 concurrency: { group: sync-cards, cancel-in-progress: false }
@@ -23,6 +23,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: cd pipeline && python drain_uploads.py
+      - name: Copy card images to the site (served by Cloudflare, not Supabase)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: cd pipeline && python mirror_images.py
       - name: Export from Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -32,10 +37,10 @@ jobs:
         run: python pipeline/build_pages.py
       - name: Commit if changed
         run: |
-          OUT="public/cards.json public/card public/set public/sitemap.xml public/robots.txt"
+          OUT="public/cards.json public/card public/set public/sitemap.xml public/robots.txt public/img"
           if [ -z "$(git status --porcelain $OUT)" ]; then echo "No change"; exit 0; fi
           git config user.name "jonin-bot"
           git config user.email "jonin-bot@users.noreply.github.com"
           git add -A $OUT
-          git commit -m "Sync cards.json and card pages from Supabase"
+          git commit -m "Sync cards.json, card pages and card images from Supabase"
           git push
