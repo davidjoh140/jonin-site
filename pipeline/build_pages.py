@@ -397,7 +397,7 @@ def set_page(s, cards):
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
 {f'<p class="note">{e(s["notes"])}</p>' if s.get('notes') else ''}
 <p><a class="primary" href="/#set={quote(s['id'])}">Browse and filter this set</a></p></section>
-<section class="spx" id="set-progress" data-set="{e(s['id'])}" data-total="{len(cards)}" aria-live="polite"></section>
+<section class="spx" id="set-progress" data-set="{e(s['id'])}" data-total="{len(cards)}" data-prints="{sum(max(1, len(c.get('v') or [])) * max(1, len([x for x in (c.get('ed') or []) if x])) for c in cards)}" aria-live="polite"></section>
 <section class="grid">{grid}</section>
 <script src="/set-progress.js?v={file_version('set-progress.js')}" defer></script>
 '''
