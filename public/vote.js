@@ -1,10 +1,10 @@
 /* Jonin character voting — loaded on /character/<slug>/ pages.
    Signed-in people pick their coolest cards for each character (3 per character, set in Supabase by
-   card_vote_limit()). They can move votes anytime. The live Top 5 shows once MIN_VOTERS people have voted.
+   card_vote_limit()). They can move votes anytime. The live Top 3 shows once MIN_VOTERS people have voted.
    Uses the same Supabase project and login as the rest of jonin.cards, so a session from the homepage carries over. */
 (function () {
   var SUPA = 'https://cfzpayanhvvqtkuqfgof.supabase.co', KEY = 'sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe';
-  var MIN_VOTERS = 5; // PLACEHOLDER: people who must vote before a character's Top 5 shows. David to confirm.
+  var MIN_VOTERS = 5; // PLACEHOLDER: people who must vote before a character's Top 3 shows. David to confirm.
   var box = document.getElementById('vote-top');
   if (!box) return;
   var CHAR = box.dataset.character, CNAME = box.dataset.name || 'this character';
@@ -49,11 +49,11 @@
     var grid = $('#vote-grid'), note = $('#vote-note');
     if (!show) {
       grid.innerHTML = '';
-      note.textContent = 'The Top 5 shows once ' + MIN_VOTERS + ' people have voted' + (t.voters ? ' (' + t.voters + ' so far).' : '. Be the first.');
+      note.textContent = 'The Top 3 shows once ' + MIN_VOTERS + ' people have voted' + (t.voters ? ' (' + t.voters + ' so far).' : '. Be the first.');
       return;
     }
     note.textContent = t.voters + ' ' + (t.voters === 1 ? 'person has' : 'people have') + ' voted. Updates live.';
-    var top = (t.cards || []).filter(function (c) { return document.querySelector('.cgroup .tile[data-card="' + CSS.escape(c.card_id) + '"]'); }).slice(0, 5);
+    var top = (t.cards || []).filter(function (c) { return document.querySelector('.cgroup .tile[data-card="' + CSS.escape(c.card_id) + '"]'); }).slice(0, 3);
     grid.innerHTML = '';
     top.forEach(function (c, i) {
       var src = document.querySelector('.cgroup .tile[data-card="' + CSS.escape(c.card_id) + '"]');

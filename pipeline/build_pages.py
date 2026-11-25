@@ -209,7 +209,7 @@ def char_page(ch, cs, sets_by_id, chars, notes):
 {f'<p class="lede">{e(note)}</p>' if note else ''}
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
 <p class="btns"><a class="primary" href="/#quick={quote('char:' + '|'.join(ch['names']))}">Browse and filter {e(ch['label'])} cards</a>{mvlink}</p></section>
-<section class="votetop" id="vote-top" data-character="{ch['slug']}" data-name="{e(ch['label'])}"><h2>Coolest {e(ch['label'])} cards<span>Top 5, voted by collectors</span></h2>
+<section class="votetop" id="vote-top" data-character="{ch['slug']}" data-name="{e(ch['label'])}"><h2>Coolest {e(ch['label'])} cards<span>Top 3, voted by collectors</span></h2>
 <p class="vbar" id="vote-bar"></p><p class="vnote" id="vote-note"></p><div class="grid" id="vote-grid"></div><p class="vtoast" id="vote-toast" role="status" hidden></p></section>
 {f'<section class="cgroup"><h2>Key cards<span>Super Rares and promos</span></h2><div class="grid">{"".join(tile(c, sets_by_id[c["s"]]) for c in key)}</div></section>' if key else ''}
 {groups}
@@ -331,6 +331,12 @@ def card_page(c, s, prev, nxt, chars_by_name=None):
     cl = char_links_for(c, chars_by_name or {})
     if cl:
         rows.insert(1, ('Character', cl))
+        chs = []
+        for x in re.split(r'\s*&\s*', c['name']):
+            ch = (chars_by_name or {}).get(base_name(x))
+            if ch and ch['slug'] + ':' + ch['label'] not in chs:
+                chs.append(ch['slug'] + ':' + ch['label'])
+        rows.insert(2, ('Votes', f'<span class="cvotes" data-card="{e(c["s"] + ":" + c["n"])}" data-chars="{e(",".join(chs))}">…</span>'))
     if c.get('note'):
         rows.append(('Note', e(c['note'])))
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
@@ -348,7 +354,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None):
 <h1>{e(c["name"])}</h1>
 <p class="mt">{e(s["name"])} · {e(c["n"])} · {e(c["r"])}</p>
 <dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
-{price_block(c)}
+{price_block(c)}{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
 <a class="primary" href="/#card={quote(c['s'] + ':' + c['n'])}">Track it in your collection</a>
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener">eBay sold · slabs</a>
