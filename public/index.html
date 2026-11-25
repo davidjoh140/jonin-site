@@ -128,6 +128,9 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
 #quick .pill:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 26%,var(--panel))}
 #quick .pill[aria-pressed=true]{background:var(--c);color:var(--ct);border-color:var(--c);box-shadow:0 6px 18px -6px color-mix(in srgb,var(--c) 85%,transparent)}
 #quick .pill[aria-pressed=true]::before{background:var(--ct);box-shadow:none}
+#quick .pill.face{padding:3px 14px 3px 3px;gap:8px}#quick .pill.face::before{display:none}
+#quick .pill.face img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 1.5px var(--c)}
+#quick .pill.face[aria-pressed=true] img{box-shadow:0 0 0 1.5px var(--ct)}
 @keyframes pop{0%{transform:scale(.95)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
 .card .art{transition:transform .35s var(--spring),box-shadow .3s var(--ease),border-color .2s}
 .card:hover .art{transform:translateY(-3px) rotate(-.6deg);box-shadow:0 16px 28px -14px rgba(0,0,0,.8),0 0 0 1px #4A3E57;border-color:#4A3E57}
@@ -431,7 +434,7 @@ paintAcct();
 const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url',{headers:{apikey:SUPA_KEY,Range:`${i*1000}-${i*1000+999}`}}).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>a.flat());
 function applyLive(rows){if(!D||!rows||!rows.length)return false;const m={};rows.forEach(r=>{if(r&&r.url)m[r.card_id]=r.url});let n=0;D.cards.forEach(c=>{const u=m[c.s+':'+c.n];if(u&&/^https:\/\//.test(u)&&c.img!==u){c.img=u;n++}});return n>0}
 fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promise.race([LIVE,new Promise(r=>setTimeout(()=>r(null),2500))]);if(live)applyLive(live);else LIVE.then(rows=>{if(applyLive(rows))renderCards(true)});D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
-  $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>`<button class="pill" data-q="${esc(q.replace(/^char:/,''))}" aria-pressed="false" style="--c:${QCOL[l]||'#F57C00'};--ct:${qct(QCOL[l]||'#F57C00')}">${esc(l)}</button>`).join(''));
+  $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>{const f=q.startsWith('char:')?'chars/'+l.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.webp':'';return `<button class="pill${f?' face':''}" data-q="${esc(q.replace(/^char:/,''))}" aria-pressed="false" style="--c:${QCOL[l]||'#F57C00'};--ct:${qct(QCOL[l]||'#F57C00')}">${f?`<img src="${f}" alt="" width="28" height="28" loading="lazy" decoding="async" onerror="this.remove();this.parentNode&&this.parentNode.classList.remove('face')">`:''}${esc(l)}</button>`}).join(''));
   $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${k?rsym(k)+' ':''}${l}</button>`).join('');$('#types').innerHTML=TYPES.map(k=>`<button class="pill" data-ty="${k}" aria-pressed="false">${k||'All types'}</button>`).join('');if(matchMedia('(max-width:900px)').matches)$('#legend').open=false;
   $('#setsel').insertAdjacentHTML('beforeend',D.sets.map(s=>`<option value="${esc(s.id)}">${esc(setLabel(s))} · ${esc(s.name)}</option>`).join(''));
   renderSets();const v=readHash();view(v);renderCards(true);{const m=location.hash.match(/(?:^#|&)card=([^&]+)/);if(m){const k=decodeURIComponent(m[1]),i=list.findIndex(c=>c.s+':'+c.n===k);if(i>=0)openCard(i);history.replaceState(null,'',location.pathname)}}let rf='';try{rf=document.referrer?new URL(document.referrer).hostname:''}catch(_){}track('view',{page:v,ref:rf.slice(0,80)||null})}).catch(()=>{$('#count').textContent='Could not load cards'});
