@@ -71,6 +71,8 @@ aside h2{margin:0;font:700 24px "Baloo 2",sans-serif}
 .links{display:flex;gap:8px;flex-wrap:wrap}.links a{flex-grow:1;text-align:center;border:1px solid #43384F;color:var(--ink);text-decoration:none;padding:12px;border-radius:8px}
 .buy{background:#2A1418;border:1px solid #5A1C22;border-radius:10px;padding:16px;display:grid;gap:6px}
 .buy b{font:700 17px "Baloo 2",sans-serif}.buy span{color:#b8b2aa;font-size:13px}
+.alert{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;background:var(--panel);border:1px solid #6B3F10;border-radius:10px;padding:14px 16px;color:var(--ink);text-decoration:none;font-size:20px}.alert:hover{border-color:var(--acc);color:var(--ink)}.alert>span:nth-child(2){display:grid;gap:2px;font-size:13px}.alert b{font:700 17px "Baloo 2",sans-serif}.alert>span:nth-child(2) span{color:var(--mute)}.alert .go{color:var(--acc)}
+nav a.alerts{color:var(--acc)}nav a.alerts:hover{color:var(--acc2)}
 .more{display:block;margin:24px auto 0;padding:12px 18px}
 footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:center;padding:24px 20px}
 
@@ -109,7 +111,7 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
 <body>
 <header><div class="hw">
   <a class="logo" href="#" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-  <nav><a href="#" data-v="cards" class="on">Cards</a><a href="#sets" data-v="sets">Sets</a></nav>
+  <nav><a href="#" data-v="cards" class="on">Cards</a><a href="#sets" data-v="sets">Sets</a><a href="/premium/" class="alerts">🔔 Alerts</a></nav>
   <a class="sell" href="https://sell.jonin.cards">Sell to Jonin</a>
 </div></header>
 <main id="main">
@@ -204,6 +206,7 @@ function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};
   <div><h2>${esc(c.name)}</h2><div class="mt">${esc(s.name||c.s)} · ${esc(c.n)} · ${esc(c.r)}</div></div>
   <div class="facts"><div><div>Set</div><div>${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</div></div><div><div>Rarity</div><div>${rsym(c.src)} ${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div><div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div class="pv">${(c.v||[]).map(v=>{const f=FOILS[v];return `<span>${f?`<span class="fx f-${f[0]}" aria-hidden="true"></span>`:''}${esc(v)}</span>`}).join('')}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
   <div class="links"><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a><a href="https://www.psacard.com/pop" target="_blank" rel="noopener">PSA pop report</a></div>
+  <a class="alert" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
   <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div>`;
   $('#ov').hidden=false;$('#panel').querySelector('[data-close]').focus()}
 function close(){$('#ov').hidden=true;sel=-1}
