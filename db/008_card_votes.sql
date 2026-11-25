@@ -1,0 +1,7 @@
+-- Applied to Supabase on 2026-11-25 (migrations card_votes, card_vote_limit_search_path). Kept here as the record.
+-- card_votes: signed-in people pick their coolest cards per character page (/character/<slug>/).
+--   Rules set by David: 3 votes per character (card_vote_limit()), votes can be removed/moved anytime,
+--   live Top 5 shows once a character has MIN_VOTERS voters (PLACEHOLDER 5, in public/vote.js).
+--   RLS: people read/add/remove only their own votes. Trigger card_votes_cap enforces the limit.
+--   character_votes(slug) is public: voter count + votes per card (counts only, no user ids).
+-- To change the vote limit: create or replace function public.card_vote_limit() ... select <n>.

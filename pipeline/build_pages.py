@@ -160,7 +160,7 @@ def year(rel):
 def tile(c, s):
     img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
            if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
-    return (f'<a class="tile" href="/card/{slug(c)}/">{img}<span class="tt">{e(c["name"])}</span>'
+    return (f'<a class="tile" href="/card/{slug(c)}/" data-card="{e(c["s"] + ":" + c["n"])}">{img}<span class="tt">{e(c["name"])}</span>'
             f'<span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])} · {e(c["r"])}</span></a>')
 
 
@@ -208,9 +208,12 @@ def char_page(ch, cs, sets_by_id, chars, notes):
 {f'<p class="lede">{e(note)}</p>' if note else ''}
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
 <p class="btns"><a class="primary" href="/#quick={quote('char:' + '|'.join(ch['names']))}">Browse and filter {e(ch['label'])} cards</a>{mvlink}</p></section>
+<section class="votetop" id="vote-top" data-character="{ch['slug']}" data-name="{e(ch['label'])}"><h2>Coolest {e(ch['label'])} cards<span>Top 5, voted by collectors</span></h2>
+<p class="vbar" id="vote-bar"></p><p class="vnote" id="vote-note"></p><div class="grid" id="vote-grid"></div><p class="vtoast" id="vote-toast" role="status" hidden></p></section>
 {f'<section class="cgroup"><h2>Key cards<span>Super Rares and promos</span></h2><div class="grid">{"".join(tile(c, sets_by_id[c["s"]]) for c in key)}</div></section>' if key else ''}
 {groups}
 <section class="others"><h2>More characters</h2><div class="chips">{others}</div></section>
+<script src="/vote.js?v={file_version('vote.js')}" defer></script>
 '''
     img = next((c['img'] for c in key + cs if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
@@ -288,6 +291,10 @@ def chars_index(chars, counts):
         {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},
         crumbs(('Naruto CCG cards', SITE + '/'), ('Characters', url))]})
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
+
+
+def file_version(name):
+    return hashlib.sha1(open(os.path.join(ROOT, name), 'rb').read()).hexdigest()[:8]
 
 
 def css_version():
