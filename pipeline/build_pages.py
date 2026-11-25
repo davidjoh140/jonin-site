@@ -68,7 +68,7 @@ HEAD = '''<!DOCTYPE html>
 <meta name="twitter:card" content="{tw}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/themes.css?v=2"><script src="/theme.js?v=2"></script>
+<link rel="stylesheet" href="/pages.css?v={cssv}"><link rel="stylesheet" href="/themes.css?v=2"><script src="/theme.js?v=2"></script>
 {ld}
 </head>
 <body>
@@ -233,6 +233,11 @@ def chars_index(chars, counts):
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
 
 
+def css_version():
+    # Changes whenever pages.css changes, so browsers and Cloudflare never serve a stale copy.
+    return hashlib.sha1(open(os.path.join(ROOT, 'pages.css'), 'rb').read()).hexdigest()[:8]
+
+
 def card_page(c, s, prev, nxt, chars_by_name=None):
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
@@ -361,6 +366,8 @@ def set_links(sets):
 
 
 def main():
+    global HEAD
+    HEAD = HEAD.replace('{cssv}', css_version())
     d = json.load(open(os.path.join(ROOT, 'cards.json'), encoding='utf-8'))
     global BANDS
     BANDS = d.get('bands') or BANDS
