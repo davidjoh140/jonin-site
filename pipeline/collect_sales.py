@@ -12,7 +12,7 @@ How it works (runs every 15 minutes from GitHub Actions):
      (settings.SALES_AUTO_APPROVE_CONFIDENCE = None). Only OK'd sales reach the public range.
 
 Env: SUPABASE_URL, SUPABASE_SERVICE_KEY, EBAY_CLIENT_ID, EBAY_CLIENT_SECRET,
-     EBAY_REFRESH_TOKEN (optional, a user token for eBay's Trading API GetItem).
+     EBAY_AUTH_TOKEN or EBAY_REFRESH_TOKEN (optional, a user token for eBay's Trading API GetItem).
 """
 import os
 import re
@@ -84,6 +84,16 @@ def to_listing(it, matcher, t):
 
 
 def user_token():
+    """A token for Trading API GetItem: an Auth'n'Auth token (EBAY_AUTH_TOKEN, lasts ~18 months)
+    or an OAuth refresh token (EBAY_REFRESH_TOKEN) exchanged for a short-lived access token."""
+    if os.environ.get("EBAY_AUTH_TOKEN"):
+        return ("authnauth", os.environ["EBAY_AUTH_TOKEN"])
+    try:   # kept in Supabase app_secrets (no public access) when it can't be a GitHub secret
+        row = supa.select("app_secrets", {"select": "value", "name": "eq.ebay_auth_token"})
+        if row and row[0].get("value"):
+            return ("authnauth", row[0]["value"])
+    except Exception as e:
+        print("could not read app_secrets:", e)
     rt = os.environ.get("EBAY_REFRESH_TOKEN")
     if not rt:
         return None
@@ -92,17 +102,24 @@ def user_token():
                       data={"grant_type": "refresh_token", "refresh_token": rt,
                             "scope": "https://api.ebay.com/oauth/api_scope"}, timeout=30)
     r.raise_for_status()
-    return r.json()["access_token"]
+    return ("oauth", r.json()["access_token"])
 
 
 def ebay_record(utok, external_id):
     """eBay's own record of a finished listing via Trading API GetItem (works up to 90 days after it ends)."""
     legacy = external_id.split("|")[1] if "|" in external_id else external_id.split(":")[-1]
+    kind, token = utok
+    creds = (f"<RequesterCredentials><eBayAuthToken>{token}</eBayAuthToken></RequesterCredentials>"
+             if kind == "authnauth" else "")
     body = (f'<?xml version="1.0" encoding="utf-8"?><GetItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">'
-            f'<ItemID>{legacy}</ItemID><DetailLevel>ReturnAll</DetailLevel></GetItemRequest>')
-    r = requests.post(TRADING, data=body.encode(), timeout=60, headers={
-        "X-EBAY-API-CALL-NAME": "GetItem", "X-EBAY-API-SITEID": "0", "X-EBAY-API-COMPATIBILITY-LEVEL": "1349",
-        "X-EBAY-API-IAF-TOKEN": utok, "Content-Type": "text/xml"})
+            f'{creds}<ItemID>{legacy}</ItemID><DetailLevel>ReturnAll</DetailLevel></GetItemRequest>')
+    headers = {"X-EBAY-API-CALL-NAME": "GetItem", "X-EBAY-API-SITEID": "0",
+               "X-EBAY-API-COMPATIBILITY-LEVEL": "1349", "Content-Type": "text/xml"}
+    if kind == "oauth":
+        headers["X-EBAY-API-IAF-TOKEN"] = token
+    else:
+        headers["X-EBAY-API-APP-NAME"] = os.environ.get("EBAY_CLIENT_ID", "")
+    r = requests.post(TRADING, data=body.encode(), timeout=60, headers=headers)
     if r.status_code != 200:
         return None
     x = ET.fromstring(r.content)
