@@ -25,7 +25,7 @@ def _s(v):
     return "" if v is None else v
 
 
-def build(sets, cards, scans=(), url_for=lambda p: p):
+def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None):
     """Pure transform: Supabase rows -> the cards.json object (same key order as before)."""
     best = {}
     for sc in scans:
@@ -45,6 +45,7 @@ def build(sets, cards, scans=(), url_for=lambda p: p):
         if s.get("symbol_url"):
             o["symbol"] = s["symbol_url"]
         out_sets.append(o)
+    pnames = {p["id"]: p["name"] for p in products}
     out_cards = []
     for c in sorted(cards, key=lambda c: (c.get("sort") is None, c.get("sort"), c["id"])):
         o = {"s": c["set_id"], "n": c["number"], "name": c["name"], "t": _s(c.get("type")),
@@ -52,11 +53,19 @@ def build(sets, cards, scans=(), url_for=lambda p: p):
              "v": c.get("printings") or [], "ed": c.get("editions") or [""]}
         if c.get("note"):
             o["note"] = c["note"]
+        if c.get("starter_exclusive") and c.get("rarity") != "Starter":
+            o["st"] = 1                      # starter-deck version of a booster rarity (Card Index shows "Starter <rarity>")
+        if c.get("deck"):
+            names = [pnames.get(d.strip(), d.strip()) for d in c["deck"].split(",") if d.strip()]
+            o["deck"] = ", ".join(names)     # products it comes in (Supabase products table)
         if c["id"] in best:
             u = best[c["id"]][1]["image_url"]
             o["img"] = url_for(u[len("storage:scans/"):]) if u.startswith("storage:scans/") else u
         out_cards.append(o)
-    return {"sets": out_sets, "cards": out_cards}
+    out = {"sets": out_sets, "cards": out_cards}
+    if version is not None:
+        out["version"] = version             # Supabase checklist_version; the Card Index compares it to warn when stale
+    return out
 
 
 def dumps(obj):
@@ -68,7 +77,9 @@ def main():
     with supa.Run("export_cards") as run:
         data = build(supa.select("sets"), supa.select("cards"),
                      supa.select("scans", {"select": "*", "public": "eq.true"}),
-                     lambda p: supa.public_url("scans", p))
+                     lambda p: supa.public_url("scans", p),
+                     supa.select("products"),
+                     (supa.select("checklist_version") or [{}])[0].get("version"))
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),
                      "with_image": sum(1 for c in data["cards"] if "img" in c)}
