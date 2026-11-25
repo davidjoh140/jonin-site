@@ -76,25 +76,9 @@ async function load(){
   app.querySelectorAll('[data-rev]').forEach(b=>b.onclick=async()=>{if(!confirm('Remove Premium from '+b.dataset.rev+'?'))return;const r=await sb.rpc('admin_revoke',{p_email:b.dataset.rev});if(r.error)alert(r.error.message);load()});
   app.querySelectorAll('[data-give]').forEach(b=>b.onclick=async()=>{const r=await sb.rpc('admin_grant',{p_email:b.dataset.give,p_until:null,p_note:null});if(r.error)alert(r.error.message);load()});
   $('#out').onclick=async e=>{e.preventDefault();await sb.auth.signOut();load()};
-  loadBo();
   loadWl();
   loadPs();
   loadFb();
-}
-// Best Offer prices: eBay sold listings where a Best Offer was accepted only show the asking price. Type what it
-// actually sold for and Save: the sale gets that price and is approved (counts on the site within ~15 minutes).
-async function loadBo(){let el=$('#bo');if(!el){app.insertAdjacentHTML('afterbegin','<div id="bo"></div>');el=$('#bo')}
-  const r=await sb.rpc('admin_offer_sales');if(r.error){el.innerHTML=`<p class="msg err">${esc(r.error.message)}</p>`;return}
-  const rows=r.data||[];if(!rows.length){el.innerHTML='';return}
-  const usd=v=>'$'+(+v).toLocaleString('en-US',{maximumFractionDigits:2});
-  el.innerHTML=`<h2>Best Offer prices <span class="tag">${rows.length} waiting</span></h2><p class="mt" style="margin-bottom:10px">eBay only shows the asking price on these. Open the listing, type what it actually sold for, and Save. Saving approves it.</p>
-  <div class="tw box" style="padding:0"><table><thead><tr><th>Card</th><th>Version</th><th>Sold</th><th>Asking</th><th>Sold for</th><th></th></tr></thead><tbody>${rows.map(x=>`<tr data-borow="${x.id}"><td>${esc(x.card_name||'')}<div class="tag">${esc(x.card_id)}</div></td><td>${esc([x.edition,x.printing,x.grader==='Raw'?'Raw':x.grader+' '+(x.grade||'')].filter(Boolean).join(' · '))}</td><td>${day(x.sold_at)}</td><td>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${usd(x.listed)} ↗</a>`:usd(x.listed)}</td><td><input data-boprice="${x.id}" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="e.g. ${Math.round(x.listed*0.85)}" style="width:120px"></td><td><button data-bosave="${x.id}">Save</button></td></tr>`).join('')}</tbody></table></div><p class="msg" id="bom"></p>`;
-  const save=async id=>{const i=el.querySelector(`[data-boprice="${id}"]`),m=$('#bom'),v=+i.value;if(!(v>0)){m.className='msg err';m.textContent='Type the sold price first.';i.focus();return}
-    const res=await sb.rpc('admin_set_offer_price',{p_id:+id,p_price:v});if(res.error){m.className='msg err';m.textContent=res.error.message;return}
-    el.querySelector(`[data-borow="${id}"]`).remove();m.className='msg ok';m.textContent=`Saved at ${usd(v)} and approved.`;
-    const next=el.querySelector('[data-boprice]');if(next)next.focus();else setTimeout(loadBo,1200)};
-  el.querySelectorAll('[data-bosave]').forEach(b=>b.onclick=()=>save(b.dataset.bosave));
-  el.querySelectorAll('[data-boprice]').forEach(i=>i.onkeydown=e=>{if(e.key==='Enter')save(i.dataset.boprice)});
 }
 // Premium waitlist: emails from the "Get early access" form on /premium/ (and card pages' alert buttons).
 async function loadWl(){let el=$('#wl');if(!el){app.insertAdjacentHTML('beforeend','<div id="wl"></div>');el=$('#wl')}
