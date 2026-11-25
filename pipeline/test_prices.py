@@ -27,6 +27,7 @@ def test_printing():
     assert prices.parse_printing("Naruto N-001 wavy foil", MANY) == ("Wavy foil", False)
     assert prices.parse_printing("Naruto N-001 foil", MANY) == (prices.UNKNOWN, False)
     assert prices.parse_printing("anything", {"printings": ["Super Rare foil"]}) == ("Super Rare foil", False)
+    assert prices.parse_printing("PR-063 Full Art Foil", {"printings": ["Normal"]}) == (prices.UNKNOWN, False)
 
 
 def test_edition():
@@ -92,3 +93,4 @@ def test_to_listing():
     assert a["kind"] == "AUCTION" and a["price"] == 12.5 and a["bids"] == 4
     assert cs.to_listing(item("Naruto CCG N-001 Naruto Uzumaki proxy custom"), M, T) is None
     assert cs.to_listing(item("Naruto CCG lot of 50 cards N-001"), M, T) is None
+    assert cs.to_listing(item("Naruto Uzumaki NRSA-PR-015 Naruto Kayou promo"), M, T) is None

@@ -38,9 +38,12 @@ def parse_grade(title):
 def parse_printing(title, card, printing_from_matcher=""):
     """(printing, assumed). UNKNOWN when the title can't tell which version it is."""
     opts = card.get("printings") or []
-    if len(opts) == 1:
-        return opts[0], False
     t = title.upper()
+    if len(opts) == 1:
+        # checklist says this card only comes non-foil but the title says foil: let David check it
+        if opts[0] == "Normal" and ANY_FOIL.search(t) and not NON_FOIL.search(t):
+            return UNKNOWN, False
+        return opts[0], False
     if NON_FOIL.search(t) and "Normal" in opts:
         return "Normal", False
     for pat, p in FOIL_WORDS:
