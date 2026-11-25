@@ -79,7 +79,7 @@ aside{position:relative;width:min(1080px,100%);max-height:calc(100vh - 48px);ove
 aside h2{margin:0;font:700 24px "Baloo 2",sans-serif}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:var(--panel);border:1px solid #30283A;border-radius:10px;padding:14px}
 .facts div div:first-child{color:var(--mute);font-size:12px}
-.px{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:8px}.px h3{margin:0;font:700 16px "Baloo 2",sans-serif;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.px h3 span{font:400 12px Inter,sans-serif;color:var(--mute)}.px table{width:100%;border-collapse:collapse;font-size:13px}.px td{padding:5px 0;border-top:1px solid var(--line)}.px td:last-child{text-align:right;font-weight:600;white-space:nowrap}.px td small{color:var(--mute);font-weight:400;margin-left:6px}.px .none{margin:0;color:var(--mute);font-size:13px}.pxlock{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:13px;border:1px dashed #6B3F10;border-radius:8px;padding:8px 10px}.pxlock:hover{border-color:var(--acc);color:var(--ink)}.pxlock b{color:var(--acc);font-weight:600}
+.px{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:8px}.px h3{margin:0;font:700 16px "Baloo 2",sans-serif;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.px h3 span{font:400 12px Inter,sans-serif;color:var(--mute)}.px table{width:100%;border-collapse:collapse;font-size:13px}.px td{padding:5px 0;border-top:1px solid var(--line)}.px td:last-child{text-align:right;font-weight:600;white-space:nowrap}.px td small{color:var(--mute);font-weight:400;margin-left:6px}.px .band{margin:0;font:700 26px "Baloo 2",sans-serif;color:var(--acc);line-height:1.1}.px .none{margin:0;color:var(--mute);font-size:13px}.pxlock{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:13px;border:1px dashed #6B3F10;border-radius:8px;padding:8px 10px}.pxlock:hover{border-color:var(--acc);color:var(--ink)}.pxlock b{color:var(--acc);font-weight:600}
 .links{display:flex;gap:8px;flex-wrap:wrap}.links a{flex-grow:1;text-align:center;border:1px solid #43384F;color:var(--ink);text-decoration:none;padding:12px;border-radius:8px}
 .buy{background:#2A1418;border:1px solid #5A1C22;border-radius:10px;padding:16px;display:grid;gap:6px}
 .buy b{font:700 17px "Baloo 2",sans-serif}.buy span{color:#b8b2aa;font-size:13px}
@@ -293,15 +293,16 @@ function match(c){
   if(S.chars.length){const names=c.name.split(/\s*&\s*/).map(baseName);if(!S.chars.some(v=>v.split('|').some(w=>names.includes(w))))return false}
   if(S.q){const q=S.q.toLowerCase().split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)).toLowerCase();if(!q.every(w=>hay.includes(w)))return false}
   return true}
-// Price range on each grid tile: lowest to highest recorded sale across every version and grade. Individual sales stay Premium-only.
-const tpx=c=>{const r=c.px||[];if(!r.length)return '<div class="tpx none">No sales yet</div>';const lo=Math.min(...r.map(x=>+x[4])),hi=Math.max(...r.map(x=>+x[5]));return `<div class="tpx">${lo===hi?money(lo):money(lo)+' – '+money(hi)}</div>`};
+// Price band on each grid tile (free). Exact prices are Premium.
+const BANDS0=['Under $10','$10–50','$50–200','$200+'],band=c=>{const b=(D&&D.bands)||BANDS0;return c.pb==null?null:b[c.pb]??null};
+const tpx=c=>{const bd=band(c);return bd?`<div class="tpx">${esc(bd)}</div>`:'<div class="tpx none">No sales yet</div>'};
 function tile(c,i){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c);
   return `<button class="card in" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div>${tpx(c)}<div class="nm">${esc(c.name)}</div><div class="mt">${setTag(c.s)}</div><div class="mt">${esc(c.n)} · ${rsym(c.src)}</div></button>`}
 // Sort options. PLACEHOLDER choices for David to confirm: rarity order (UR > SR > R > U > C, then Promo, Starter, unknown),
-// "Newest sets first" = main sets 28 down to 1, then packs/tins/promos; "market value" = the highest recorded sale for any version of the card; cards with no sales always go last.
+// "Newest sets first" = main sets 28 down to 1, then packs/tins/promos; "market value" = the price band (free data only); cards with no sales always go last.
 const SORTS=[['','Set & number'],['name','Name A–Z'],['name-d','Name Z–A'],['rar-d','Rarity: high to low'],['rar','Rarity: low to high'],['px-d','Market value: high to low'],['px','Market value: low to high'],['set-d','Newest sets first']];
 const RORD={UR:6,SR:5,R:4,U:3,C:2,P:1,F:0,'':-1};
-const pxOf=c=>{const r=c.px||[];return r.length?Math.max(...r.map(x=>+x[5]||+x[4]||0)):null};
+const pxOf=c=>c.pb==null?null:c.pb;
 function sorted(a){const k=S.sort;if(!k)return a;const ix=new Map(D.cards.map((c,i)=>[c,i])),so=new Map(D.sets.map((s,i)=>[s.id,i]));const d=k.endsWith('-d')?-1:1,b=k.replace(/-d$/,'');
   const key={name:c=>c.name.toLowerCase(),rar:c=>RORD[c.src]??-1,px:pxOf,set:c=>{const i=so.get(c.s)??0;return (D.byId[c.s]||{}).kind==='Main'?i:i-1000}}[b];
   return a.map(c=>[c,key(c)]).sort(([x,kx],[y,ky])=>{if(b==='px'&&(kx==null||ky==null)){if(kx==null&&ky==null)return ix.get(x)-ix.get(y);return kx==null?1:-1}
@@ -319,11 +320,11 @@ function renderCards(reset){
 function renderSets(){$('#sets').innerHTML=D.sets.map((s,k)=>`<button class="set in" style="--k:${Math.min(k,24)}" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(symUrl(s.symbol))}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
 function view(v){const was=VIEW;VIEW=v;$('#v-cards').hidden=v!=='cards';$('#v-sets').hidden=v!=='sets';$('#v-mine').hidden=v!=='mine';$('#v-user').hidden=v!=='user';if(v==='cards'&&(was==='mine'||was==='user'))renderCards(true);if(v==='mine')renderMine();if(v==='user')renderUser(decodeURIComponent(location.hash.slice(3)));document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v))}
 const money=v=>'$'+(v>=100?Math.round(v).toLocaleString():(+v).toFixed(2).replace(/\.00$/,''));
-function priceBlock(c){const rows=c.px||[],eds=(c.ed||[]).filter(Boolean).length>1,prs=(c.v||[]).length>1;
-  const lock=`<a class="pxlock" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span>🔒 Every sold listing, with dates and photos</span><b>Premium →</b></a>`;
-  if(!rows.length)return `<div class="px"><h3>Market price</h3><p class="none">No sales recorded yet. We're tracking eBay sales for this card.</p>${lock}</div>`;
-  // Free view shows price ranges only; sale counts and individual sales are Premium.
-  return `<div class="px"><h3>Market price<span>price range</span></h3><table>${rows.map(([p,e,g,gr,lo,hi,k])=>`<tr><td>${[eds&&e?(e==='1st Edition'?'1st Ed':e):'',prs?p:'',g==='Raw'?'Raw':g+' '+gr].filter(Boolean).map(esc).join(' · ')}</td><td>${lo===hi?money(lo):money(lo)+'–'+money(hi)}</td></tr>`).join('')}</table>${lock}</div>`}
+// Free view: one price band per card. Exact prices by edition, foil and grade, and sold listings, are Premium.
+function priceBlock(c){const bd=band(c);
+  const lock=`<a class="pxlock" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span>🔒 Exact prices by edition, foil and grade, plus every sold listing</span><b>Premium →</b></a>`;
+  if(!bd)return `<div class="px"><h3>Market price</h3><p class="none">No sales recorded yet. We're tracking eBay sales for this card.</p>${lock}</div>`;
+  return `<div class="px"><h3>Market price<span>across all versions</span></h3><p class="band">${esc(bd)}</p>${lock}</div>`}
 function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};const q=encodeURIComponent('naruto ccg '+c.name+' '+c.n.replace(/-/g,''));
   $('#panel').innerHTML=`<div class="nav3"><button class="ib" data-step="-1" aria-label="Previous card">‹</button><button class="ib" data-step="1" aria-label="Next card">›</button><span></span><button class="ib" data-close aria-label="Close">✕</button></div><div class="pvwrap"><div class="pvart">${/^https:\/\//.test(c.img||'')?`<div class="art big"><img src="${esc(c.img)}" alt="${esc(c.name)} card scan"></div>`:`<div class="art big"><span class="num" style="font-size:34px">${esc(c.n)}</span><span class="ty">${esc(c.t)} · scan coming soon</span></div>`}</div><div class="pvinfo">
   <div><h2>${esc(c.name)}</h2><div class="mt">${esc(s.name||c.s)} · ${esc(c.n)} · ${esc(c.r)}</div></div>

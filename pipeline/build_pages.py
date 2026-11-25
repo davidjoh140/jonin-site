@@ -88,24 +88,20 @@ def money(v):
     return '$' + (f'{round(v):,}' if v >= 100 else (f'{v:.2f}'.removesuffix('.00')))
 
 
+BANDS = ['Under $10', '$10–50', '$50–200', '$200+']   # replaced by cards.json "bands" in main()
+
+
 def price_block(c):
-    """Free "Market price" range (from cards.json px); the full sold list is Premium."""
-    rows = c.get('px') or []
-    eds, prs = len([x for x in (c.get('ed') or []) if x]) > 1, len(c.get('v') or []) > 1
+    """Free "Market price": one price band for the whole card. Exact prices by edition, foil and grade,
+    and every sold listing, are Premium."""
+    pb = c.get('pb')
     lock = (f'<a class="pxlock" href="/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}">'
-            '<span>🔒 Every sold listing, with dates and photos</span><b>Premium →</b></a>')
-    if not rows:
+            '<span>🔒 Exact prices by edition, foil and grade, plus every sold listing</span><b>Premium →</b></a>')
+    if pb is None or not 0 <= pb < len(BANDS):
         return ('<section class="px"><h3>Market price</h3><p class="none">No sales recorded yet. '
                 f"We're tracking eBay sales for this card.</p>{lock}</section>")
-    # Free view shows price ranges only; sale counts and individual sales are Premium.
-    trs = []
-    for p, ed, g, gr, lo, hi, k, _ in rows:
-        label = ' · '.join(x for x in [('1st Ed' if ed == '1st Edition' else ed) if eds and ed else '',
-                                         p if prs else '', 'Raw' if g == 'Raw' else f'{g} {gr}'] if x)
-        val = money(lo) if lo == hi else f'{money(lo)}–{money(hi)}'
-        trs.append(f'<tr><td>{e(label)}</td><td>{val}</td></tr>')
-    return (f'<section class="px"><h3>Market price<span>price range</span></h3>'
-            f'<table>{"".join(trs)}</table>{lock}</section>')
+    return (f'<section class="px"><h3>Market price<span>across all versions</span></h3>'
+            f'<p class="band">{e(BANDS[pb])}</p>{lock}</section>')
 
 
 def card_page(c, s, prev, nxt):
@@ -194,6 +190,8 @@ def write(path, text):
 
 def main():
     d = json.load(open(os.path.join(ROOT, 'cards.json'), encoding='utf-8'))
+    global BANDS
+    BANDS = d.get('bands') or BANDS
     sets = d['sets']
     by_set = {s['id']: [] for s in sets}
     for c in d['cards']:

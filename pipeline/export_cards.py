@@ -11,6 +11,11 @@ import re
 import sys
 from pathlib import Path
 
+try:
+    from settings import PRICE_BAND_CUTOFFS
+except ImportError:
+    from pipeline.settings import PRICE_BAND_CUTOFFS
+
 OUT = Path(__file__).resolve().parent.parent / "public" / "cards.json"
 QUALITY_RANK = {"clean": 3, "slab": 2, "placeholder": 1}
 # Postgres jsonb doesn't keep key order, so rarity counts come out in one fixed order.
@@ -49,9 +54,24 @@ def price_rows(ranges):
                   for r in sorted(rows, key=key)] for cid, rows in out.items()}
 
 
+def band_labels(cuts=PRICE_BAND_CUTOFFS):
+    """Free price band names, cheapest first: Under $10, $10–50, ..., $200+."""
+    m = lambda v: f"${v:,}"
+    return ([f"Under {m(cuts[0])}"] + [f"{m(a)}–{a2}" for a, a2 in zip(cuts, [f"{b:,}" for b in cuts[1:]])]
+            + [f"{m(cuts[-1])}+"])
+
+
+def price_band(rows, cuts=PRICE_BAND_CUTOFFS):
+    """Index into band_labels() for a card's highest recorded sale, or None with no sales."""
+    if not rows:
+        return None
+    top = max(max(r[4], r[5]) for r in rows)
+    return sum(1 for c in cuts if top >= c)
+
+
 def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None, ranges=()):
     """Pure transform: Supabase rows -> the cards.json object (same key order as before).
-    A card with recorded sales gets "px": its free price ranges (see price_rows)."""
+    A card with recorded sales gets "pb": its free price band (see price_band); exact prices are Premium."""
     best = {}
     for sc in scans:
         if not sc.get("public"):
@@ -88,9 +108,9 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
             u = best[c["id"]][1]["image_url"]
             o["img"] = url_for(u[len("storage:scans/"):]) if u.startswith("storage:scans/") else u
         if c["id"] in px:
-            o["px"] = px[c["id"]]
+            o["pb"] = price_band(px[c["id"]])   # free price band only; exact prices stay in Supabase (Premium)
         out_cards.append(o)
-    out = {"sets": out_sets, "cards": out_cards}
+    out = {"sets": out_sets, "cards": out_cards, "bands": band_labels()}
     if version is not None:
         out["version"] = version             # Supabase checklist_version; the Card Index compares it to warn when stale
     return out
@@ -112,7 +132,7 @@ def main():
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),
                      "with_image": sum(1 for c in data["cards"] if "img" in c),
-                     "with_prices": sum(1 for c in data["cards"] if "px" in c)}
+                     "with_prices": sum(1 for c in data["cards"] if "pb" in c)}
         same = OUT.exists() and OUT.read_text() == text
         run.stats["changed"] = not same
         if "--check" in sys.argv:
