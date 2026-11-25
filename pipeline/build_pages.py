@@ -3,6 +3,7 @@
 Writes:
   public/card/<set>-<number>/index.html   one page per card
   public/set/<set>/index.html             one page per set (card list)
+  public/articles/...                     articles from pipeline/articles/*.md (see articles_build.py)
   public/sitemap.xml, public/robots.txt
 Output is deterministic (no timestamps), so the sync workflow only commits real changes.
 Stale card/set folders (cards removed or renumbered) are deleted.
@@ -73,7 +74,7 @@ HEAD = '''<!DOCTYPE html>
 </head>
 <body>
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/news/">News</a><a href="#feedback" data-fb>💬 Feedback</a><a href="/premium/">🔔 Alerts</a></nav></div></header>
+<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/news/">News</a><a href="/articles/">Articles</a><a href="#feedback" data-fb>💬 Feedback</a><a href="/premium/">🔔 Alerts</a></nav></div></header>
 <main>
 '''
 FOOT = '''</main>
@@ -114,6 +115,8 @@ def price_block(c):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from settings import MOST_VALUABLE_CHARACTERS, MOST_VALUABLE_TOP
+import articles_build as AB
+featured_in = lambda c: AB.featured_in(c)
 
 NOTES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'character_notes.json')
 RANK = {'Super Rare': 0, 'Promo': 1, 'Rare': 2, 'Uncommon': 3, 'Starter': 4, 'Common': 5}
@@ -289,12 +292,13 @@ def chars_index(chars, counts):
     cells = ''.join(f'<a class="ccell" href="/character/{c["slug"]}/"><img src="/char-art/{c["slug"]}.webp" alt="" width="480" height="360" loading="lazy">'
                     f'<b>{e(c["name"])}</b><span>{counts[c["slug"]]} cards</span></a>' for c in chars)
     mv = [c for c in chars if c.get('mv')]
-    mvrow = (f'<section class="others"><h2>Most valuable cards<span>Top {MOST_VALUABLE_TOP} by highest sale</span></h2><div class="chips">'
+    mvrow = (f'<section class="others" id="most-valuable"><h2>Most valuable cards<span>Top {MOST_VALUABLE_TOP} by highest sale</span></h2><div class="chips">'
              + ''.join(f'<a class="chip" href="/character/{c["slug"]}/most-valuable/"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">Most valuable {e(c["label"])} cards</a>' for c in mv)
              + '</div></section>') if mv else ''
     body = f'''<nav class="crumb"><a href="/">All cards</a> › Characters</nav>
 <section class="sethead"><h1>Naruto CCG cards by character</h1>
-<p class="lede">Every character card in the original Bandai Naruto CCG (2006–2013), grouped by character. Pick a character to see all of their cards set by set.</p></section>
+<p class="lede">Every character card in the original Bandai Naruto CCG (2006–2013), grouped by character. Pick a character to see all of their cards set by set.</p>
+{'<p class="btns"><a class="primary" href="#most-valuable">💰 Most valuable cards</a></p>' if mv else ''}</section>
 <section class="cindex">{cells}</section>
 {mvrow}'''
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
@@ -362,6 +366,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None):
 {psa}
 <a href="/premium/?card={quote(c['s'] + ':' + c['n'])}&amp;name={quote(c['name'])}">🔔 Alerts for this card</a>
 </div>
+{featured_in(c)}
 </div>
 </article>
 <nav class="prevnext">{nav}</nav>
@@ -536,6 +541,10 @@ def main():
             by_set[c['s']].append(c)
     chars = load_chars()
     chars_by_name = {nm: ch for ch in chars for nm in ch['names']}
+    AB.setup(sys.modules[__name__])
+    articles = AB.load_articles()
+    cards_by_key = {c['s'] + ':' + c['n']: c for c in d['cards']}
+    AB.set_featured(articles, cards_by_key)
     changed, keep_c, keep_s = 0, set(), set()
     for s in sets:
         cs = by_set[s['id']]
@@ -575,6 +584,7 @@ def main():
         changed += write(os.path.join(ROOT, 'news', a['slug'], 'index.html'), news_page(a))
     if arts:
         changed += write(os.path.join(ROOT, 'news', 'index.html'), news_index(arts))
+    changed += AB.build_articles(articles, cards_by_key, sets_by_id)
     removed = 0
     for sub, keep in (('card', keep_c), ('set', keep_s), ('character', keep_ch)):
         base = os.path.join(ROOT, sub)
@@ -588,7 +598,7 @@ def main():
     if hs2 == hs and '<!--setlinks-->' not in hs:
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
-    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/'] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
+    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
            [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
