@@ -145,12 +145,42 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
 #q{transition:border-color .2s,box-shadow .25s}#q:focus{box-shadow:0 0 0 4px rgba(181,18,27,.22)}
 .legend summary::after{transition:transform .3s var(--spring),margin .3s}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* accounts, haves & wants */
+.acct{display:flex;align-items:center;gap:8px}
+.acct .pill{min-height:38px}.acct a.pill{text-decoration:none;color:var(--ink)}
+.mk{position:absolute;left:8px;top:8px;display:flex;gap:4px;z-index:1}
+.mk span{font:700 11px/1 Inter,sans-serif;padding:4px 6px;border-radius:6px;background:rgba(23,18,29,.9);border:1px solid var(--line)}
+.mk .h{color:#7ee2a8;border-color:#2f6b4a}.mk .w{color:#ff9db0;border-color:#6b2f3c}
+.mycoll{background:var(--panel);border:1px solid #30283A;border-radius:10px;padding:14px;display:grid;gap:10px}
+.mycoll h4{margin:0;font:700 16px "Baloo 2",sans-serif}
+.mycoll .mrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;font-size:13px}
+.step{display:inline-flex;align-items:center;border:1px solid #3A3046;border-radius:999px;overflow:hidden}
+.step button{all:unset;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;font-size:16px;color:var(--ink)}
+.step button:hover{background:#2E2638}.step b{min-width:22px;text-align:center;font-size:13px}
+.step.on{border-color:#2f6b4a;background:#15251c}
+.wt{all:unset;cursor:pointer;height:32px;padding:0 12px;border-radius:999px;border:1px solid #3A3046;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.wt[aria-pressed=true]{background:#3a1622;border-color:#6b2f3c;color:#ff9db0}
+.authbox{position:relative;width:min(420px,100%);background:#17121D;border:1px solid #30283A;border-radius:18px;padding:24px;display:grid;gap:12px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
+.authbox h2{margin:0;font:800 24px "Baloo 2",sans-serif}
+.authbox label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
+.authbox input{background:var(--panel);border:1px solid #3A3046;border-radius:10px;padding:12px 14px;color:var(--ink);font:15px Inter,sans-serif;outline:none}
+.authbox input:focus{border-color:var(--red)}
+.authbox .go{min-height:44px;border-radius:10px;background:var(--red);border:0;color:#fff;font-weight:600;font-size:15px;cursor:pointer}
+.authbox .msg{font-size:13px;color:var(--mute);min-height:18px}.authbox .msg.err{color:#ff8b8b}
+.tabs{display:flex;gap:8px}
+.sp{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:14px 0}
+.sp button{all:unset;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px;font-size:13px}
+.sp .bar2{height:6px;border-radius:99px;background:#2E2638;overflow:hidden}.sp .bar2 i{display:block;height:100%;background:var(--acc)}
+.share{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:8px;font-size:13px}
+.share code{background:var(--bg);padding:6px 8px;border-radius:6px;font-size:12px;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
 <header><div class="hw">
   <a class="logo" href="#" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
   <nav><a href="#" data-v="cards" class="on">Cards</a><a href="#sets" data-v="sets">Sets</a><a href="/premium/" class="alerts">🔔 Alerts</a></nav>
+  <span class="acct" id="acct"></span>
   <a class="sell" href="https://sell.jonin.cards">Sell to Jonin</a>
 </div></header>
 <main id="main">
@@ -195,12 +225,19 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
     <p class="mt">The 28 main sets, tournament packs, collector tins and promos of the English Bandai Naruto CCG.</p>
     <div class="sets" id="sets"></div>
   </section>
+  <section id="v-mine" hidden></section>
+  <section id="v-user" hidden></section>
 </main>
 <div class="ov" id="ov" hidden>
   <button class="bg" id="ovbg" aria-label="Close card"></button>
   <aside id="panel" aria-label="Card details"></aside>
 </div>
+<div class="ov" id="authov" hidden>
+  <button class="bg" data-authclose aria-label="Close"></button>
+  <form class="authbox" id="authform" novalidate></form>
+</div>
 <footer>Jonin is an independent fan reference. Naruto © Masashi Kishimoto / Shueisha; the Naruto CCG was published by Bandai. Not affiliated with either.</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"></script>
 <script>
 {
 const $=s=>document.querySelector(s);
@@ -216,12 +253,12 @@ const QCOL={"Naruto": "#F57C00", "Sasuke": "#2F6FDB", "Kakashi": "#9FB3C8", "Ita
 const qct=h=>{const n=parseInt(h.slice(1),16),l=(.299*(n>>16)+.587*(n>>8&255)+.114*(n&255))/255;return l>.6?'#1B1622':'#fff'};
 const QUICK=[['Naruto','char:Naruto Uzumaki'],['Sasuke','char:Sasuke Uchiha'],['Kakashi','char:Kakashi Hatake'],['Itachi','char:Itachi Uchiha'],['Gaara','char:Gaara of the Desert'],['Sakura','char:Sakura Haruno'],['Hinata','char:Hinata Hyuga'],['Jiraiya','char:Jiraiya'],['Minato','char:Minato Namikaze|The Fourth Hokage'],['Madara','char:Madara Uchiha'],['Obito','char:Obito Uchiha|Tobi'],['Pain','char:Pain|Nagato'],['Shikamaru','char:Shikamaru Nara'],['Rock Lee','char:Rock Lee'],['Neji','char:Neji Hyuga'],['Orochimaru','char:Orochimaru'],['Tsunade','char:Tsunade'],['Deidara','char:Deidara'],['Might Guy','char:Might Guy'],['Killer Bee','char:Killer Bee']];
 const S0=()=>({q:'',set:'',type:'',chars:[],rars:[]});
-let D=null,S=S0(),list=[],shown=0,sel=-1;
+let VIEW='cards',D=null,S=S0(),list=[],shown=0,sel=-1;
 const PAGE=120;
 const setName=id=>D.byId[id]?.name||id;
 const setLabel=s=>s.kind==='Main'?'Set '+s.id:s.kind==='Promo'?'Promo':s.id;
 const baseName=n=>n.replace(/\s*\(.*?\)\s*/g,'').trim();
-function readHash(){const h=location.hash.slice(1);if(h==='sets')return 'sets';S=S0();h.split('&').forEach(p=>{const i=p.indexOf('=');if(i<0)return;const k=p.slice(0,i),v=decodeURIComponent(p.slice(i+1));if(!v)return;
+function readHash(){const h=location.hash.slice(1);if(h==='sets')return 'sets';if(h==='mine')return 'mine';if(h.startsWith('u='))return 'user';S=S0();h.split('&').forEach(p=>{const i=p.indexOf('=');if(i<0)return;const k=p.slice(0,i),v=decodeURIComponent(p.slice(i+1));if(!v)return;
   if(k==='chars'||k==='rars')S[k]=v.split(',').filter(Boolean);else if(k==='rar')S.rars=[v];else if(k==='quick'){const[a,b]=v.split(':');if(a==='char')S.chars=[b];if(a==='rar')S.rars=[b]}else if(k in S)S[k]=v});return 'cards'}
 function writeHash(){const h=Object.entries(S).filter(([k,v])=>Array.isArray(v)?v.length:v).map(([k,v])=>k+'='+encodeURIComponent(Array.isArray(v)?v.join(','):v)).join('&');history.replaceState(null,'',h?'#'+h:location.pathname)}
 const active=()=>Object.values(S).some(v=>Array.isArray(v)?v.length:v);
@@ -234,7 +271,7 @@ function match(c){
   if(S.q){const q=S.q.toLowerCase().split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)).toLowerCase();if(!q.every(w=>hay.includes(w)))return false}
   return true}
 function tile(c,i){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c);
-  return `<button class="card in" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div><div class="nm">${esc(c.name)}</div><div class="mt">${esc(setLabel(D.byId[c.s]||{id:c.s}))} · ${esc(c.n)} · ${rsym(c.src)}</div></button>`}
+  return `<button class="card in" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div><div class="nm">${esc(c.name)}</div><div class="mt">${esc(setLabel(D.byId[c.s]||{id:c.s}))} · ${esc(c.n)} · ${rsym(c.src)}</div></button>`}
 function renderCards(reset){
   if(reset){list=D.cards.filter(match);shown=0;$('#grid').innerHTML=''}
   const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
@@ -245,15 +282,16 @@ function renderCards(reset){
   document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r?S.rars.includes(b.dataset.r):!S.rars.length));
   $('#setsel').value=S.set;$('#typesel').value=S.type;if(document.activeElement!==$('#q'))$('#q').value=S.q}
 function renderSets(){$('#sets').innerHTML=D.sets.map((s,k)=>`<button class="set in" style="--k:${Math.min(k,24)}" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(s.symbol)}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
-function view(v){$('#v-cards').hidden=v!=='cards';$('#v-sets').hidden=v!=='sets';document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v))}
+function view(v){const was=VIEW;VIEW=v;$('#v-cards').hidden=v!=='cards';$('#v-sets').hidden=v!=='sets';$('#v-mine').hidden=v!=='mine';$('#v-user').hidden=v!=='user';if(v==='cards'&&(was==='mine'||was==='user'))renderCards(true);if(v==='mine')renderMine();if(v==='user')renderUser(decodeURIComponent(location.hash.slice(3)));document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v))}
 function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};const q=encodeURIComponent('naruto ccg '+c.name+' '+c.n.replace(/-/g,''));
   $('#panel').innerHTML=`<div class="nav3"><button class="ib" data-step="-1" aria-label="Previous card">‹</button><button class="ib" data-step="1" aria-label="Next card">›</button><span></span><button class="ib" data-close aria-label="Close">✕</button></div><div class="pvwrap"><div class="pvart">${/^https:\/\//.test(c.img||'')?`<div class="art big"><img src="${esc(c.img)}" alt="${esc(c.name)} card scan"></div>`:`<div class="art big"><span class="num" style="font-size:34px">${esc(c.n)}</span><span class="ty">${esc(c.t)} · scan coming soon</span></div>`}</div><div class="pvinfo">
   <div><h2>${esc(c.name)}</h2><div class="mt">${esc(s.name||c.s)} · ${esc(c.n)} · ${esc(c.r)}</div></div>
   <div class="facts"><div><div>Set</div><div>${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</div></div><div><div>Rarity</div><div>${rsym(c.src)} ${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div><div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div class="pv">${(c.v||[]).map(v=>{const f=FOILS[v];return `<span>${f?`<span class="fx f-${f[0]}" aria-hidden="true"></span>`:''}${esc(v)}</span>`}).join('')}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
+  <div class="mycoll" id="mycoll"></div>
   <div class="links"><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a><a href="https://www.psacard.com/pop" target="_blank" rel="noopener">PSA pop report</a></div>
   <a class="alert" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
   <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div></div></div>`;
-  $('#ov').hidden=false;$('#panel').querySelector('[data-close]').focus()}
+  $('#ov').hidden=false;renderMyColl(c);$('#panel').querySelector('[data-close]').focus()}
 function pop(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
 function close(){$('#ov').hidden=true;sel=-1}
 $('#q').addEventListener('input',e=>{S.q=e.target.value.trim();writeHash();renderCards(true)});
@@ -268,12 +306,93 @@ document.addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t
   else if(t.dataset.step){openCard((sel+ +t.dataset.step+list.length)%list.length)}
   else if(t.dataset.close!=null||t.id==='ovbg')close();
   else if(t.dataset.set){S=Object.assign(S0(),{set:t.dataset.set});view('cards');writeHash();renderCards(true);scrollTo(0,0)}
-  else if(t.dataset.v){e.preventDefault();if(t.dataset.v==='sets'){history.replaceState(null,'','#sets');view('sets')}else{writeHash();view('cards')}}});
+  else if(t.dataset.v){e.preventDefault();if(t.dataset.v==='sets'){history.replaceState(null,'','#sets');view('sets')}else if(t.dataset.v==='mine'){if(!ME){openAuth('in');return}history.replaceState(null,'','#mine');view('mine');scrollTo(0,0)}else{writeHash();view('cards')}}
+  else collClick(t,e)});
 document.addEventListener('keydown',e=>{if($('#ov').hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')openCard((sel+1)%list.length);if(e.key==='ArrowLeft')openCard((sel-1+list.length)%list.length)});
 new IntersectionObserver(es=>{if(es[0].isIntersecting&&!$('#more').hidden)renderCards(false)},{rootMargin:'600px'}).observe($('#more'));
+
 // Live scan images: read straight from the Jonin database (Supabase), so new scans show up without waiting
 // for cards.json to be rebuilt. Public read-only view + publishable key (safe to ship in the page).
 const SUPA='https://cfzpayanhvvqtkuqfgof.supabase.co',SUPA_KEY='sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe';
+// ---------- accounts: haves & wants (Supabase auth; each person's rows are private to them, RLS) ----------
+let sb=null,ME=null,MYP=null;const COLL=new Map();
+const cid=c=>c.s+':'+c.n;
+const ck=(id,p,e,k)=>id+'|'+p+'|'+e+'|'+k;
+function qtyOf(c,kind){let n=0;for(const [k,v] of COLL)if(k.startsWith(cid(c)+'|')&&k.endsWith('|'+kind))n+=v;return n}
+function marks(c){if(!ME)return '<span class="mk"></span>';const h=qtyOf(c,'have'),w=qtyOf(c,'want');return `<span class="mk">${h?`<span class="h" title="You have ${h}">✓ ${h}</span>`:''}${w?'<span class="w" title="On your wants">♡</span>':''}</span>`}
+function refreshMarks(){document.querySelectorAll('.card[data-i]').forEach(b=>{const c=list[+b.dataset.i];const m=b.querySelector('.mk');if(c&&m)m.outerHTML=marks(c)})}
+function sbc(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPA,SUPA_KEY);return sb}
+async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;ME=u;COLL.clear();MYP=null;
+  if(u){const [p,it]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty))}
+  paintAcct();refreshMarks();if(sel>=0&&list[sel])renderMyColl(list[sel]);if(VIEW==='mine'){if(ME)renderMine();else{history.replaceState(null,'',location.pathname);view('cards')}}}
+function paintAcct(){$('#acct').innerHTML=ME?`<a href="#mine" data-v="mine" class="pill">My collection</a><button class="clear" data-signout>Sign out</button>`:`<button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button>`}
+function openAuth(mode,msg){const up=mode==='up',reset=mode==='reset';
+  $('#authform').innerHTML=`<h2>${reset?'Reset password':up?'Create your Jonin account':'Sign in'}</h2>
+  <p class="mt" style="margin:0">${reset?'We will email you a link to set a new password.':'Track the cards you have and the ones you want, and share your list.'}</p>
+  ${up?'<label>Username<input name="handle" autocomplete="username" placeholder="letters, numbers, _" maxlength="24"></label>':''}
+  <label>Email<input name="email" type="email" autocomplete="email" required></label>
+  ${reset?'':`<label>Password<input name="password" type="password" autocomplete="${up?'new-password':'current-password'}" minlength="8" required></label>`}
+  <button class="go" type="submit">${reset?'Send reset link':up?'Sign up':'Sign in'}</button>
+  <div class="msg" id="amsg">${esc(msg||'')}</div>
+  <div class="tabs">${up?'<button type="button" class="clear" data-auth="in">I already have an account</button>':'<button type="button" class="clear" data-auth="up">Create an account</button>'}${up||reset?'':'<button type="button" class="clear" data-auth="reset">Forgot password?</button>'}</div>`;
+  $('#authform').dataset.mode=mode;$('#authov').hidden=false;const f=$('#authform').querySelector('input');if(f)f.focus()}
+$('#authform').addEventListener('submit',async e=>{e.preventDefault();const f=e.target,mode=f.dataset.mode,m=$('#amsg'),btn=f.querySelector('.go');
+  const email=f.email.value.trim(),pw=f.password?f.password.value:'',handle=f.handle?f.handle.value.trim():'';
+  const err=t=>{m.className='msg err';m.textContent=t};m.className='msg';
+  if(!sbc())return err('Could not reach the account service. Try again in a moment.');
+  if(!/^\S+@\S+\.\S+$/.test(email))return err('Enter a valid email.');
+  if(mode!=='reset'&&pw.length<8)return err('Password needs at least 8 characters.');
+  if(mode==='up'&&handle&&!/^[A-Za-z0-9_]{3,24}$/.test(handle))return err('Username: 3–24 letters, numbers or _.');
+  btn.disabled=true;m.textContent='One moment…';
+  try{let r;
+    if(mode==='up'){r=await sb.auth.signUp({email,password:pw,options:{data:{handle},emailRedirectTo:location.origin+'/#mine'}});if(r.error)throw r.error;
+      if(!r.data.session){m.textContent='Check your email and click the link to finish signing up.';btn.disabled=false;return}}
+    else if(mode==='in'){r=await sb.auth.signInWithPassword({email,password:pw});if(r.error)throw r.error}
+    else{r=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/#reset'});if(r.error)throw r.error;m.textContent='If that email has an account, a reset link is on its way.';btn.disabled=false;return}
+    $('#authov').hidden=true}
+  catch(x){err(x.message||'Something went wrong.')}btn.disabled=false});
+async function setItem(c,p,ed,kind,qty){const id=cid(c),k=ck(id,p,ed,kind),before=COLL.get(k);
+  if(qty>0)COLL.set(k,qty);else COLL.delete(k);renderMyColl(c);refreshMarks();
+  const r=qty>0?await sb.from('collection_items').upsert({user_id:ME.id,card_id:id,printing:p,edition:ed,kind,qty,updated_at:new Date().toISOString()}):await sb.from('collection_items').delete().match({user_id:ME.id,card_id:id,printing:p,edition:ed,kind});
+  if(r.error){if(before)COLL.set(k,before);else COLL.delete(k);renderMyColl(c);refreshMarks();const b=$('#mycoll');if(b)b.insertAdjacentHTML('beforeend','<p class="mt" style="color:#ff8b8b;margin:0">Could not save. Check your connection and try again.</p>')}}
+const combos=c=>{const eds=(c.ed||[]).filter(Boolean);const ps=(c.v&&c.v.length?c.v:['Normal']);return (eds.length?eds:['']).flatMap(e=>ps.map(p=>[p,e]))};
+function renderMyColl(c){const box=$('#mycoll');if(!box)return;
+  if(!ME){box.innerHTML='<h4>Your collection</h4><p class="mt" style="margin:0">Sign up to mark the printings you have and the ones you want.</p><div><button class="pill" data-auth="up">Sign up</button> <button class="clear" data-auth="in">Sign in</button></div>';return}
+  box.innerHTML='<h4>Your collection</h4>'+combos(c).map(([p,e],j)=>{const h=COLL.get(ck(cid(c),p,e,'have'))||0,w=COLL.has(ck(cid(c),p,e,'want'));const f=FOILS[p];
+    return `<div class="mrow"><span>${f?`<span class="fx f-${f[0]}" style="font-size:5px;vertical-align:middle;margin-right:6px" aria-hidden="true"></span>`:''}${esc(p)}${e?` · <span class="mt">${esc(e)}</span>`:''}</span>
+    <span class="step${h?' on':''}" aria-label="How many you have"><button data-have="${j}" data-d="-1" aria-label="One less">−</button><b>${h}</b><button data-have="${j}" data-d="1" aria-label="One more">+</button></span>
+    <button class="wt" data-want="${j}" aria-pressed="${w}">♡ Want</button></div>`}).join('')}
+function collClick(t,e){
+  if(t.dataset.auth){e.preventDefault();openAuth(t.dataset.auth)}
+  else if(t.dataset.authclose!=null)$('#authov').hidden=true;
+  else if(t.dataset.signout!=null)sb&&sb.auth.signOut();
+  else if(t.dataset.have!=null||t.dataset.want!=null){const c=list[sel];if(!c||!ME)return;const [p,ed]=combos(c)[+(t.dataset.have??t.dataset.want)];
+    if(t.dataset.have!=null){const k=ck(cid(c),p,ed,'have');setItem(c,p,ed,'have',Math.max(0,(COLL.get(k)||0)+ +t.dataset.d))}
+    else{const k=ck(cid(c),p,ed,'want');setItem(c,p,ed,'want',COLL.has(k)?0:1)}}
+  else if(t.dataset.mtab){MTAB=t.dataset.mtab;renderMine()}
+  else if(t.dataset.share!=null)toggleShare();
+  else if(t.dataset.copy!=null){navigator.clipboard&&navigator.clipboard.writeText(t.dataset.copy).then(()=>{t.textContent='Copied'})}}
+let MTAB='have';
+function cardsWith(kind,src){const ids=new Set();for(const k of src.keys()){const a=k.split('|');if(a[3]===kind)ids.add(a[0])}return D.cards.filter(c=>ids.has(cid(c)))}
+function progress(src){const have=new Set();for(const k of src.keys()){const a=k.split('|');if(a[3]==='have')have.add(a[0])}
+  return D.sets.map(s=>{const n=D.cards.filter(c=>c.s===s.id&&have.has(cid(c))).length;return {s,n}}).filter(x=>x.n)}
+function listView(el,title,src,ro){const items=cardsWith(MTAB,src);list=items;
+  const prog=progress(src);
+  el.innerHTML=`${title}
+  <div class="row"><button class="pill" data-mtab="have" aria-pressed="${MTAB==='have'}">Haves · ${cardsWith('have',src).length}</button><button class="pill" data-mtab="want" aria-pressed="${MTAB==='want'}">Wants · ${cardsWith('want',src).length}</button></div>
+  ${MTAB==='have'&&prog.length?`<div class="sp">${prog.map(({s,n})=>`<button data-set="${esc(s.id)}"><span><b>${esc(setLabel(s))}</b> · ${esc(s.name)}</span><span class="mt">${n} / ${s.count} cards</span><span class="bar2"><i style="width:${Math.min(100,n/s.count*100)}%"></i></span></button>`).join('')}</div>`:''}
+  <div class="grid">${items.length?items.map((c,i)=>tile(c,i)).join(''):`<p class="empty">${ro?'Nothing here yet.':MTAB==='have'?'No cards yet. Open any card and use + to add the printings you have.':'No wants yet. Open any card and tap ♡ Want.'}</p>`}</div>`}
+function renderMine(){const el=$('#v-mine');if(!ME){el.innerHTML='<h1>My collection</h1><p class="mt">Sign up or sign in to track the cards you have and want.</p><div class="row"><button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button></div>';return}
+  const link=MYP?location.origin+'/#u='+MYP.share_slug:'';
+  listView(el,`<h1>${esc(MYP&&MYP.handle?MYP.handle+"'s collection":'My collection')}</h1>
+  ${MYP?`<div class="share"><span>Share link${MYP.sharing?'':' (off)'}:</span>${MYP.sharing?`<code>${esc(link)}</code><button class="clear" data-copy="${esc(link)}">Copy</button>`:''}<button class="clear" data-share>${MYP.sharing?'Turn off sharing':'Turn on sharing'}</button></div>`:''}`,COLL,false)}
+async function toggleShare(){if(!MYP)return;const v=!MYP.sharing;const r=await sb.from('profiles').update({sharing:v}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data)MYP=r.data;renderMine()}
+async function renderUser(slug){const el=$('#v-user');el.innerHTML='<p class="empty">Loading…</p>';if(!sbc()){el.innerHTML='<p class="empty">Could not load this list.</p>';return}
+  const r=await sb.rpc('shared_list',{slug});if(r.error||!r.data||!r.data.length){el.innerHTML='<h1>Shared list</h1><p class="empty">This list is empty, private, or the link is wrong.</p>';return}
+  const m=new Map();r.data.forEach(i=>m.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));const who=r.data[0].handle||'A collector';
+  listView(el,`<h1>${esc(who)}'s haves and wants</h1><p class="mt">Shared from Jonin. ${ME?'':'<button class="clear" data-auth="up">Make your own list</button>'}</p>`,m,true)}
+if(sbc()){sb.auth.getSession().then(({data})=>setUser(data.session?data.session.user:null));sb.auth.onAuthStateChange((ev,ses)=>{setUser(ses?ses.user:null);if(ev==='PASSWORD_RECOVERY'){const pw=prompt('Choose a new password (at least 8 characters)');if(pw&&pw.length>=8)sb.auth.updateUser({password:pw})}})}
+paintAcct();
 const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url',{headers:{apikey:SUPA_KEY,Range:`${i*1000}-${i*1000+999}`}}).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>a.flat());
 function applyLive(rows){if(!D||!rows||!rows.length)return false;const m={};rows.forEach(r=>{if(r&&r.url)m[r.card_id]=r.url});let n=0;D.cards.forEach(c=>{const u=m[c.s+':'+c.n];if(u&&/^https:\/\//.test(u)&&c.img!==u){c.img=u;n++}});return n>0}
 fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promise.race([LIVE,new Promise(r=>setTimeout(()=>r(null),2500))]);if(live)applyLive(live);else LIVE.then(rows=>{if(applyLive(rows))renderCards(true)});D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
