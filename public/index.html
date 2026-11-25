@@ -172,6 +172,10 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
 .sp{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:14px 0}
 .sp button{all:unset;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px;font-size:13px}
 .sp .bar2{height:6px;border-radius:99px;background:#2E2638;overflow:hidden}.sp .bar2 i{display:block;height:100%;background:var(--acc)}
+.cstats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:14px 0}.cstats>div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:2px}.cstats b{font:700 22px/1.1 "Baloo 2",sans-serif}.cstats span{color:var(--mute);font-size:12px}
+.spc{display:grid;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}.spc.on{border-color:var(--acc)}.sp .spc>button[data-set]{border:0;border-radius:0}
+.sp .msb{all:unset;cursor:pointer;border-top:1px solid var(--line);padding:7px 12px;font-size:12.5px;color:var(--acc)}.sp .msb:hover{background:#2E2638}.sp .msb.done{cursor:default;color:var(--mute)}
+.misshead{align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
 .share{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:8px;font-size:13px}
 .share code{background:var(--bg);padding:6px 8px;border-radius:6px;font-size:12px;overflow-wrap:anywhere}
 .psay{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.links .psay a{flex-grow:0;padding:8px 10px}
@@ -294,7 +298,7 @@ function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};
   <div><h2>${esc(c.name)}</h2><div class="mt">${esc(s.name||c.s)} · ${esc(c.n)} · ${esc(c.r)}</div></div>
   <div class="facts"><div><div>Set</div><div>${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</div></div><div><div>Rarity</div><div>${rsym(c.src)} ${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div><div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div class="pv">${(c.v||[]).map(v=>{const f=FOILS[v];return `<span>${f?`<span class="fx f-${f[0]}" aria-hidden="true"></span>`:''}${esc(v)}</span>`}).join('')}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
   <div class="mycoll" id="mycoll"></div>
-  <div class="links"><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a>${PSA[c.s]?`<a href="${PSA_POP+PSA[c.s]+psaFrag(c)}" target="_blank" rel="noopener">PSA pop report · ${esc(setLabel(s))}</a>`:c.s==='P'?`<span class="psay"><span class="mt">PSA pop report:</span> ${PSA_PROMO.map(([y,u])=>`<a href="${PSA_POP+u+psaFrag(c)}" target="_blank" rel="noopener">${y}</a>`).join('')}</span>`:'<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>'}</div>
+  <div class="links"><a href="/card/${encodeURIComponent((c.s+'-'+c.n).toLowerCase())}/">Card page · share link</a><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a>${PSA[c.s]?`<a href="${PSA_POP+PSA[c.s]+psaFrag(c)}" target="_blank" rel="noopener">PSA pop report · ${esc(setLabel(s))}</a>`:c.s==='P'?`<span class="psay"><span class="mt">PSA pop report:</span> ${PSA_PROMO.map(([y,u])=>`<a href="${PSA_POP+u+psaFrag(c)}" target="_blank" rel="noopener">${y}</a>`).join('')}</span>`:'<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>'}</div>
   <a class="alert" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
   <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div></div></div>`;
   $('#ov').hidden=false;renderMyColl(c);track('card',{card_id:(c.s+':'+c.n).slice(0,24)});$('#panel').querySelector('[data-close]').focus()}
@@ -380,18 +384,27 @@ function collClick(t,e){
   else if(t.dataset.have!=null||t.dataset.want!=null){const c=list[sel];if(!c||!ME)return;const [p,ed]=combos(c)[+(t.dataset.have??t.dataset.want)];
     if(t.dataset.have!=null){const k=ck(cid(c),p,ed,'have');setItem(c,p,ed,'have',Math.max(0,(COLL.get(k)||0)+ +t.dataset.d))}
     else{const k=ck(cid(c),p,ed,'want');setItem(c,p,ed,'want',COLL.has(k)?0:1)}}
-  else if(t.dataset.mtab){MTAB=t.dataset.mtab;renderMine()}
+  else if(t.dataset.mtab){MTAB=t.dataset.mtab;MISS='';LAST?listView(...LAST):renderMine()}
+  else if(t.dataset.miss!=null){MISS=MISS===t.dataset.miss?'':t.dataset.miss;listView(...LAST)}
   else if(t.dataset.share!=null)toggleShare();
   else if(t.dataset.copy!=null){navigator.clipboard&&navigator.clipboard.writeText(t.dataset.copy).then(()=>{t.textContent='Copied'})}}
 let MTAB='have';
 function cardsWith(kind,src){const ids=new Set();for(const k of src.keys()){const a=k.split('|');if(a[3]===kind)ids.add(a[0])}return D.cards.filter(c=>ids.has(cid(c)))}
 function progress(src){const have=new Set();for(const k of src.keys()){const a=k.split('|');if(a[3]==='have')have.add(a[0])}
   return D.sets.map(s=>{const n=D.cards.filter(c=>c.s===s.id&&have.has(cid(c))).length;return {s,n}}).filter(x=>x.n)}
-function listView(el,title,src,ro){const items=cardsWith(MTAB,src);list=items;
-  const prog=progress(src);
+let MISS='',LAST=null;
+function collStats(src){let copies=0,first=0,foil=0;const have=new Set(),want=new Set();
+  for(const [k,q] of src){const a=k.split('|');if(a[3]==='have'){have.add(a[0]);copies+=q;if(/1st/.test(a[2]))first+=q;if(/foil|Super Rare|Gold/i.test(a[1]))foil+=q}else if(a[3]==='want')want.add(a[0])}
+  const per=D.sets.map(s=>{const all=D.cards.filter(c=>c.s===s.id);const n=all.filter(c=>have.has(cid(c))).length;return {s,n,t:all.length,miss:all.filter(c=>!have.has(cid(c)))}}).filter(x=>x.n);
+  return {have,want,copies,first,foil,per,done:per.filter(x=>x.n>=x.t).length}}
+function listView(el,title,src,ro){LAST=[el,title,src,ro];const st=collStats(src);const ms=MISS&&MTAB==='have'?st.per.find(x=>x.s.id===MISS):null;if(!ms)MISS='';
+  const items=ms?ms.miss:cardsWith(MTAB,src);list=items;
+  const stat=(n,l)=>`<div><b>${n.toLocaleString()}</b><span>${l}</span></div>`;
   el.innerHTML=`${title}
-  <div class="row"><button class="pill" data-mtab="have" aria-pressed="${MTAB==='have'}">Haves · ${cardsWith('have',src).length}</button><button class="pill" data-mtab="want" aria-pressed="${MTAB==='want'}">Wants · ${cardsWith('want',src).length}</button></div>
-  ${MTAB==='have'&&prog.length?`<div class="sp">${prog.map(({s,n})=>`<button data-set="${esc(s.id)}"><span><b>${esc(setLabel(s))}</b> · ${esc(s.name)}</span><span class="mt">${n} / ${s.count} cards</span><span class="bar2"><i style="width:${Math.min(100,n/s.count*100)}%"></i></span></button>`).join('')}</div>`:''}
+  <div class="row"><button class="pill" data-mtab="have" aria-pressed="${MTAB==='have'}">Haves · ${st.have.size}</button><button class="pill" data-mtab="want" aria-pressed="${MTAB==='want'}">Wants · ${st.want.size}</button></div>
+  ${MTAB==='have'&&st.have.size?`<div class="cstats">${stat(st.have.size,'different cards')}${stat(st.copies,'total copies')}${stat(st.first,'1st Edition copies')}${stat(st.foil,'foil copies')}${stat(st.per.length,'sets started')}${stat(st.done,'sets complete')}<div><b>—</b><span>value · coming with prices</span></div></div>`:''}
+  ${MTAB==='have'&&st.per.length?`<div class="sp">${st.per.map(({s,n,t,miss})=>`<div class="spc${MISS===s.id?' on':''}"><button data-set="${esc(s.id)}" title="Browse this set"><span><b>${esc(setLabel(s))}</b> · ${esc(s.name)}</span><span class="mt">${n} / ${t} cards · ${Math.floor(n/t*100)}%</span><span class="bar2"><i style="width:${Math.min(100,n/t*100)}%"></i></span></button>${miss.length?`<button class="msb" data-miss="${esc(s.id)}" aria-pressed="${MISS===s.id}">${MISS===s.id?'Hide missing':'Missing · '+miss.length}</button>`:'<span class="msb done">Complete ✓</span>'}</div>`).join('')}</div>`:''}
+  ${ms?`<div class="row misshead"><b>Missing from ${esc(setLabel(ms.s))} · ${esc(ms.s.name)}: ${ms.miss.length} cards</b><button class="clear" data-copy="${esc(ms.miss.map(c=>c.n+'  '+c.name).join('\n'))}">Copy list</button>${ro?'':'<span class="mt">Open a card and tap ♡ Want to add it to your wants.</span>'}<button class="clear" data-miss="${esc(ms.s.id)}">Back to my haves</button></div>`:''}
   <div class="grid">${items.length?items.map((c,i)=>tile(c,i)).join(''):`<p class="empty">${ro?'Nothing here yet.':MTAB==='have'?'No cards yet. Open any card and use + to add the printings you have.':'No wants yet. Open any card and tap ♡ Want.'}</p>`}</div>`}
 function renderMine(){const el=$('#v-mine');if(!ME){el.innerHTML='<h1>My collection</h1><p class="mt">Sign up or sign in to track the cards you have and want.</p><div class="row"><button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button></div>';return}
   const link=MYP?location.origin+'/#u='+MYP.share_slug:'';
@@ -410,7 +423,7 @@ fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promis
   $('#quick').insertAdjacentHTML('beforeend',QUICK.map(([l,q])=>`<button class="pill" data-q="${esc(q.replace(/^char:/,''))}" aria-pressed="false" style="--c:${QCOL[l]||'#F57C00'};--ct:${qct(QCOL[l]||'#F57C00')}">${esc(l)}</button>`).join(''));
   $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${k?rsym(k)+' ':''}${l}</button>`).join('');if(matchMedia('(max-width:900px)').matches)$('#legend').open=false;
   $('#setsel').insertAdjacentHTML('beforeend',D.sets.map(s=>`<option value="${esc(s.id)}">${esc(setLabel(s))} · ${esc(s.name)}</option>`).join(''));
-  renderSets();const v=readHash();view(v);renderCards(true);let rf='';try{rf=document.referrer?new URL(document.referrer).hostname:''}catch(_){}track('view',{page:v,ref:rf.slice(0,80)||null})}).catch(()=>{$('#count').textContent='Could not load cards'});
+  renderSets();const v=readHash();view(v);renderCards(true);{const m=location.hash.match(/(?:^#|&)card=([^&]+)/);if(m){const k=decodeURIComponent(m[1]),i=list.findIndex(c=>c.s+':'+c.n===k);if(i>=0)openCard(i);history.replaceState(null,'',location.pathname)}}let rf='';try{rf=document.referrer?new URL(document.referrer).hostname:''}catch(_){}track('view',{page:v,ref:rf.slice(0,80)||null})}).catch(()=>{$('#count').textContent='Could not load cards'});
 }
 </script>
 </body>
