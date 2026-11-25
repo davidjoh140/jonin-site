@@ -21,7 +21,7 @@ def slug(s):
 
 def path_for(row):
     set_id, number = row["card_id"].split(":", 1)
-    return f"ci/{slug(set_id)}/{slug(number)}~{slug(row['printing'])}-{slug(row.get('edition'))}-{row['asset'][:8]}.webp"
+    return f"ci/{slug(set_id)}/{slug(number)}_{slug(row['printing'])}-{slug(row.get('edition'))}-{row['asset'][:8]}.webp"
 
 
 def staged_ids():
