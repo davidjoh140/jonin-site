@@ -174,7 +174,7 @@ def share_row(url, title):
             f'<a href="https://www.facebook.com/sharer/sharer.php?u={u}" target="_blank" rel="noopener">Facebook</a>'
             f'<a href="https://www.reddit.com/submit?url={u}&amp;title={t}" target="_blank" rel="noopener">Reddit</a>'
             f'<button type="button" data-copy="{B.e(url)}" onclick="navigator.clipboard.writeText(this.dataset.copy).then(()=>this.textContent=\'Copied ✓\')">Copy link</button>'
-            f'<a class="ig" href="{INSTAGRAM}" target="_blank" rel="noopener">📸 Follow @jonin.cards</a></div>')
+            f'<a class="igbtn" href="{INSTAGRAM}" target="_blank" rel="noopener">{B.IG_SVG}Follow @jonin.cards</a></div>')
 
 
 def cover_of(a, cards_by_key):
@@ -231,7 +231,7 @@ def articles_index(arts, cards_by_key):
     body = (f'<nav class="crumb"><a href="/">All cards</a> › Articles</nav>\n'
             f'<section class="sethead"><h1>Articles</h1>\n'
             f'<p class="lede">Top sales, the most valuable cards, and the stories behind them.</p>\n'
-            f'<p class="btns"><a class="ghostbtn" href="{INSTAGRAM}" target="_blank" rel="noopener">📸 Follow @jonin.cards</a></p></section>\n'
+            f'<p class="btns"><a class="igbtn" href="{INSTAGRAM}" target="_blank" rel="noopener">{B.IG_SVG}Follow @jonin.cards</a></p></section>\n'
             f'<ul class="alist big">{items}</ul>\n')
     ld = B.ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},

@@ -53,6 +53,14 @@ def card_q(c):
     return '"' + re.sub(r'\s*\[.*\]', '', c['name']) + '" ' + (m.group(0) if m else '')
 
 
+IG_URL = 'https://www.instagram.com/jonin.cards/'
+IG_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg>'
+IG_HEADER = '<a class="igf" href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener" aria-label="Follow Jonin on Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg><span>Follow<span class="h"> @jonin.cards</span></span></a>'
+IG_FOOT = '<div class="igrow"><a class="igbtn" href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg>Follow @jonin.cards</a><span>New finds, top sales and set spotlights on Instagram.</span></div>'
+
+IG_END = ('<div class="igend"><p>Get Naruto CCG news and top sales in your feed.</p>'
+          f'<a class="igbtn" href="{IG_URL}" target="_blank" rel="noopener">{IG_SVG}Follow @jonin.cards</a></div>\n')
+
 HEAD = '''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,14 +82,14 @@ HEAD = '''<!DOCTYPE html>
 </head>
 <body>
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/news/">News</a><a href="/articles/">Articles</a><a href="#feedback" data-fb>💬 Feedback</a><div class="pn"><a class="pnb" href="/premium/"><svg class="lk" viewBox="0 0 14 16" aria-hidden="true"><path class="sh" d="M4 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="1" y="7" width="12" height="9" rx="2.2" fill="currentColor"/></svg>Premium</a><div class="pdd"><div><h4>What Premium unlocks</h4><ul><li>Exact prices by edition, foil and grade</li><li>Every sold listing, linked to the sale</li><li>Price estimates and sort by market value</li><li>Alerts for the cards you&#39;re hunting</li><li>Buy and sell posts from the Naruto CCG marketplaces</li></ul><a class="go" href="/premium/">See Premium →</a></div></div></div></nav></div></header>
+<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/news/">News</a><a href="/articles/">Articles</a><a href="#feedback" data-fb>💬 Feedback</a><div class="pn"><a class="pnb" href="/premium/"><svg class="lk" viewBox="0 0 14 16" aria-hidden="true"><path class="sh" d="M4 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="1" y="7" width="12" height="9" rx="2.2" fill="currentColor"/></svg>Premium</a><div class="pdd"><div><h4>What Premium unlocks</h4><ul><li>Exact prices by edition, foil and grade</li><li>Every sold listing, linked to the sale</li><li>Price estimates and sort by market value</li><li>Alerts for the cards you&#39;re hunting</li><li>Buy and sell posts from the Naruto CCG marketplaces</li></ul><a class="go" href="/premium/">See Premium →</a></div></div></div></nav>{igh}</div></header>
 <main>
 '''
 FOOT = '''</main>
-<footer>Jonin is a fan-made database for the original Bandai Naruto Collectible Card Game (2006–2013). Not affiliated with Bandai, Shueisha or Masashi Kishimoto. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you. <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a></footer>
+<footer>{igf}Jonin is a fan-made database for the original Bandai Naruto Collectible Card Game (2006–2013). Not affiliated with Bandai, Shueisha or Masashi Kishimoto. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you. <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a></footer>
 <script src="/feedback.js?v=1" defer></script>
 </body></html>
-'''
+'''.replace('{igf}', IG_FOOT)
 
 
 def ld_json(obj):
@@ -441,7 +449,8 @@ def news_page(a):
         crumbs(('Naruto CCG cards', SITE + '/'), ('News', SITE + '/news/'), (a.get('short') or a['title'], url))]})
     upd = f" · Updated {fmt_date(a['updated'])}" if a.get('updated') and a['updated'] != a['published'] else ''
     body = (f'<nav class="crumb"><a href="/">All cards</a> › <a href="/news/">News</a> › {e(a.get("short") or a["title"])}</nav>\n'
-            f'<article class="news"><h1>{e(a["title"])}</h1><p class="mt">{fmt_date(a["published"])}{upd}</p>\n{a["body"]}</article>\n')
+            f'<article class="news"><h1>{e(a["title"])}</h1><p class="mt">{fmt_date(a["published"])}{upd}</p>\n{a["body"]}</article>\n'
+            + IG_END)
     return HEAD.format(title=e(title), desc=e(a['description']), url=url, img=e(a.get('image') or SITE + '/og.png'),
                        tw='summary_large_image', ld=ld) + body + FOOT
 
@@ -530,7 +539,7 @@ def set_links(sets):
 
 def main():
     global HEAD
-    HEAD = HEAD.replace('{cssv}', css_version()).replace('{premv}', file_version('prem.css'))
+    HEAD = HEAD.replace('{igh}', IG_HEADER).replace('{cssv}', css_version()).replace('{premv}', file_version('prem.css'))
     d = json.load(open(os.path.join(ROOT, 'cards.json'), encoding='utf-8'))
     global BANDS
     BANDS = d.get('bands') or BANDS
