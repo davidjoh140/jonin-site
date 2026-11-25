@@ -204,6 +204,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .authbox input{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px 14px;color:var(--ink);font:15px Inter,sans-serif;outline:none}
 .authbox input:focus{border-color:var(--red)}
 .authbox .go{min-height:44px;border-radius:10px;background:var(--red);border:0;color:var(--ont);font-weight:600;font-size:15px;cursor:pointer}
+.fbcard{background:none;border:1px dashed var(--edge);color:var(--mute);border-radius:10px;padding:10px 12px;font:13px Inter,sans-serif;cursor:pointer;text-align:left}.fbcard:hover{color:var(--ink);border-color:var(--red)}
 .authbox .msg{font-size:13px;color:var(--mute);min-height:18px}.authbox .msg.err{color:#ff8b8b}
 .tabs{display:flex;gap:8px}
 .sp{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:14px 0}
@@ -222,7 +223,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 <body>
 <header><div class="hw">
   <a class="logo" href="#" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-  <nav><a href="#" data-v="cards" class="on">Cards</a><a href="#sets" data-v="sets">Sets</a><a href="/premium/" class="alerts">🔔 Alerts</a></nav>
+  <nav><a href="#" data-v="cards" class="on">Cards</a><a href="#sets" data-v="sets">Sets</a><a href="#feedback" data-fb>💬 Feedback</a><a href="/premium/" class="alerts">🔔 Alerts</a></nav>
   <span class="acct" id="acct"></span>
   <a class="sell" href="https://sell.jonin.cards">Sell to Jonin</a>
 </div></header>
@@ -284,7 +285,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
   <button class="bg" data-authclose aria-label="Close"></button>
   <form class="authbox" id="authform" novalidate></form>
 </div>
-<footer>Jonin is an independent fan reference. Naruto © Masashi Kishimoto / Shueisha; the Naruto CCG was published by Bandai. Not affiliated with either. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you.</footer>
+<footer>Jonin is an independent fan reference. Naruto © Masashi Kishimoto / Shueisha; the Naruto CCG was published by Bandai. Not affiliated with either. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you. <a data-fb href="#feedback" style="color:var(--ink)">Send feedback</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"></script>
 <script>
 {
@@ -412,8 +413,13 @@ function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};
   <div class="mycoll" id="mycoll"></div>
   <div class="links"><a href="/card/${encodeURIComponent((c.s+'-'+c.n).toLowerCase())}/">Card page · share link</a><a href="https://www.ebay.com/sch/i.html?_nkw=${q}&amp;${EPN}" target="_blank" rel="sponsored noopener">See listings on eBay</a>${PSA[c.s]?`<a href="${PSA_POP+PSA[c.s]+psaFrag(c)}" target="_blank" rel="noopener">PSA pop report · ${esc(setLabel(s))}</a>`:c.s==='P'?`<span class="psay"><span class="mt">PSA pop report:</span> ${PSA_PROMO.map(([y,u])=>`<a href="${PSA_POP+u+psaFrag(c)}" target="_blank" rel="noopener">${y}</a>`).join('')}</span>`:'<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>'}</div>
   <a class="alert" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
+  <button class="fbcard" data-fb data-fbcard>✎ Something wrong or missing on this card? Tell us</button>
   <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div></div></div>`;
   $('#ov').hidden=false;renderMyColl(c);loadExact(c);track('card',{card_id:(c.s+':'+c.n).slice(0,24)});$('#panel').querySelector('[data-close]').focus()}
+// Feedback widget (/feedback.js) asks which card is open, so card notes carry the card id.
+window.joninFbCard=()=>sel>=0&&list[sel]?{id:list[sel].s+':'+list[sel].n,name:list[sel].name+' · '+list[sel].n}:null;
+window.joninFbUser=()=>ME&&ME.email||null;
+window.joninFbCardAt=i=>list[i]?{id:list[i].s+':'+list[i].n,name:list[i].name+' · '+list[i].n}:null;
 function pop(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
 function close(){$('#ov').hidden=true;sel=-1}
 $('#q').addEventListener('input',e=>{S.q=e.target.value.trim();clearTimeout(trackT);if(S.q.length>=2){const t=S.q.slice(0,80);trackT=setTimeout(()=>track('search',{term:t}),1500)}writeHash();renderCards(true)});
@@ -556,5 +562,6 @@ fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promis
 </script>
 <button class="totop" id="totop" type="button" aria-label="Back to top"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script>(function(){var b=document.getElementById('totop');function u(){b.classList.toggle('on',window.scrollY>500)}addEventListener('scroll',u,{passive:true});u();b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})})})();</script>
+<script src="/feedback.js?v=1" defer></script>
 </body>
 </html>
