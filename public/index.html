@@ -58,13 +58,20 @@ select{background:var(--panel);color:var(--ink);border:1px solid #3A3046;border-
 .set .no{font:700 28px "Baloo 2",sans-serif;color:var(--acc);line-height:1}
 .set img{height:26px;border-radius:4px}
 .set h3{margin:0;font-size:16px}
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10;display:flex;justify-content:flex-end}
+.ov{position:fixed;inset:0;background:rgba(10,7,14,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:10;display:flex;align-items:center;justify-content:center;padding:24px}
 .ov[hidden]{display:none}
-.ov .bg{flex-grow:1;background:none;border:0}
-aside{width:460px;max-width:100%;height:100%;overflow-y:auto;background:#17121D;border-left:1px solid #30283A;padding:18px 22px 32px;display:flex;flex-direction:column;gap:14px}
+.ov .bg{position:absolute;inset:0;background:none;border:0;cursor:zoom-out}
+aside{position:relative;width:min(1080px,100%);max-height:calc(100vh - 48px);overflow:hidden;background:#17121D;border:1px solid #30283A;border-radius:18px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8);display:flex;flex-direction:column}
+.nav3{padding:12px 14px 0}
+.pvwrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;padding:14px 28px 28px;overflow:hidden;min-height:0}
+.pvart{display:flex;align-items:flex-start;justify-content:center;min-height:0}
+.pvart .art.big{width:auto;height:min(calc(100vh - 150px),720px);max-width:100%;aspect-ratio:5/7;border-radius:16px;padding:0;box-shadow:0 20px 50px -18px rgba(0,0,0,.9)}
+.pvart .art.big img{object-fit:contain;background:#0F0B13}
+.pvinfo{display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:calc(100vh - 150px);padding-right:4px}
+@media(max-width:800px){.ov{padding:0;align-items:stretch}aside{border-radius:0;max-height:100vh;height:100%;overflow-y:auto}.pvwrap{grid-template-columns:1fr;overflow:visible;flex:none;padding:10px 18px 28px}.pvart .art.big{height:auto;width:min(100%,440px)}.pvinfo{max-height:none;overflow:visible}}
 .nav3{display:flex;gap:8px}.nav3 span{flex-grow:1}
 .ib{background:#2A2333;border:1px solid #3A3046;color:var(--ink);border-radius:8px;width:44px;height:44px;cursor:pointer;font-size:16px}
-.big{aspect-ratio:5/7;width:70%;align-self:center}
+.big{aspect-ratio:5/7}
 aside h2{margin:0;font:700 24px "Baloo 2",sans-serif}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:var(--panel);border:1px solid #30283A;border-radius:10px;padding:14px}
 .facts div div:first-child{color:var(--mute);font-size:12px}
@@ -108,27 +115,27 @@ footer{border-top:1px solid #2E2638;color:var(--mute);font-size:12px;text-align:
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}nav{order:3;width:100%}aside{width:100%}}
 
 /* motion: springy presses, lifts and entrances */
-:root{--spring:cubic-bezier(.34,1.56,.64,1);--ease:cubic-bezier(.22,1,.36,1)}
+:root{--spring:cubic-bezier(.3,1.22,.6,1);--ease:cubic-bezier(.22,1,.36,1)}
 .pill,.ib,.sell,.clear,select,.links a,.alert,.buy a{transition:transform .25s var(--spring),background-color .18s,border-color .18s,color .18s,box-shadow .2s}
-.pill:hover,.ib:hover{transform:translateY(-2px);border-color:#5A4A68}
-.pill:active,.ib:active,.sell:active,.clear:active,.links a:active,.alert:active{transform:scale(.93);transition-duration:.08s}
+.pill:hover,.ib:hover{transform:translateY(-1px);border-color:#5A4A68}
+.pill:active,.ib:active,.sell:active,.clear:active,.links a:active,.alert:active{transform:scale(.97);transition-duration:.08s}
 .pill[aria-pressed=true]{box-shadow:0 6px 18px -6px rgba(181,18,27,.75)}
 .pill.pop{animation:pop .42s var(--spring)}
-@keyframes pop{0%{transform:scale(.88)}55%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes pop{0%{transform:scale(.95)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
 .card .art{transition:transform .35s var(--spring),box-shadow .3s var(--ease),border-color .2s}
-.card:hover .art{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 16px 28px -14px rgba(0,0,0,.8),0 0 0 1px #4A3E57;border-color:#4A3E57}
-.card:active .art{transform:scale(.95);transition-duration:.1s}
+.card:hover .art{transform:translateY(-3px);box-shadow:0 16px 28px -14px rgba(0,0,0,.8),0 0 0 1px #4A3E57;border-color:#4A3E57}
+.card:active .art{transform:scale(.98);transition-duration:.1s}
 .card .nm{transition:color .2s}.card:hover .nm{color:var(--acc2)}
-.card.in{animation:rise .5s var(--ease) both;animation-delay:calc(var(--k,0)*22ms)}
-@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+.card.in{animation:rise .5s var(--ease) both;animation-delay:calc(var(--k,0)*12ms)}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .set{transition:transform .35s var(--spring),border-color .2s,box-shadow .3s}
-.set:hover{transform:translateY(-4px);box-shadow:0 14px 24px -14px rgba(0,0,0,.8)}.set:active{transform:scale(.96);transition-duration:.1s}
+.set:hover{transform:translateY(-2px);box-shadow:0 14px 24px -14px rgba(0,0,0,.8)}.set:active{transform:scale(.96);transition-duration:.1s}
 .set.in{animation:rise .5s var(--ease) both;animation-delay:calc(var(--k,0)*25ms)}
 .ov:not([hidden]){animation:fade .2s ease both}
-.ov:not([hidden]) aside{animation:slide .45s var(--spring) both}
-@keyframes fade{from{opacity:0}}@keyframes slide{from{transform:translateX(70px);opacity:.4}}
+.ov:not([hidden]) aside{animation:zoomin .28s var(--ease) both}
+@keyframes fade{from{opacity:0}}@keyframes zoomin{from{transform:scale(.96);opacity:0}}
 .count.bump{animation:bump .4s var(--spring)}
-@keyframes bump{40%{transform:scale(1.15);color:var(--ink)}}
+@keyframes bump{40%{transform:scale(1.06);color:var(--ink)}}
 .count{display:inline-block}
 #q{transition:border-color .2s,box-shadow .25s}#q:focus{box-shadow:0 0 0 4px rgba(181,18,27,.22)}
 .legend summary::after{transition:transform .3s var(--spring),margin .3s}
@@ -233,13 +240,12 @@ function renderCards(reset){
 function renderSets(){$('#sets').innerHTML=D.sets.map((s,k)=>`<button class="set in" style="--k:${Math.min(k,24)}" data-set="${esc(s.id)}"><div class="top"><span class="no">${esc(s.kind==='Main'?s.id:s.kind==='Promo'?'PR':s.id)}</span>${s.symbol?`<img src="${esc(s.symbol)}" alt="${esc(s.name)} set symbol">`:''}</div><h3>${esc(s.name)}</h3><span class="mt">${s.count} cards${s.rel?' · '+esc(s.rel):''}</span></button>`).join('')}
 function view(v){$('#v-cards').hidden=v!=='cards';$('#v-sets').hidden=v!=='sets';document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v))}
 function openCard(i){sel=i;const c=list[i];if(!c)return;const s=D.byId[c.s]||{};const q=encodeURIComponent('naruto ccg '+c.name+' '+c.n.replace(/-/g,''));
-  $('#panel').innerHTML=`<div class="nav3"><button class="ib" data-step="-1" aria-label="Previous card">‹</button><button class="ib" data-step="1" aria-label="Next card">›</button><span></span><button class="ib" data-close aria-label="Close">✕</button></div>
-  ${/^https:\/\//.test(c.img||'')?`<div class="art big"><img src="${esc(c.img)}" alt="${esc(c.name)} card scan"></div>`:`<div class="art big"><span class="num" style="font-size:34px">${esc(c.n)}</span><span class="ty">${esc(c.t)} · scan coming soon</span></div>`}
+  $('#panel').innerHTML=`<div class="nav3"><button class="ib" data-step="-1" aria-label="Previous card">‹</button><button class="ib" data-step="1" aria-label="Next card">›</button><span></span><button class="ib" data-close aria-label="Close">✕</button></div><div class="pvwrap"><div class="pvart">${/^https:\/\//.test(c.img||'')?`<div class="art big"><img src="${esc(c.img)}" alt="${esc(c.name)} card scan"></div>`:`<div class="art big"><span class="num" style="font-size:34px">${esc(c.n)}</span><span class="ty">${esc(c.t)} · scan coming soon</span></div>`}</div><div class="pvinfo">
   <div><h2>${esc(c.name)}</h2><div class="mt">${esc(s.name||c.s)} · ${esc(c.n)} · ${esc(c.r)}</div></div>
   <div class="facts"><div><div>Set</div><div>${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</div></div><div><div>Rarity</div><div>${rsym(c.src)} ${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div><div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div class="pv">${(c.v||[]).map(v=>{const f=FOILS[v];return `<span>${f?`<span class="fx f-${f[0]}" aria-hidden="true"></span>`:''}${esc(v)}</span>`}).join('')}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
   <div class="links"><a href="https://www.ebay.com/sch/i.html?_nkw=${q}" target="_blank" rel="noopener">See listings on eBay</a><a href="https://www.psacard.com/pop" target="_blank" rel="noopener">PSA pop report</a></div>
   <a class="alert" href="/premium/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
-  <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div>`;
+  <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div></div></div>`;
   $('#ov').hidden=false;$('#panel').querySelector('[data-close]').focus()}
 function pop(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
 function close(){$('#ov').hidden=true;sel=-1}
