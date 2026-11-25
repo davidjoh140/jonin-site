@@ -240,17 +240,22 @@ def mv_page(ch, ranked, sets_by_id, mv_chars):
     rows = []
     for i, c in enumerate(ranked):
         s = sets_by_id[c['s']]
-        b, ver = c['top'][1], c['top'][2]
+        b, ver, sold_on = c['top'][1], c['top'][2], c['top'][3]
+        price = c['top'][4] if len(c['top']) > 4 else None
+        sale_url = c['top'][5] if len(c['top']) > 5 else ''
         img = (f'<img loading="{"eager" if i == 0 else "lazy"}" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
                if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
         lock = f'/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}'
-        band = e(BANDS[b]) if 0 <= b < len(BANDS) else '—'
+        band = ('$' + f'{price:,.2f}'.removesuffix('.00')) if price else (e(BANDS[b]) if 0 <= b < len(BANDS) else '—')
+        src = (f'<a href="{e(sale_url + ("&" if "?" in sale_url else "?") + EPN.lstrip("&"))}" target="_blank" rel="sponsored noopener">See the sale on eBay ↗</a>'
+               if sale_url else 'Private sale' if price else '')
         rows.append(
             f'<li class="mvrow"><span class="mvn">{i + 1}</span><a class="mvart" href="/card/{slug(c)}/">{img}</a>'
             f'<div class="mvinfo"><h2><a href="/card/{slug(c)}/">{e(c["name"])}</a></h2>'
             f'<p class="mt"><span class="stag">{sym_img(s)}{e(s["name"])}</span> · {e(c["n"])} · {e(c["r"])}</p>'
-            f'<dl><dt>Top sale</dt><dd><b class="band">{band}</b></dd><dt>Version</dt><dd>{e(ver) or "—"}</dd></dl>'
-            f'<a class="pxlock" href="{lock}"><span>🔒 Exact sale price and every sold listing</span><b>Premium →</b></a></div></li>')
+            f'<dl><dt>Top sale</dt><dd><b class="band">{band}</b></dd><dt>Version</dt><dd>{e(ver) or "—"}</dd>'
+            f'<dt>Sold</dt><dd>{e(sold_on) or "—"}{" · " + src if src else ""}</dd></dl>'
+            f'<a class="pxlock" href="{lock}"><span>🔒 Every sale of this card, by edition, foil and grade</span><b>Premium →</b></a></div></li>')
     others = ''.join(f'<a class="chip" href="/character/{o["slug"]}/most-valuable/"><img src="/chars/{o["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(o["label"])}</a>'
                      for o in mv_chars if o is not ch)
     others_html = (f'<section class="others"><h2>Most valuable cards of other characters</h2><div class="chips">{others}</div></section>'
@@ -282,11 +287,15 @@ def chars_index(chars, counts):
             f'and {len(chars) - 5} more, with every printing, foil and 1st Edition.')
     cells = ''.join(f'<a class="ccell" href="/character/{c["slug"]}/"><img src="/chars/{c["slug"]}.webp" alt="" width="64" height="64" loading="lazy">'
                     f'<b>{e(c["name"])}</b><span>{counts[c["slug"]]} cards</span></a>' for c in chars)
+    mv = [c for c in chars if c.get('mv')]
+    mvrow = (f'<section class="others"><h2>Most valuable cards<span>Top {MOST_VALUABLE_TOP} by highest sale</span></h2><div class="chips">'
+             + ''.join(f'<a class="chip" href="/character/{c["slug"]}/most-valuable/"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">Most valuable {e(c["label"])} cards</a>' for c in mv)
+             + '</div></section>') if mv else ''
     body = f'''<nav class="crumb"><a href="/">All cards</a> › Characters</nav>
 <section class="sethead"><h1>Naruto CCG cards by character</h1>
 <p class="lede">Every character card in the original Bandai Naruto CCG (2006–2013), grouped by character. Pick a character to see all of their cards set by set.</p></section>
 <section class="cindex">{cells}</section>
-'''
+{mvrow}'''
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},
         crumbs(('Naruto CCG cards', SITE + '/'), ('Characters', url))]})

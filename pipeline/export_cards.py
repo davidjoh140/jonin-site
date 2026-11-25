@@ -77,10 +77,8 @@ def version_label(sale):
     return " · ".join(p for p in parts if p and p != "?")
 
 
-def top_sales(sales, cuts=PRICE_BAND_CUTOFFS):
-    """Highest approved sale per card (any version, eBay or private, all time) ->
-    {card_id: [rank, band, version, sold_date]}. rank 1 = the most expensive top sale on the site.
-    Only the order and the band go public; the exact price stays in Supabase (Premium)."""
+def best_sales(sales):
+    """{card_id: its highest approved sale row} (any version, eBay or private, all time)."""
     best = {}
     for x in sales:
         cid, price = x.get("card_id"), float(x.get("price") or 0)
@@ -91,9 +89,36 @@ def top_sales(sales, cuts=PRICE_BAND_CUTOFFS):
         k = (price, x.get("sold_at") or "", x.get("id") or 0)
         if cid not in best or k > best[cid][0]:
             best[cid] = (k, x)
+    return {cid: v[1] for cid, v in best.items()}
+
+
+def top_sales(sales, cuts=PRICE_BAND_CUTOFFS):
+    """Highest approved sale per card -> {card_id: [rank, band, version, sold_date]}.
+    rank 1 = the most expensive top sale on the site. Only the order and the band go public here;
+    exact prices are added just for cards on a most-valuable page (see reveal_top_prices)."""
+    best = {cid: ((float(x["price"]), x.get("sold_at") or "", x.get("id") or 0), x) for cid, x in best_sales(sales).items()}
     order = sorted(best, key=lambda cid: (-best[cid][0][0], cid))
     return {cid: [i + 1, sum(1 for c in cuts if best[cid][0][0] >= c), version_label(best[cid][1]),
                   (best[cid][1].get("sold_at") or "")[:10]] for i, cid in enumerate(order)}
+
+
+def reveal_top_prices(data, sales):
+    """Most-valuable pages show the exact top sale (David's call, 2026-11-25). Only the cards that make a
+    character's top list get [price, ebay_url] appended to "top"; every other card's prices stay Premium."""
+    import build_pages as bp
+    from settings import MOST_VALUABLE_CHARACTERS
+    best = best_sales(sales)
+    shown = 0
+    for ch in bp.load_chars():
+        if ch["slug"] not in MOST_VALUABLE_CHARACTERS:
+            continue
+        for c in bp.most_valuable(bp.char_cards(ch, data["cards"])):
+            x = best.get(c["s"] + ":" + c["n"])
+            if x and len(c["top"]) == 4:
+                url = x.get("url") or ""
+                c["top"] += [_num(x["price"]), url if url.startswith("https://") else ""]
+                shown += 1
+    return shown
 
 
 def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None, ranges=(), sales=()):
@@ -166,19 +191,21 @@ def image_url(path):
 def main():
     import supa
     with supa.Run("export_cards") as run:
+        sales = supa.select("sales", {"select": "id,card_id,price,sold_at,status,printing,edition,grader,grade,url",
+                                      "status": "eq.approved"})
         data = build(supa.select("sets"), supa.select("cards"),
                      supa.select("scans", {"select": "*", "public": "eq.true"}),
                      image_url,
                      supa.select("products"),
                      (supa.select("checklist_version") or [{}])[0].get("version"),
                      supa.select("price_ranges"),
-                     supa.select("sales", {"select": "id,card_id,price,sold_at,status,printing,edition,grader,grade",
-                                           "status": "eq.approved"}))
+                     sales)
+        revealed = reveal_top_prices(data, sales)
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),
                      "with_image": sum(1 for c in data["cards"] if "img" in c),
                      "with_prices": sum(1 for c in data["cards"] if "pb" in c),
-                     "with_top_sale": sum(1 for c in data["cards"] if "top" in c)}
+                     "with_top_sale": sum(1 for c in data["cards"] if "top" in c), "top_prices_shown": revealed}
         same = OUT.exists() and OUT.read_text() == text
         run.stats["changed"] = not same
         if "--check" in sys.argv:

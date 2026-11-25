@@ -46,6 +46,6 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 
 - `/character/<slug>/most-valuable/` for the characters in `MOST_VALUABLE_CHARACTERS` (`pipeline/settings.py`; Naruto, Sasuke, Itachi to start). Top `MOST_VALUABLE_TOP` (5) cards.
 - Ranked by each card's single highest approved sale (eBay or private, any version, all time). One spot per card, so a card and its foil can't both appear.
-- `export_cards.py` adds `"top": [rank, band, version, date]` to each card with sales. Only the order and the price band go public; exact prices stay in Supabase (Premium).
+- `export_cards.py` adds `"top": [rank, band, version, date]` to each card with sales. Cards that make a most-valuable list also get `[price, ebay_url]` appended: those pages show the exact top sale (and link it). Every other card's exact prices stay Premium.
 - Rebuilt by the Sync workflow every ~15 minutes, so the lists update on their own.
-- Private sales (not on eBay) are added from `/admin/` → Private sales (`db/008_private_sales.sql`).
+- Private sales (not on eBay) are added from `/admin/` → Private sales (`db/009_private_sales.sql`).
