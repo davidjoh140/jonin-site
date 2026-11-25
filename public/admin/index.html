@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Members, private sales &amp; feedback — Jonin admin</title>
+<title>Members, waitlist, private sales &amp; feedback — Jonin admin</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -76,8 +76,18 @@ async function load(){
   app.querySelectorAll('[data-rev]').forEach(b=>b.onclick=async()=>{if(!confirm('Remove Premium from '+b.dataset.rev+'?'))return;const r=await sb.rpc('admin_revoke',{p_email:b.dataset.rev});if(r.error)alert(r.error.message);load()});
   app.querySelectorAll('[data-give]').forEach(b=>b.onclick=async()=>{const r=await sb.rpc('admin_grant',{p_email:b.dataset.give,p_until:null,p_note:null});if(r.error)alert(r.error.message);load()});
   $('#out').onclick=async e=>{e.preventDefault();await sb.auth.signOut();load()};
+  loadWl();
   loadPs();
   loadFb();
+}
+// Premium waitlist: emails from the "Get early access" form on /premium/ (and card pages' alert buttons).
+async function loadWl(){let el=$('#wl');if(!el){app.insertAdjacentHTML('beforeend','<div id="wl"></div>');el=$('#wl')}
+  const [cards,r]=await Promise.all([cardsList().catch(()=>[]),sb.rpc('admin_waitlist')]);
+  if(r.error){el.innerHTML=`<h2>Premium waitlist</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
+  const rows=r.data||[],names=Object.fromEntries(cards.map(c=>[c.id,c.label])),wk=rows.filter(x=>new Date(x.last_at)>Date.now()-7*864e5).length;
+  el.innerHTML=`<h2>Premium waitlist</h2><p class="mt" style="margin-bottom:10px">People who asked for early access on the Premium page. <b style="color:var(--ink)">${rows.length}</b> ${rows.length===1?'person':'people'} · ${wk} in the last 7 days.${rows.length?' <button class="ghost" id="wlcopy">Copy all emails</button>':''}</p>
+  <div class="tw box" style="padding:0"><table><thead><tr><th>Email</th><th>Signed up</th><th>Interested in</th><th>From</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.email)}${x.signups>1?`<div class="tag">${x.signups} signups</div>`:''}</td><td>${day(x.first_at)}${x.last_at!==x.first_at?`<div class="tag">latest ${day(x.last_at)}</div>`:''}</td><td>${x.cards.length?x.cards.map(id=>`<a href="/#card=${encodeURIComponent(id)}" target="_blank">${esc(names[id]||id)}</a>`).join('<br>'):'<span class="tag">Premium in general</span>'}</td><td class="tag">${esc(x.sources.map(s=>s==='card_page'?'card alert button':s==='premium_page'?'Premium page':s).join(', '))}</td></tr>`).join('')||'<tr><td colspan="4" class="tag">No signups yet.</td></tr>'}</tbody></table></div>`;
+  const cb=$('#wlcopy');if(cb)cb.onclick=async()=>{await navigator.clipboard.writeText(rows.map(x=>x.email).join(', '));cb.textContent='Copied ✓'};
 }
 // Private sales: sales David makes or sees outside eBay. They count everywhere an eBay sale does
 // (price bands, Premium estimates, most-valuable pages) once the site syncs (every ~15 min).

@@ -1,0 +1,4 @@
+-- Applied to Supabase on 2026-11-25 (migration admin_waitlist). Kept here as the record.
+-- admin_waitlist() (owner only, is_admin()): one row per email from premium_waitlist with first/latest signup,
+--   signup count, cards they asked about and where they signed up. Shown on /admin/ → Premium waitlist.
+-- premium_waitlist: anon/authenticated keep INSERT only (select/update/delete grants revoked).
