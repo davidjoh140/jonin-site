@@ -33,7 +33,7 @@ h2{font:800 clamp(24px,2.8vw,30px)/1.15 "Baloo 2",sans-serif;margin:0 0 6px}
 .watch{display:inline-flex;align-items:center;gap:8px;background:var(--buybg);border:1px solid var(--buyline);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:13px;margin-bottom:16px}.watch[hidden]{display:none}
 .founding{display:grid;gap:6px;margin:0 0 18px;padding:14px 16px;border:1px solid color-mix(in srgb,#F2C14E 55%,transparent);background:color-mix(in srgb,#F2C14E 12%,transparent);border-radius:14px;max-width:520px}.founding b{font:700 18px "Baloo 2",sans-serif}.founding span{line-height:1.45}.founding #fleft{font-weight:700;margin-left:4px}.founding .btn{justify-self:start;margin-top:4px}.founding[hidden]{display:none}
 .price{display:flex;align-items:baseline;gap:8px;margin:24px 0 14px}.price b{font:800 44px/1 "Baloo 2",sans-serif}.price span{color:var(--mute)}
-.join{display:grid;gap:10px;max-width:440px}
+.join{display:grid;gap:10px;max-width:440px}.join[hidden]{display:none}
 .join form{display:flex;gap:8px;flex-wrap:wrap}
 .join input{flex:1 1 220px;background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:13px 14px;color:var(--ink);font:15px Inter,sans-serif;outline:none}.join input:focus{border-color:var(--red)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 20px;border-radius:10px;background:var(--red);border:1px solid var(--red);color:var(--ont);font:600 15px Inter,sans-serif;text-decoration:none;cursor:pointer}.btn:hover{background:var(--red2);border-color:var(--red2);color:var(--ont)}
@@ -175,7 +175,7 @@ function showOffer(){fnd.hidden=false;fetch(SUPA+'/rest/v1/rpc/founding_spots_le
 if(!ses)showOffer();else{fnd.hidden=true;const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js';
   sc.onload=async()=>{try{const sb=window.supabase.createClient(SUPA,SUPA_KEY);const {data:{session}}=await sb.auth.getSession();if(!session)return showOffer();
     const {data:m}=await sb.from('memberships').select('founding,active,until').eq('user_id',session.user.id).maybeSingle();
-    if(m&&m.founding&&m.active&&(!m.until||new Date(m.until)>new Date())){fnd.classList.add('is-member');fnd.innerHTML='<b>⭐ You\'re a founding member</b><span>You\'re signed up. Premium is yours, free, forever.</span>';fnd.hidden=false}}catch(_){}};
+    if(m&&m.founding&&m.active&&(!m.until||new Date(m.until)>new Date())){fnd.classList.add('is-member');fnd.innerHTML='<b>⭐ You\'re a founding member</b><span>You\'re signed up. Premium is yours, free, forever.</span>';fnd.hidden=false;join.hidden=true}}catch(_){}};
   sc.onerror=showOffer;document.head.appendChild(sc)}
 if(JOIN_URL){
   const a=document.createElement('a');a.className='btn';a.href=JOIN_URL+(card?(JOIN_URL.includes('?')?'&':'?')+'ref='+encodeURIComponent(card):'');a.textContent='Join Jonin Alerts';
