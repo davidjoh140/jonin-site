@@ -97,3 +97,7 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - PSA free limit: 100 calls/day, 2 per cert, shared with the scanner. Members first (David, 2026-11-26): members take calls with no reserve; the scanner leaves `PSA_MEMBER_RESERVE` (20) for them. Over the limit, the cert is queued and the hourly `psa-queue` job looks it up later.
 - Needs the Edge Function secret `PSA_TOKEN` (Supabase → Edge Functions → Secrets). Until it's set, certs just queue.
 - PLACEHOLDERS: 10 new cert lookups per member per day; scanner reserve 20 calls; day resets at UTC midnight.
+
+## Last seen
+
+- `acct.js` (every page) calls `touch_seen()` for signed-in members, at most every 5 minutes, setting `profiles.last_seen_at` (`db/024_last_seen.sql`). `/admin/` → Accounts shows "Last seen" (falls back to the last sign-in) plus "Active last 24 hours / 7 days".
