@@ -189,14 +189,14 @@
     var tok=s.access_token,uid=encodeURIComponent(s.user.id);
     Promise.all([
       rest('/rest/v1/profiles?id=eq.'+uid+'&select=handle,fav_character,avatar',tok).catch(function(){return null}),
-      rest('/rest/v1/memberships?user_id=eq.'+uid+'&select=active,until,founding',tok).catch(function(){return null}),
+      rest('/rest/v1/memberships?user_id=eq.'+uid+'&select=active,until,founding,upgrade_notice',tok).catch(function(){return null}),
       rest('/rest/v1/rpc/my_xp',tok,{}).catch(function(){return null})
     ]).then(function(r){
       var p=r[0]&&r[0][0],m=r[1]&&r[1][0];
       if(p){base.handle=p.handle||base.handle;base.fav=p.fav_character||null;base.avatar=p.avatar||null}
-      if(r[1]){var on=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));base.badge=on?(m.founding?'founding':'premium'):null}
+      var on=false;if(r[1]){on=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));base.badge=on?(m.founding?'founding':'premium'):null}
       if(r[2])base.pts=r[2];
-      paint(base);cache(base);introMaybe(base);
+      paint(base);cache(base);if(!(on&&m.upgrade_notice&&upgradeShow(m.upgrade_notice,tok)))introMaybe(base);
     });
   }
   function signOut(){
@@ -267,6 +267,24 @@
     '.jsi li b{font:800 14px "Baloo 2",sans-serif;color:#F2C14E;white-space:nowrap}.jsi li small{display:block;color:var(--mute,#B8AEA6);font-size:12px}.jsi .jsr{font-size:15px}.jsi .jsr b{color:#F2C14E}'+
     '.jsi .jsb{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.jsi .jsb a{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;padding:0 16px}.jsi .jsl{background:none;border:0;color:var(--mute,#B8AEA6);font:14px Inter,system-ui,sans-serif;cursor:pointer;margin-left:auto}';
     document.head.appendChild(c)})();
+  // ---- Upgrade popup (David, 2026-11-26) ----
+  // When David gives someone Jonin Club or Founding member from /admin/, Supabase sets memberships.upgrade_notice.
+  // The next page they open while signed in shows this once; dismiss_upgrade_notice clears it as soon as it shows.
+  // PLACEHOLDER wording for David to change.
+  var UPG={founding:{h:'⭐ You’re a Founding member',p:'You’ve been made one of Jonin’s founding members. Jonin Club is yours free, forever, and your profile now shows the founding ring.'},
+           premium:{h:'You’re in Jonin Club',p:'You’ve been upgraded to Jonin Club. Everything below is unlocked on your account now.'}};
+  function upgradeShow(kind,tok){var u=UPG[kind];if(!u||upgradeShow.on||/^\/admin\//.test(location.pathname))return false;upgradeShow.on=1;
+    rest('/rest/v1/rpc/dismiss_upgrade_notice',tok,{}).catch(function(){});
+    var d=document.createElement('div');d.className='jmo jsi jup';
+    d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph"><button class="jmx" type="button" aria-label="Close">×</button>'+
+      '<h2 id="juph">'+u.h+'</h2><p class="jsr">'+u.p+'</p><ul>'+
+      ['Exact prices by edition, foil and grade','Every sold listing, linked to the sale','Price estimates and sort by market value','Alerts for the cards you’re hunting','Your collection value, a spreadsheet export and a badge']
+        .map(function(t){return '<li><span>'+t+'</span><b>✓</b></li>'}).join('')+
+      '</ul><div class="jsb"><a class="jmgo" href="/#mine">See my collection</a><button type="button" class="jsl">Close</button></div></div>';
+    var go=function(){if(!document.body)return setTimeout(go,50);document.body.appendChild(d);if(window.jtrack)jtrack('upgrade-popup',{kind:kind})};go();
+    var close=function(){d.remove()};d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.jmx,.jsl'))close()});
+    document.addEventListener('keydown',function f(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',f)}});
+    return true}
   function introMaybe(st){
     if(!st||!st.user||!st.pts||/^\/(missions|admin)\//.test(location.pathname))return;
     var p=st.pts,R=p.rules||{};if((p.voted||[]).length>=INTRO_UNDER||!R.vote_character)return;
