@@ -106,6 +106,7 @@ def money(v):
     return '$' + (f'{round(v):,}' if v >= 100 else (f'{v:.2f}'.removesuffix('.00')))
 
 
+SETS_BY_ID = {}
 BANDS = ['Under $10', '$10–50', '$50–200', '$200+']   # replaced by cards.json "bands" in main()
 
 
@@ -421,7 +422,30 @@ def css_version():
     return hashlib.sha1(open(os.path.join(ROOT, 'pages.css'), 'rb').read()).hexdigest()[:8]
 
 
-def card_page(c, s, prev, nxt, chars_by_name=None):
+def related_rows(c, s, set_cards, char_lists, chars_by_name):
+    """'More <character> cards' and 'More from <set>' rows under a card page, so one card leads to the next.
+    Best-selling cards first, then rarity; 6 per row."""
+    pick = lambda xs: sorted([x for x in xs if x is not c], key=lambda x: (x['top'][0] if x.get('top') else 10 ** 6, RANK.get(x['r'], 9), x['n']))[:6]
+    out, seen = [], set()
+    for x in re.split(r'\s*&\s*', c['name']):
+        ch = char_of(x, chars_by_name)
+        if not ch or ch['slug'] in seen:
+            continue
+        seen.add(ch['slug'])
+        cs = pick(char_lists.get(ch['slug'], []))
+        if cs:
+            out.append(f'<section class="cgroup related"><h2><a href="/character/{ch["slug"]}/">More {e(ch["label"])} cards</a>'
+                       f'<span>{len(char_lists[ch["slug"]])} in all</span></h2><div class="grid">{"".join(tile(x, SETS_BY_ID[x["s"]]) for x in cs)}</div>'
+                       f'<p class="btns"><a class="ghostbtn" href="/character/{ch["slug"]}/">All {e(ch["label"])} cards →</a></p></section>')
+    cs = pick(set_cards)
+    if cs:
+        out.append(f'<section class="cgroup related"><h2><a href="/set/{set_slug(s)}/">More from {e(s["name"])}</a><span>{len(set_cards)} cards</span></h2>'
+                   f'<div class="grid">{"".join(tile(x, s) for x in cs)}</div>'
+                   f'<p class="btns"><a class="ghostbtn" href="/set/{set_slug(s)}/">Full {e(s["name"])} card list →</a></p></section>')
+    return '\n'.join(out)
+
+
+def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None):
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
     eds = [x for x in (c.get('ed') or []) if x]
@@ -477,6 +501,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None):
 </div>
 </article>
 <nav class="prevnext">{nav}</nav>
+{related_rows(c, s, set_cards, char_lists or {}, chars_by_name or {})}
 '''
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(img or SITE + '/og.png'),
                        tw='summary_large_image', ld=ld) + body + FOOT
@@ -654,13 +679,16 @@ def main():
     articles = AB.load_articles()
     cards_by_key = {c['s'] + ':' + c['n']: c for c in d['cards']}
     AB.set_featured(articles, cards_by_key)
+    global SETS_BY_ID
+    SETS_BY_ID = {x['id']: x for x in sets}
+    char_lists = {ch['slug']: char_cards(ch, d['cards']) for ch in chars}
     changed, keep_c, keep_s = 0, set(), set()
     for s in sets:
         cs = by_set[s['id']]
         for i, c in enumerate(cs):
             keep_c.add(slug(c))
             changed += write(os.path.join(ROOT, 'card', slug(c), 'index.html'),
-                             card_page(c, s, cs[i - 1] if i else None, cs[i + 1] if i + 1 < len(cs) else None, chars_by_name))
+                             card_page(c, s, cs[i - 1] if i else None, cs[i + 1] if i + 1 < len(cs) else None, chars_by_name, cs, char_lists))
         keep_s.add(set_slug(s))
         changed += write(os.path.join(ROOT, 'set', set_slug(s), 'index.html'), set_page(s, cs))
     sets_by_id = {x['id']: x for x in sets}
