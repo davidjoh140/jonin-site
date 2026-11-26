@@ -1,6 +1,6 @@
 /* jonin.cards header profile button (every page).
-   Signed in: avatar + status symbol (crown = founding, gem = premium, leaf = free) + username + feedback rank,
-   with a hover menu (My collection, Premium, Send feedback, Theme, Sign out).
+   Signed in: avatar + status symbol (crown = founding, gem = premium, leaf = free) + username + XP rank,
+   with a hover menu (rank/XP, My collection, Missions, Premium, Send feedback, Theme, Sign out).
    Signed out: one "Sign up" button whose hover menu holds Sign in, the guest collection and Theme.
    The homepage renders it through JoninAcct.html(state); other pages mark <span id="acct" data-auto> and this file fills it in,
    reading the signed-in session the homepage's Supabase client saved in localStorage (no Supabase library needed here). */
@@ -32,23 +32,23 @@
     return src?'<img src="'+esc(src)+'" alt="" width="'+sz+'" height="'+sz+'" decoding="async">':'<span class="jini">'+esc((s.handle||'?').charAt(0).toUpperCase())+'</span>';
   }
 
-  // s = {home, user, handle, fav, avatar, badge:'founding'|'premium'|null, pts:{points,rank,next,next_at}|null, guest}
+  // s = {home, user, handle, fav, avatar, badge:'founding'|'premium'|null, pts:{xp,rank,next,next_at,prev_at}|null (from my_xp), guest}
   function html(s){
     var mine=s.home?'href="#mine" data-v="mine"':'href="/#mine"';
     var up=s.home?'<button type="button" class="jab jsu" data-auth="up"':'<a class="jab jsu" href="/#signup"';
     var upEnd=s.home?'</button>':'</a>';
     var inB=s.home?'<button type="button" class="jmi" role="menuitem" data-auth="in">Sign in</button>':'<a class="jmi" role="menuitem" href="/#signin">Sign in</a>';
-    var fb='<button type="button" class="jmi" role="menuitem" data-fb data-fbname="Header profile menu">Send feedback<small>Accepted notes rank you up</small></button>';
+    var fb='<button type="button" class="jmi" role="menuitem" data-fb data-fbname="Header profile menu">Send feedback<small>Notes we use earn XP</small></button>';
     if(!s.user){
       return '<div class="jac">'+up+' aria-haspopup="menu">'+'<span>'+(s.guest?'Sign up<span class="jx"> to save</span>':'Sign up')+'</span>'+CARET+upEnd+
         '<div class="jam" role="menu"><div class="jmp"><b>Free account</b><span>Save your collection and vote for the coolest cards. The first 20 members get Premium free, forever.</span></div>'+
         (s.home?'<button type="button" class="jmi jgo" role="menuitem" data-auth="up">Create free account</button>':'<a class="jmi jgo" role="menuitem" href="/#signup">Create free account</a>')+
         inB+(s.guest?'<a class="jmi" role="menuitem" '+mine+'>My collection<small>'+s.guest+' card'+(s.guest===1?'':'s')+' saved on this device only</small></a>':'')+
-        fb+themeRow()+'</div></div>';
+        '<a class="jmi" role="menuitem" href="/missions/">Missions<small>Earn XP and rank up</small></a>'+fb+themeRow()+'</div></div>';
     }
     var st=s.badge==='founding'?'founding':s.badge==='premium'?'premium':'free';
-    var p=s.pts,rank=p&&p.rank?p.rank:'',pts=p?(p.points||0):0;
-    var pct=p&&p.next_at?Math.min(100,Math.round(pts/p.next_at*100)):100;
+    var p=s.pts,rank=p&&p.rank?p.rank:'',pts=p?(p.xp!=null?p.xp:(p.points||0)):0,lo=p&&p.prev_at||0;
+    var pct=p&&p.next_at?Math.min(100,Math.round((pts-lo)/(p.next_at-lo)*100)):100;
     var name=s.handle||'My profile';
     return '<div class="jac">'+
       '<a class="jab jpf st-'+st+'" '+mine+' aria-haspopup="menu" title="'+esc(name+' · '+LABEL[st]+(rank?' · '+rank:''))+'">'+
@@ -56,10 +56,11 @@
         '<span class="jat"><b>'+esc(name)+'</b>'+(rank?'<small>'+esc(rank)+'</small>':'')+'</span>'+CARET+'</a>'+
       '<div class="jam" role="menu">'+
         '<div class="jah"><span class="jav big">'+avatar(s,48)+'</span><div><b>'+esc(name)+'</b><span class="jst st-'+st+'">'+ICON[st]+LABEL[st]+'</span></div></div>'+
-        (p?'<div class="jrk"><div><span>Rank</span> <b>'+esc(rank)+'</b><span class="jpt">'+pts+' pt'+(pts===1?'':'s')+'</span></div><span class="jbar"><i style="width:'+pct+'%"></i></span>'+
-          (p.next?'<small>'+(p.next_at-pts)+' more accepted note'+(p.next_at-pts===1?'':'s')+' to '+esc(p.next)+'</small>':'<small>Top rank</small>')+'</div>':'')+
+        (p?'<a class="jrk" href="/missions/" role="menuitem" style="display:block;text-decoration:none" title="See your missions"><div><span>Rank</span> <b>'+esc(rank)+'</b><span class="jpt">'+pts+' XP</span></div><span class="jbar"><i style="width:'+pct+'%"></i></span>'+
+          (p.next?'<small>'+(p.next_at-pts)+' XP to '+esc(p.next)+'</small>':'<small>Top rank</small>')+'</a>':'')+
         '<a class="jmi" role="menuitem" '+mine+'>My collection<small>Haves, wants, slabs and profile</small></a>'+
         '<a class="jmi" role="menuitem" '+(s.home?'href="#lists" data-v="mine" data-lmine':'href="/#lists"')+'>My lists<small>Your own card lists</small></a>'+
+        '<a class="jmi" role="menuitem" href="/missions/">Missions<small>Earn XP and rank up</small></a>'+
         (st==='free'?'<a class="jmi jprem" role="menuitem" href="/premium/">Unlock Premium</a>':'')+
         fb+themeRow()+
         '<button type="button" class="jmi jout" role="menuitem" '+(s.home?'data-signout':'data-jsignout')+'>Sign out</button>'+
@@ -109,7 +110,7 @@
     Promise.all([
       rest('/rest/v1/profiles?id=eq.'+uid+'&select=handle,fav_character,avatar',tok).catch(function(){return null}),
       rest('/rest/v1/memberships?user_id=eq.'+uid+'&select=active,until,founding',tok).catch(function(){return null}),
-      rest('/rest/v1/rpc/my_feedback_points',tok,{}).catch(function(){return null})
+      rest('/rest/v1/rpc/my_xp',tok,{}).catch(function(){return null})
     ]).then(function(r){
       var p=r[0]&&r[0][0],m=r[1]&&r[1][0];
       if(p){base.handle=p.handle||base.handle;base.fav=p.fav_character||null;base.avatar=p.avatar||null}
@@ -133,6 +134,6 @@
     setInterval(load,4000);
   }
 
-  window.JoninAcct={html:html,cache:cache,cached:function(){return ls(CK)},icon:ICON,label:LABEL};
+  window.JoninAcct={html:html,cache:cache,cached:function(){return ls(CK)},icon:ICON,label:LABEL,refresh:function(){LAST='';load()}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',auto);else auto();
 })();

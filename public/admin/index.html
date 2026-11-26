@@ -154,7 +154,7 @@ async function loadPs(){let el=$('#ps');if(!el){app.insertAdjacentHTML('beforeen
 }
 let FBSHOW='review';
 // Feedback review (2026-11-26): Claude drafts a fix for each note (proposal); David picks Accept / Skip / Alter.
-// Accept applies card-data fixes (admin_feedback_review) and gives the sender 1 point. Undo puts it back.
+// Accept applies card-data fixes (admin_feedback_review) and gives the sender feedback XP (xp_rules). Undo puts it back.
 async function loadFb(){const r=await sb.rpc('admin_feedback');let el=$('#fb');if(!el){app.insertAdjacentHTML('beforeend','<div id="fb"></div>');el=$('#fb')}
   if(r.error){el.innerHTML=`<h2>Feedback</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
   const all=r.data||[],K={card:'🃏 Card info',idea:'💡 Idea',bug:'🐞 Bug',other:'💬 Other'};
@@ -176,9 +176,9 @@ async function loadFb(){const r=await sb.rpc('admin_feedback');let el=$('#fb');i
     ${x.review==='drafting'?`<p class="tag">Claude is drafting a fix (checked every hour).</p>`:''}
     ${x.review==='alter'?`<p class="tag"><b style="color:var(--ink)">Your change:</b> ${esc(x.alter_note)}<br>Claude is redrafting (checked every hour).</p>`:''}
     ${x.proposal&&x.review!=='drafting'?`<div class="fbp"><div class="tag" style="letter-spacing:1px;font-weight:700">PROPOSED FIX</div><div style="margin:4px 0 6px">${esc(x.proposal)}</div>${changeHtml(x)}${x.proposal_question&&x.review!=='accepted'?`<p class="tag" style="margin-top:8px">❓ ${esc(x.proposal_question)}</p>`:''}</div>`:''}
-    ${x.review==='awaiting'?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button data-fbr="accept" data-id="${x.id}">✓ Accept${x.proposal_change?' & apply':''} (+1 point)</button><button class="ghost" data-fbr="alter" data-id="${x.id}">✎ Alter</button><button class="ghost" data-fbr="skip" data-id="${x.id}">Skip</button></div>
+    ${x.review==='awaiting'?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button data-fbr="accept" data-id="${x.id}">✓ Accept${x.proposal_change?' & apply':''} (+XP)</button><button class="ghost" data-fbr="alter" data-id="${x.id}">✎ Alter</button><button class="ghost" data-fbr="skip" data-id="${x.id}">Skip</button></div>
       <form class="fbalt" data-id="${x.id}" hidden style="margin-top:8px;display:grid;gap:6px"><textarea name="t" rows="2" placeholder="What should change? e.g. apply to all rares in this set" style="width:100%;box-sizing:border-box"></textarea><div><button type="submit">Send to Claude</button></div></form>`:''}
-    ${x.review==='accepted'?`<p class="tag" style="margin-top:8px">✓ Accepted ${day(x.reviewed_at)}${x.applied?` · ${x.applied.length} card${x.applied.length>1?'s':''} updated (on the site within ~15 min)`:''} · ${x.credit_user?'point given':'point waiting (no account with that email yet; it\'s given if they sign up with it)'} <button class="ghost" data-fbundo="${x.id}">Undo</button></p>`:''}
+    ${x.review==='accepted'?`<p class="tag" style="margin-top:8px">✓ Accepted ${day(x.reviewed_at)}${x.applied?` · ${x.applied.length} card${x.applied.length>1?'s':''} updated (on the site within ~15 min)`:''} · ${x.credit_user?'XP given':'XP waiting (no account with that email yet; it\'s given if they sign up with it)'} <button class="ghost" data-fbundo="${x.id}">Undo</button></p>`:''}
     ${x.review==='skipped'?`<p class="tag">Skipped ${day(x.reviewed_at)}</p>`:''}
   </div>`;
   el.innerHTML=`<h2>Feedback</h2><p class="mt" style="margin-bottom:10px">${[['review','To review'],['accepted','Accepted'],['skipped','Skipped'],['all','All']].map(([k,l])=>`<button class="ghost" data-fbs="${k}" style="${FBSHOW===k?'color:var(--ink);border-color:var(--acc)':''}">${l}${k!=='all'?' ('+cnt(k)+')':''}</button>`).join(' ')}</p>
@@ -188,7 +188,7 @@ async function loadFb(){const r=await sb.rpc('admin_feedback');let el=$('#fb');i
   el.querySelectorAll('[data-fbr]').forEach(b=>b.onclick=()=>{const id=+b.dataset.id;if(b.dataset.fbr==='alter'){const f=el.querySelector(`.fbalt[data-id="${id}"]`);f.hidden=!f.hidden;if(!f.hidden)f.t.focus();return}
     b.disabled=true;act(id,b.dataset.fbr)});
   el.querySelectorAll('.fbalt').forEach(f=>f.onsubmit=e=>{e.preventDefault();const t=f.t.value.trim();if(!t){f.t.focus();return}act(+f.dataset.id,'alter',t)});
-  el.querySelectorAll('[data-fbundo]').forEach(b=>b.onclick=async()=>{if(!confirm('Undo this? The cards go back to how they were and the point is taken away.'))return;const r=await sb.rpc('admin_feedback_undo',{p_id:+b.dataset.fbundo});if(r.error)alert(r.error.message);loadFb()});
+  el.querySelectorAll('[data-fbundo]').forEach(b=>b.onclick=async()=>{if(!confirm('Undo this? The cards go back to how they were and the XP is taken away.'))return;const r=await sb.rpc('admin_feedback_undo',{p_id:+b.dataset.fbundo});if(r.error)alert(r.error.message);loadFb()});
 }
 load();
 }

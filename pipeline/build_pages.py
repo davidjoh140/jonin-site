@@ -87,7 +87,7 @@ HEAD = '''<!DOCTYPE html>
 '''
 FOOT = '''</main>
 <footer>{igf}Jonin is a fan-made database for the original Bandai Naruto Collectible Card Game (2006–2013). Not affiliated with Bandai, Shueisha or Masashi Kishimoto. Some eBay links are affiliate links: Jonin may earn a small commission at no cost to you. <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a></footer>
-<script src="/feedback.js?v=1" defer></script>
+<script src="/feedback.js?v=2" defer></script>
 </body></html>
 '''.replace('{igf}', IG_FOOT)
 
@@ -232,7 +232,7 @@ def char_page(ch, cs, sets_by_id, chars, notes):
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
 <p class="btns"><a class="primary" href="/#quick={quote('char:' + '|'.join(ch['names']))}">Browse and filter {e(ch['label'])} cards</a>{mvlink}</p></section>
 <section class="votetop" id="vote-top" data-character="{ch['slug']}" data-name="{e(ch['label'])}"><h2>Coolest {e(ch['label'])} cards<span>Top 3, voted by collectors</span></h2>
-<p class="vbar" id="vote-bar"></p><p class="vnote" id="vote-note"></p><div class="grid" id="vote-grid"></div><p class="vtoast" id="vote-toast" role="status" hidden></p></section>
+<p class="mt vxp">Your first vote on {e(ch['label'])} earns XP. <a href="/missions/">See all missions</a></p><p class="vbar" id="vote-bar"></p><p class="vnote" id="vote-note"></p><div class="grid" id="vote-grid"></div><p class="vtoast" id="vote-toast" role="status" hidden></p></section>
 {f'<section class="cgroup"><h2>Key cards<span>Super Rares and promos</span></h2><div class="grid">{"".join(tile(c, sets_by_id[c["s"]]) for c in key)}</div></section>' if key else ''}
 {groups}
 <section class="others"><h2>More characters</h2><div class="chips">{others}</div></section>
@@ -410,6 +410,36 @@ def chars_index(chars, counts):
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},
         crumbs(('Naruto CCG cards', SITE + '/'), ('Characters', url))]})
+    return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
+
+
+def missions_page(chars):
+    """/missions/: ways to earn XP and rank up. Static shell; /missions.js fills in the signed-in member's progress
+    and the XP numbers from Supabase (xp_rules, xp_ranks), so changing the rules there updates this page."""
+    url = f'{SITE}/missions/'
+    title = 'Missions: earn XP and rank up | Jonin'
+    desc = 'Earn XP on Jonin by voting for the coolest Naruto CCG cards for every character and sending feedback we use. Rank up from Academy Student to Kage.'
+    chips = ''.join(f'<a class="chip mch" data-ch="{c["slug"]}" href="/character/{c["slug"]}/#vote-top"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(c["label"])}<i class="mok" aria-hidden="true">✓</i></a>' for c in chars)
+    body = f'''<nav class="crumb"><a href="/">All cards</a> › Missions</nav>
+<section class="sethead"><h1>Missions</h1>
+<p class="lede">Earn XP and rank up from Academy Student to Kage. Your rank shows on your profile next to your name.</p></section>
+<section class="mhero" id="mhero"><p class="mt">Loading your rank…</p></section>
+<section class="mlist">
+<article class="mcard" id="m-vote"><div class="mtop"><h2>Vote for every character's coolest cards</h2><span class="mxp" data-xp="vote_character">+XP</span></div>
+<p class="mt">Open a character and vote for up to 3 of their best cards. Your first vote on each character earns XP, once per character. Moving a vote later keeps your XP.</p>
+<div class="mprog"><span class="mbar"><i style="width:0%"></i></span><b class="mcount">0 / {len(chars)}</b></div>
+<div class="chips mchips">{chips}</div></article>
+<article class="mcard" id="m-fb"><div class="mtop"><h2>Send feedback we use</h2><span class="mxp" data-xp="feedback_accepted">+XP</span></div>
+<p class="mt">Spotted a wrong card, a missing foil or a bug? Send a note from any page. Every note that leads to a fix earns XP. Sign in first, or leave the email you signed up with, so it's credited to you.</p>
+<div class="mprog"><b class="mfb">0 notes used so far</b></div>
+<p class="btns"><button type="button" class="primary" data-fb data-fbname="Missions page">💬 Send feedback</button></p></article>
+</section>
+<section class="mcard mranks"><h2>Ranks</h2><ol id="mladder"></ol></section>
+<script src="/missions.js?v={file_version('missions.js')}" defer></script>
+'''
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'WebPage', 'name': title, 'description': desc, 'url': url},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('Missions', url))]})
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
 
 
@@ -716,6 +746,7 @@ def main():
             shutil.rmtree(mvdir)
     chars = [ch for ch in chars if ch['slug'] in keep_ch]
     changed += write(os.path.join(ROOT, 'characters', 'index.html'), chars_index(chars, counts))
+    changed += write(os.path.join(ROOT, 'missions', 'index.html'), missions_page(chars))
     # Character list for the /welcome/ setup page (same order as the homepage sidebar).
     changed += write(os.path.join(ROOT, 'chars.json'), json.dumps([{'slug': ch['slug'], 'label': ch['label'], 'cards': counts[ch['slug']]} for ch in chars], ensure_ascii=False) + '\n')
     mvidx = os.path.join(ROOT, 'most-valuable')
@@ -747,7 +778,7 @@ def main():
     if hs2 == hs and '<!--setlinks-->' not in hs:
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
-    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
+    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
            list_urls + [SITE + '/price-guide/'] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]

@@ -9,6 +9,8 @@
   if (!box) return;
   var CHAR = box.dataset.character, CNAME = box.dataset.name || 'this character';
   var sb = null, me = null, mine = new Set(), limit = 3, busy = false;
+  // XP (2026-11-26): the first vote on a character earns XP once (Supabase xp_on_vote / xp_rules; amount is a PLACEHOLDER David sets there).
+  var earned = true, xpEach = 0;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var tiles = Array.prototype.slice.call(document.querySelectorAll('.tile[data-card]'));
@@ -80,6 +82,8 @@
   function loadMine() {
     mine.clear();
     if (!me) { paint(); return Promise.resolve(); }
+    sb.from('xp_events').select('ref').eq('kind', 'vote').eq('ref', CHAR).then(function (r) { if (!r.error) earned = (r.data || []).length > 0; });
+    sb.rpc('xp_rules').then(function (r) { if (!r.error && r.data) xpEach = r.data.vote_character || 0; });
     return sb.from('card_votes').select('card_id').eq('character', CHAR).then(function (r) {
       (r.data || []).forEach(function (x) { mine.add(x.card_id); }); paint();
       var c = takePending();
@@ -104,6 +108,11 @@
       busy = false;
       if (r.error) { say(r.error.message || 'Could not save your vote.'); paint(); return; }
       if (on) mine.delete(card); else mine.add(card);
+      if (!on && !earned) {
+        earned = true;
+        if (xpEach) say('+' + xpEach + ' XP for voting on ' + CNAME + '! More missions on the Missions page.');
+        if (window.JoninAcct && JoninAcct.refresh) JoninAcct.refresh();
+      }
       refresh();
     });
   }
