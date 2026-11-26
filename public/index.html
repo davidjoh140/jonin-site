@@ -377,7 +377,7 @@ if(!off&&!ses){var n=0;try{var g=JSON.parse(localStorage.getItem('jonin_guest_v1
 b.innerHTML=ctaHTML(n,true);b.hidden=false}})();</script>
     <div class="hrow"><h1>Every card in the original Bandai Naruto CCG</h1>
     <div class="tick" id="tick" role="status" aria-live="polite" hidden><span class="lv" aria-hidden="true"><span class="dot"></span>Live</span><span class="tn" id="tickn"></span><span class="tl">cards tracked<small>by <span id="tickc"></span></small></span></div></div>
-    <input id="q" type="search" placeholder="Search a card or character — try Kakashi" aria-label="Search cards" autocomplete="off">
+    <input id="q" type="search" placeholder="Search a card, character or number — try Kakashi or N-001" aria-label="Search cards" autocomplete="off">
     <div class="picks"><div class="setpick"><span id="setlbl">Set</span><div class="sdd" id="sdd"><button type="button" id="setsel" class="sddb" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="setlbl setsel"><span class="sddo"><span class="nosym all">★</span><b>All sets</b></span></button><ul class="sddl" id="sddl" role="listbox" aria-labelledby="setlbl" tabindex="-1" hidden></ul></div></div><label class="setpick sortpick" for="sortsel"><span>Sort</span><select id="sortsel"></select></label></div>
         <div class="bar" id="fbar">
       <button type="button" class="ftog" id="ftog" aria-expanded="false" aria-controls="fbar">Filters<span class="fn" id="fn"></span><span class="chev" aria-hidden="true">▾</span></button><span class="brk ftbrk" aria-hidden="true"></span>
@@ -439,12 +439,17 @@ function readHash(){const h=location.hash.slice(1);if(h==='sets')return 'sets';i
 function writeHash(){const h=Object.entries(S).filter(([k,v])=>Array.isArray(v)?v.length:v).map(([k,v])=>k+'='+encodeURIComponent(Array.isArray(v)?v.join(','):v)).join('&');history.replaceState(null,'',h?'#'+h:location.pathname)}
 const active=()=>Object.values(S).some(v=>Array.isArray(v)?v.length:v);
 const tog=(a,v)=>a.includes(v)?a.filter(x=>x!==v):[...a,v];
+// Card number search (2026-11-26): "N-001", "n001", "n1", "#12", "12", "jus3" all find the card by number.
+// Dashes, spaces, # and leading zeros are ignored; a bare number matches that number in any prefix (N-012, J-012…).
+const numKey=x=>x.toUpperCase().replace(/[#\s-]/g,'').replace(/(^|[A-Z])0+(?=\d)/g,'$1');
+function numHit(w,n){if(!/\d/.test(w))return false;const k=numKey(w),cn=numKey(n);
+  if(/^\d+[A-Z]?$/.test(k))return cn.replace(/^[A-Z]+/,'')===k;return cn===k}
 function match(c){
   if(S.set&&c.s!==S.set)return false;
   if(S.rars.length&&!S.rars.includes(c.src))return false;
   if(S.type&&c.t!==S.type)return false;
   if(S.chars.length){const names=c.name.split(/\s*&\s*/).map(baseName);if(!S.chars.some(v=>v.split('|').some(w=>names.includes(w))))return false}
-  if(S.q){const q=S.q.toLowerCase().split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)).toLowerCase();if(!q.every(w=>hay.includes(w)))return false}
+  if(S.q){const q=S.q.toLowerCase().split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')).toLowerCase();if(!q.every(w=>numHit(w,c.n)||(!/^#?\d+$/.test(w)&&hay.includes(w))))return false}
   return true}
 // Price band on each grid tile (free). Exact prices are Jonin Club only.
 const BANDS0=['Under $10','$10–50','$50–200','$200+'],band=c=>{const b=(D&&D.bands)||BANDS0;return c.pb==null?null:b[c.pb]??null};
