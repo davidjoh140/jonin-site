@@ -7,7 +7,7 @@ The eBay original is kept in pipeline/sale_photos_raw/. Results go to pipeline/s
   ok      tile made, cert found and blurred
   check   tile made, but we couldn't place the cert for sure: David looks first. Until he sets it to "ok"
           the lists show the card scan (PLACEHOLDER rule, 2026-11-26)
-  noslab  no clean slab crop: the lists show the card scan instead of this photo (build_pages.sale_photo)
+  noslab  no clean slab crop, or the photo is skewed: the lists show the card scan instead of this photo (build_pages.sale_photo)
 Usage: python slab_tiles.py            process new slab photos
        python slab_tiles.py --pending  print how many are waiting (the workflow skips heavy installs at 0)
        python slab_tiles.py --redo X   reprocess one file name from its original"""
@@ -24,6 +24,8 @@ CANVAS_W, CANVAS_H = 600, 1000          # matches the 3:5 frame the pages alread
 SLAB_W, SLAB_H = 560, 952               # PSA/BGS/CGC slabs are ~3.1 x 5.3 in (0.59)
 BG = (20, 17, 17)                       # BGR, near-black like the list background (#0b0b0d-ish)
 SLAB_RATIO = (0.54, 0.66)               # width/height range accepted as "a slab"
+MAX_SKEW_DEG = 5.0                      # PLACEHOLDER: photos shot at an angle are not used (David, 2026-11-26:
+                                        # "if it's skewed don't use it"); corner angles or tilt beyond this = skewed
 SLAB_FILE = re.compile(r"-(psa|bgs|cgc|sgc|tag)-[0-9-]+\.jpg$")
 
 
@@ -90,6 +92,21 @@ def _mask_candidates(path):
             yield q, f, f"mask{cut}"
 
 
+def skew_deg(q):
+    """How far the slab outline is from a straight-on rectangle: the worst corner angle off 90 degrees,
+    or the tilt of the top/bottom edges, whichever is larger."""
+    import numpy as np
+    worst = 0.0
+    for i in range(4):
+        a, b, c = q[i - 1], q[i], q[(i + 1) % 4]
+        v1, v2 = a - b, c - b
+        cos = float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-9))
+        worst = max(worst, abs(np.degrees(np.arccos(np.clip(cos, -1, 1))) - 90))
+    for p1, p2 in ((q[0], q[1]), (q[3], q[2])):
+        worst = max(worst, abs(np.degrees(np.arctan2(p2[1] - p1[1], p2[0] - p1[0]))))
+    return worst
+
+
 def _warp(img, q):
     import cv2, numpy as np
     M = cv2.getPerspectiveTransform(q, np.array([[0, 0], [SLAB_W, 0], [SLAB_W, SLAB_H], [0, SLAB_H]], np.float32))
@@ -133,10 +150,15 @@ def flatten(path):
         for area, r, src, q in sorted(ok, key=lambda t: -t[0]):
             slab = _warp(img, q)
             if has_label(slab):
-                return slab, f"{src} ratio {r:.2f} area {area:.2f}"
+                sk = skew_deg(q)
+                if sk > MAX_SKEW_DEG:
+                    return None, f"skewed photo ({sk:.0f} degrees off straight-on)"
+                return slab, f"{src} ratio {r:.2f} area {area:.2f} skew {sk:.1f}"
         return None, None
 
     slab, note = pick(_edge_candidates(img))
+    if slab is None and note:   # found the slab, but it was shot at an angle
+        return None, note
     if slab is None:   # photo already cropped tight to the slab: use the whole frame
         r = w / h
         whole = np.array([[0, 0], [w, 0], [w, h], [0, h]], np.float32)
@@ -145,7 +167,7 @@ def flatten(path):
     if slab is None:
         slab, note = pick(_mask_candidates(path))
     if slab is None:
-        return None, "no clean slab crop (no label found on top)"
+        return None, note or "no clean slab crop (no label found on top)"
     canvas = np.full((CANVAS_H, CANVAS_W, 3), BG, np.uint8)
     ox, oy = (CANVAS_W - SLAB_W) // 2, (CANVAS_H - SLAB_H) // 2
     canvas[oy:oy + SLAB_H, ox:ox + SLAB_W] = slab
@@ -177,7 +199,7 @@ def blur_cert(tile):
     """Blur the cert number (any 7+ digit run on the label) and the PSA barcode. True if we know where the cert
     was: read off the label, or the red PSA label was found (its cert line is always in the same place; most
     sale photos arrive with the cert already blurred, so there is often nothing left to read)."""
-    import cv2, pytesseract
+    import cv2, numpy as np, pytesseract
     top = tile[:300]
     label = _psa_label(top)
     hits = []
@@ -186,22 +208,33 @@ def blur_cert(tile):
     for im in (big, cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]):
         d = pytesseract.image_to_data(im, output_type=pytesseract.Output.DICT, config="--psm 11")
         hits = [(d["left"][k] // 3, d["top"][k] // 3, d["width"][k] // 3, d["height"][k] // 3)
-                for k, t in enumerate(d["text"]) if sum(ch.isdigit() for ch in t) >= 7]
+                for k, t in enumerate(d["text"])
+                if sum(ch.isdigit() for ch in t) >= 7
+                or (sum(ch.isdigit() for ch in t) >= 5 and d["left"][k] // 3 > top.shape[1] // 2)]   # partly read cert
         if hits:
             break
     if not hits:
         if label:   # cert is the bottom-right line of the red PSA label, barcode bottom-left
             x, y, w, h = label
-            _blur(tile, x + w * 0.62, y + h * 0.75, w * 0.36, h * 0.2)
-            _blur(tile, x + w * 0.04, y + h * 0.75, w * 0.36, h * 0.2)
+            _blur(tile, x + w * 0.60, y + h * 0.73, w * 0.38, h * 0.24)
+            _blur(tile, x + w * 0.03, y + h * 0.73, w * 0.38, h * 0.24)
             return True
         _blur(tile, 370, 130, 190, 80)
         return False
     for x, y, w, h in hits:
-        _blur(tile, x - 8, y - 6, w + 16, h + 12)
+        _blur(tile, x - 14, y - 6, w + 28, h + 20)   # barely upward: the grade sits right above
+        if label:   # a partly read cert: also cover the whole cert line of the PSA label
+            lx, ly, lw, lh = label
+            _blur(tile, lx + lw * 0.60, y - 6, lw * 0.38, h + 20)
         if label:
             lx, ly, lw, lh = label
-            _blur(tile, lx + lw * 0.03, y - 8, lw * 0.38, h + 22)
+            _blur(tile, lx + lw * 0.03, y - 4, lw * 0.40, h + 22)
+        elif x > tile.shape[1] // 2:   # pale PSA label we couldn't outline: blur a barcode on the cert's line
+            band = cv2.cvtColor(tile[max(y - 4, 0):y + h + 18, 40:x], cv2.COLOR_BGR2GRAY).astype(np.float32)
+            gx = np.abs(cv2.Sobel(band, cv2.CV_32F, 1, 0)).mean() if band.size else 0
+            gy = np.abs(cv2.Sobel(band, cv2.CV_32F, 0, 1)).mean() if band.size else 1
+            if gx > 2.5 * gy:   # barcode = vertical bars only; text has horizontal edges too
+                _blur(tile, 40, y - 4, int(tile.shape[1] * 0.42), h + 22)
     return True
 
 
@@ -218,8 +251,10 @@ def process(name, man):
         man[name] = {"status": "noslab", "note": note}
         return
     read = blur_cert(tile)
+    if read and "-psa-" in name and _psa_label(tile[:300]) is None:
+        read = False   # PSA slab but its label is too pale to outline, so its barcode may still show
     cv2.imwrite(str(src), tile, [cv2.IMWRITE_JPEG_QUALITY, 88, cv2.IMWRITE_JPEG_PROGRESSIVE, 1])
-    man[name] = {"status": "ok" if read else "check", "note": note + ("" if read else "; cert not found on a non-PSA label, default spot blurred")}
+    man[name] = {"status": "ok" if read else "check", "note": note + ("" if read else "; cert/barcode position not certain, needs a look")}
 
 
 def main(argv):
