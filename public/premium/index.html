@@ -31,6 +31,7 @@ h2{font:800 clamp(24px,2.8vw,30px)/1.15 "Baloo 2",sans-serif;margin:0 0 6px}
 .lede{color:var(--mute);font-size:17px;max-width:52ch;margin:0}
 .hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:center}
 .watch{display:inline-flex;align-items:center;gap:8px;background:var(--buybg);border:1px solid var(--buyline);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:13px;margin-bottom:16px}.watch[hidden]{display:none}
+.founding{display:grid;gap:6px;margin:0 0 18px;padding:14px 16px;border:1px solid color-mix(in srgb,#F2C14E 55%,transparent);background:color-mix(in srgb,#F2C14E 12%,transparent);border-radius:14px;max-width:520px}.founding b{font:700 18px "Baloo 2",sans-serif}.founding span{line-height:1.45}.founding #fleft{font-weight:700;margin-left:4px}.founding .btn{justify-self:start;margin-top:4px}
 .price{display:flex;align-items:baseline;gap:8px;margin:24px 0 14px}.price b{font:800 44px/1 "Baloo 2",sans-serif}.price span{color:var(--mute)}
 .join{display:grid;gap:10px;max-width:440px}
 .join form{display:flex;gap:8px;flex-wrap:wrap}
@@ -85,6 +86,8 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
       <p class="lede">Jonin Alerts is a private Discord that posts new listings, buy and sell posts and collection lots as they go up, with photos and a link straight to the seller.</p>
       <!-- Price not set yet (David, Nov 25 2026). Put the number back here once it's decided. -->
       <div class="price"><b>Pricing</b><span>coming soon</span></div>
+      <!-- Founding members (David, 2026-11-26): first 20 accounts get Premium free, forever. Spots left come from Supabase founding_spots_left(). -->
+      <div class="founding" id="founding"><b>⭐ Founding members</b><span>The first 20 people to make a free Jonin account get Premium free, forever.<span id="fleft"></span></span><a class="btn" href="/#signup">Claim a free spot</a></div>
       <div class="join" id="join">
         <!-- Filled by script: a Join button when JOIN_URL is set, otherwise the waitlist form -->
       </div>
@@ -163,6 +166,7 @@ const p=new URLSearchParams(location.search);
 const card=(p.get('card')||'').slice(0,40),name=(p.get('name')||'').slice(0,80);
 if(name){$('#watch').hidden=false;$('#watch span').textContent='Watching for '+name;document.title='Alerts for '+name+' — Jonin'}
 const join=$('#join');
+fetch(SUPA+'/rest/v1/rpc/founding_spots_left',{method:'POST',headers:{apikey:SUPA_KEY,'Content-Type':'application/json'},body:'{}'}).then(r=>r.ok?r.json():null).then(n=>{if(typeof n!=='number')return;if(n<=0)$('#founding').hidden=true;else $('#fleft').textContent=' '+n+(n===1?' spot':' spots')+' left.'}).catch(()=>{});
 if(JOIN_URL){
   const a=document.createElement('a');a.className='btn';a.href=JOIN_URL+(card?(JOIN_URL.includes('?')?'&':'?')+'ref='+encodeURIComponent(card):'');a.textContent='Join Jonin Alerts';
   join.append(a);join.insertAdjacentHTML('beforeend','<span class="small">Pay, connect Discord, and the alert channels unlock automatically.</span>');
