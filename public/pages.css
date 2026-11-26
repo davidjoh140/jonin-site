@@ -178,3 +178,6 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 @media (max-width:620px){.mvminis{gap:8px}.mvmini{padding:6px}.mvmini b{font-size:13px}.mvmini .band{font-size:15px}.mvmini .mt{display:none}.mvmini .mvn{font-size:22px}}
 .px .pgl{margin:10px 0 0;font-size:13px}
 .related{margin-top:30px}.related .btns{margin:12px 0 0}
+.newbie{margin:18px 0 0;padding:14px 16px;border:1px solid var(--accdim);border-left:4px solid var(--acc);border-radius:12px;background:var(--panel);font-size:14px;line-height:1.5}
+.newbie b{color:var(--acc)}.newbie .btns{margin:10px 0 0;display:flex;flex-wrap:wrap;gap:8px}.newbie[hidden]{display:none}
+.sethead+.newbie,.charhead+.newbie{margin:0 0 22px}

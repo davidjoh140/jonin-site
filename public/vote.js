@@ -98,7 +98,7 @@
 
   function toggle(card) {
     if (!sb || busy) return;
-    if (!me) { pend(card); openAuth('up'); return; }
+    if (!me) { pend(card); if (window.jtrack) jtrack('vote-signup-prompt', { character: CHAR }); openAuth('up'); return; }
     var on = mine.has(card);
     if (!on && mine.size >= limit) { say('You have used all ' + limit + ' votes for ' + CNAME + '. Tap a ✓ Voted card to free one up.'); return; }
     busy = true; paint();
@@ -108,6 +108,7 @@
       busy = false;
       if (r.error) { say(r.error.message || 'Could not save your vote.'); paint(); return; }
       if (on) mine.delete(card); else mine.add(card);
+      if (!on && window.jtrack) jtrack('vote', { character: CHAR });
       if (!on && !earned) {
         earned = true;
         if (xpEach) say('📜 +' + xpEach + (xpEach===1?' scroll':' scrolls') + ' for voting on ' + CNAME + '! More missions on the Missions page.');

@@ -62,3 +62,41 @@
   s.setAttribute('data-domains','jonin.cards');
   document.head.appendChild(s);
 })();
+/* Visitor tracking for sign-ups (Umami custom events) and the "New to Jonin?" box.
+   - Remembers the first page a visitor ever landed on (and where from: google, instagram...) for 30 days,
+     plus this visit's landing page, and sends them with every event so Umami shows which pages bring members.
+   - window.jtrack(name, props) sends an event; links with data-jt="name" send one on click (data-jt-* become props).
+   - "signup" fires once per new account (account made in the last 30 minutes), whichever sign-up form was used. */
+(function(){
+  var AUTH='sb-cfzpayanhvvqtkuqfgof-auth-token';
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+  function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);sessionStorage.setItem(k,v)}catch(e){return null}}
+  function src(){var r='';try{r=document.referrer?new URL(document.referrer).hostname:''}catch(e){}
+    if(!r||/(^|\.)jonin\.cards$/.test(r))return r?'internal':'direct';
+    var m=r.match(/google|bing|duckduckgo|yahoo|instagram|facebook|reddit|discord|youtube|tiktok|twitter|x\.com/);return m?m[0].replace('.com',''):r}
+  var path=location.pathname;
+  if(!ss('jt_land')){ss('jt_land',path);ss('jt_src',src())}
+  var first=null;try{first=JSON.parse(ls('jt_first')||'null')}catch(e){}
+  if(!first||Date.now()-first.t>30*864e5){first={p:path,s:ss('jt_src')||src(),t:Date.now()};ls('jt_first',JSON.stringify(first))}
+  function base(){return {page:path,landing:ss('jt_land')||path,source:ss('jt_src')||'',first_landing:first.p,first_source:first.s}}
+  var q=[];
+  window.jtrack=function(name,props){var d=base();for(var k in props||{})d[k]=props[k];
+    if(window.umami&&umami.track)umami.track(name,d);else q.push([name,d])};
+  var tries=0,iv=setInterval(function(){if(window.umami&&umami.track){clearInterval(iv);q.forEach(function(x){umami.track(x[0],x[1])});q=[]}else if(++tries>40)clearInterval(iv)},500);
+  document.addEventListener('click',function(ev){var l=ev.target.closest&&ev.target.closest('a[href]');
+    if(l&&!l.hasAttribute('data-jt')){var h=l.getAttribute('href')||'';
+      var n=/sell\.jonin\.cards/.test(h)?'sell-click':/^\/premium\//.test(h)?'premium-click':/instagram\.com/.test(h)?'instagram-click':'';
+      if(n)jtrack(n,{})}},true);
+  document.addEventListener('click',function(ev){var a=ev.target.closest&&ev.target.closest('[data-jt]');if(!a)return;
+    var p={};for(var i=0;i<a.attributes.length;i++){var n=a.attributes[i].name;if(n.indexOf('data-jt-')===0)p[n.slice(8)]=a.attributes[i].value}
+    jtrack(a.getAttribute('data-jt'),p)},true);
+  function user(){try{var s=JSON.parse(ls(AUTH)||'null');return s&&s.user||null}catch(e){return null}}
+  function checkSignup(){var u=user();if(!u||!u.created_at)return;var done=ls('jt_su')||'';
+    if(done.indexOf(u.id)>=0)return;
+    if(Date.now()-new Date(u.created_at).getTime()<30*60e3){ls('jt_su',done+','+u.id);
+      jtrack('signup',{method:(u.app_metadata&&u.app_metadata.provider)||'email'})}else ls('jt_su',done+','+u.id)}
+  checkSignup();setInterval(function(){checkSignup();newbie()},5000);
+  function newbie(){var signed=!!user();document.querySelectorAll('[data-newbie]').forEach(function(el){el.hidden=signed})}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',newbie);else newbie();
+  window.addEventListener('storage',function(ev){if(ev.key===AUTH){newbie();checkSignup()}});
+})();

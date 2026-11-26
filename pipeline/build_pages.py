@@ -77,7 +77,7 @@ HEAD = '''<!DOCTYPE html>
 <meta name="twitter:card" content="{tw}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/pages.css?v={cssv}"><link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v={premv}"><script src="/theme.js?v=5"></script>
+<link rel="stylesheet" href="/pages.css?v={cssv}"><link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v={premv}"><script src="/theme.js?v=6"></script>
 {ld}
 </head>
 <body>
@@ -90,6 +90,16 @@ FOOT = '''</main>
 <script src="/feedback.js?v={fbv}" defer></script>
 </body></html>
 '''.replace('{igf}', IG_FOOT)
+
+
+def newbie(where):
+    """'New to Jonin?' box for first-time visitors, who mostly land on card, character and set pages from Google.
+    theme.js hides it for signed-in members. PLACEHOLDER copy for David to edit."""
+    return (f'<aside class="newbie" data-newbie hidden><div><b>New to Jonin?</b> '
+            'A free database of every card in the original Bandai Naruto CCG (2006–2013). '
+            'Make a free account to track your collection and slabs, see your set completion and vote for the coolest cards.</div>'
+            f'<p class="btns"><a class="primary" href="/#signup" data-jt="signup-click" data-jt-from="{where}">Sign up free</a>'
+            '<a class="ghostbtn" href="/#sets">Browse every set</a></p></aside>\n')
 
 
 def ld_json(obj):
@@ -178,8 +188,16 @@ def year(rel):
     return m.group(0) if m else ''
 
 
+def card_alt(c, s):
+    """Image description for Google Images: name, number, set, rarity and year, e.g.
+    'Kakashi Hatake N-011 Naruto CCG card, The Path to Hokage (Uncommon, Bandai 2006)'."""
+    y = year(s.get('rel'))
+    bits = ', '.join(x for x in (c.get('r') if c.get('r') not in (None, '', 'Unknown') else '', ('Bandai ' + y) if y else 'Bandai') if x)
+    return f"{c['name']} {c['n']} Naruto CCG card, {s['name']} ({bits})"
+
+
 def tile(c, s):
-    img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
+    img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
            if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
     return (f'<a class="tile" href="/card/{slug(c)}/" data-card="{e(c["s"] + ":" + c["n"])}">{img}<span class="tt">{e(c["name"])}</span>'
             f'<span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])} · {e(c["r"])}</span></a>')
@@ -231,7 +249,7 @@ def char_page(ch, cs, sets_by_id, chars, notes):
 {f'<p class="lede">{e(note)}</p>' if note else ''}
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
 <p class="btns"><a class="primary" href="/#quick={quote('char:' + '|'.join(ch['names']))}">Browse and filter {e(ch['label'])} cards</a>{mvlink}</p></section>
-<section class="votetop" id="vote-top" data-character="{ch['slug']}" data-name="{e(ch['label'])}"><h2>Coolest {e(ch['label'])} cards<span>Top 3, voted by collectors</span></h2>
+{newbie('character')}<section class="votetop" id="vote-top" data-character="{ch['slug']}" data-name="{e(ch['label'])}"><h2>Coolest {e(ch['label'])} cards<span>Top 3, voted by collectors</span></h2>
 <p class="mt vxp">Your first vote on {e(ch['label'])} earns scrolls. <a href="/missions/">See all missions</a></p><p class="vbar" id="vote-bar"></p><p class="vnote" id="vote-note"></p><div class="grid" id="vote-grid"></div><p class="vtoast" id="vote-toast" role="status" hidden></p></section>
 {f'<section class="cgroup"><h2>Key cards<span>Super Rares and promos</span></h2><div class="grid">{"".join(tile(c, sets_by_id[c["s"]]) for c in key)}</div></section>' if key else ''}
 {groups}
@@ -490,7 +508,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
             + " eBay sold prices for raw and PSA graded copies.")
     psa = (f'<a href="{e(PSA_POP + PSA[c["s"]])}" target="_blank" rel="noopener">PSA pop report · {e(set_label(s))}</a>'
            if c['s'] in PSA else '<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>')
-    art = (f'<img src="{e(img)}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card scan" width="750" height="1050">'
+    art = (f'<img src="{e(img)}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
            if img else f'<div class="noimg"><b>{e(c["n"])}</b><span>{e(c["t"])} · scan coming soon</span></div>')
     rows = [('Set', f'<a class="stag" href="/set/{set_slug(s)}/">{sym_img(s)}{e(s["name"])}</a> · {e(set_label(s))}{" · " + e(s["rel"]) if s.get("rel") else ""}'),
             ('Number', e(c['n'])), ('Rarity', e(c['r'])), ('Type', e(c['t'])),
@@ -524,13 +542,13 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 <dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
 {price_block(c)}{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
-<a class="primary" href="/#card={quote(c['s'] + ':' + c['n'])}">Track it in your collection</a>
-<a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener">eBay sold · slabs</a>
-<a href="{e(sold(card_q(c), 'raw'))}" target="_blank" rel="sponsored noopener">eBay sold · raw</a>
+<a class="primary" href="/#card={quote(c['s'] + ':' + c['n'])}" data-jt="track-click">Track it in your collection</a>
+<a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="slab">eBay sold · slabs</a>
+<a href="{e(sold(card_q(c), 'raw'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="raw">eBay sold · raw</a>
 {psa}
-<a href="/premium/?card={quote(c['s'] + ':' + c['n'])}&amp;name={quote(c['name'])}">🔔 Alerts for this card</a>
+<a href="/premium/?card={quote(c['s'] + ':' + c['n'])}&amp;name={quote(c['name'])}" data-jt="alerts-click">🔔 Alerts for this card</a>
 </div>
-{featured_in(c)}
+{newbie('card')}{featured_in(c)}
 </div>
 </article>
 <nav class="prevnext">{nav}</nav>
@@ -553,7 +571,7 @@ def set_page(s, cards):
         facts.append(('Rarities', e(rar)))
     grid = ''.join(
         f'<a class="tile" href="/card/{slug(c)}/" data-card="{e(c["s"] + ":" + c["n"])}">'
-        + (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])}" width="750" height="1050">'
+        + (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
            if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
         + f'<span class="tt">{e(c["name"])}</span><span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])}</span></a>' for c in cards)
     sym = f'<img class="sym" src="{e(s["symbol"])}?v={SYMV}" alt="">' if s.get('symbol') else ''
@@ -562,7 +580,7 @@ def set_page(s, cards):
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
 {f'<p class="note">{e(s["notes"])}</p>' if s.get('notes') else ''}
 <p><a class="primary" href="/#set={quote(s['id'])}">Browse and filter this set</a></p></section>
-<section class="spx" id="set-progress" data-set="{e(s['id'])}" data-total="{len(cards)}" data-prints="{sum(max(1, len(c.get('v') or [])) * max(1, len([x for x in (c.get('ed') or []) if x])) for c in cards)}" aria-live="polite"></section>
+{newbie('set')}<section class="spx" id="set-progress" data-set="{e(s['id'])}" data-total="{len(cards)}" data-prints="{sum(max(1, len(c.get('v') or [])) * max(1, len([x for x in (c.get('ed') or []) if x])) for c in cards)}" aria-live="polite"></section>
 <section class="grid">{grid}</section>
 <script src="/set-progress.js?v={file_version('set-progress.js')}" defer></script>
 '''
@@ -695,7 +713,8 @@ def set_links(sets):
 
 
 def main():
-    global HEAD
+    global HEAD, FOOT
+    FOOT = FOOT.replace('{fbv}', file_version('feedback.js'))
     HEAD = HEAD.replace('{igh}', IG_HEADER).replace('{cssv}', css_version()).replace('{premv}', file_version('prem.css')).replace('{fbv}', file_version('feedback.js')).replace('{acctv}', file_version('acct.js'))
     d = json.load(open(os.path.join(ROOT, 'cards.json'), encoding='utf-8'))
     global BANDS
@@ -785,11 +804,13 @@ def main():
            list_urls + [SITE + '/price-guide/'] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
+    card_imgs = {f'{SITE}/card/{slug(c)}/': c['img'] for c in d['cards'] if re.match(r'^https://jonin\.cards/', c.get('img') or '')}
+    img_tag = lambda u: f'<image:image><image:loc>{e(card_imgs[u])}</image:loc></image:image>' if u in card_imgs else ''
     lm = lastmods(urls)
     changed += write(LASTMOD, json.dumps(lm, indent=0, sort_keys=True) + '\n')
     changed += write(os.path.join(ROOT, 'sitemap.xml'),
-                     '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                     + ''.join(f'<url><loc>{e(u)}</loc><lastmod>{lm[u][1]}</lastmod></url>\n' for u in urls) + '</urlset>\n')
+                     '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+                     + ''.join(f'<url><loc>{e(u)}</loc><lastmod>{lm[u][1]}</lastmod>{img_tag(u)}</url>\n' for u in urls) + '</urlset>\n')
     changed += write(os.path.join(ROOT, 'robots.txt'),
                      f'User-agent: *\nAllow: /\nDisallow: /admin/\n\nSitemap: {SITE}/sitemap.xml\n')
     print(f'{len(keep_c)} card pages, {len(keep_s)} set pages, {changed} files written, {removed} stale folders removed')

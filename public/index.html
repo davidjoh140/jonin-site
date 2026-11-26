@@ -310,7 +310,7 @@ header .pn>.pnb{height:30px;padding:0 12px 0 10px;font-size:14px}
 }
 .fbrank{align-items:center;flex-wrap:wrap;gap:8px}.fbrank b{font:800 18px "Baloo 2",sans-serif;color:#F2C14E}.fbbar{display:inline-block;width:120px;height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}.fbbar i{display:block;height:100%;background:#F2C14E}
 </style>
-<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=6dc5e118"><script src="/theme.js?v=5"></script><script src="/acct.js?v=5be4ca45"></script>
+<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=6dc5e118"><script src="/theme.js?v=6"></script><script src="/acct.js?v=5be4ca45"></script>
 </head>
 <body>
 <header><div class="hw">
@@ -691,6 +691,7 @@ $('#authform').addEventListener('submit',async e=>{e.preventDefault();const f=e.
 async function setItem(c,p,ed,kind,qty){const id=cid(c),k=ck(id,p,ed,kind),before=COLL.get(k);
   if(qty>0)COLL.set(k,qty);else COLL.delete(k);renderMyColl(c);refreshMarks();
   if(qty>0&&kind==='have'){if(!askAtThird(c))progToast(c);setTimeout(sellAsk,2500)}
+  if(qty>0&&!before&&window.jtrack)jtrack('collection-add',{kind,signed_in:!!ME});
   if(!ME){gSave();paintAcct();return}
   const r=qty>0?await sb.from('collection_items').upsert({user_id:ME.id,card_id:id,printing:p,edition:ed,kind,qty,updated_at:new Date().toISOString()}):await sb.from('collection_items').delete().match({user_id:ME.id,card_id:id,printing:p,edition:ed,kind});
   if(r.error){if(before)COLL.set(k,before);else COLL.delete(k);renderMyColl(c);refreshMarks();const b=$('#mycoll');if(b)b.insertAdjacentHTML('beforeend','<p class="mt" style="color:#ff8b8b;margin:0">Could not save. Check your connection and try again.</p>')}}
