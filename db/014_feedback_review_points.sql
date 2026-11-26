@@ -1,0 +1,10 @@
+-- Applied to Supabase on 2026-11-26 (migration feedback_review_and_points). Kept here as the record.
+-- feedback: + proposal, proposal_change (jsonb [{card_id, set:{printings,editions,rarity,...}}]), proposal_question,
+--   review ('drafting'|'awaiting'|'alter'|'accepted'|'skipped'), alter_note, reviewed_at, applied (card rows before, for undo), credit_user.
+-- Trigger feedback_set_user: user_id = auth.uid() on insert (signed-in senders get credit); clients can't set review/proposal fields.
+-- admin_feedback_review(id, 'accept'|'skip'|'alter', note): accept applies proposal_change to cards (whitelisted fields)
+--   and credits the sender (user_id, else auth email = contact). admin_feedback_undo(id) restores cards and removes the point.
+-- Points: feedback_points(user) / my_feedback_points() = count of accepted notes + rank from feedback_rank() (PLACEHOLDER ranks:
+--   Academy Student 0, Genin 1, Chunin 3, Jonin 10, Kage 25 — David to set). Trigger on_signup_claim_feedback gives points
+--   to someone who signs up later with the email they left on a note.
+-- Proposals are drafted by the hourly scheduled task "Jonin feedback → proposed fixes".

@@ -30,6 +30,7 @@ button.ghost{background:none;color:var(--mute);border-color:var(--line);min-heig
 .tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-weight:600;color:var(--mute);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
 .st{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;background:#2E2638}.st.active{background:#1F3A1A;color:var(--ok)}.st.invited{background:#3A2A10;color:var(--acc2)}.st.revoked,.st.expired{color:var(--mute)}
 .tag{font-size:12px;color:var(--mute)}
+.fbp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:rgba(242,193,78,.06)}.fbch{padding:6px 0;border-top:1px dashed var(--line)}.fbdel{color:#ff8a80}.fbadd{color:var(--ok)}.fbalt[hidden]{display:none!important}
 .gate{max-width:440px}
 form.psale{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end}form.psale .wide{grid-column:span 2}
 @media(max-width:760px){form.psale{grid-template-columns:1fr 1fr}form.psale .wide{grid-column:1/-1}}
@@ -145,15 +146,43 @@ async function loadPs(){let el=$('#ps');if(!el){app.insertAdjacentHTML('beforeen
   el.querySelectorAll('[data-pscode]').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(`{{sale ${b.dataset.pscode}}}`);b.textContent='Copied ✓'});
   el.querySelectorAll('[data-psdel]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this sale?'))return;const res=await sb.rpc('admin_delete_private_sale',{p_id:+b.dataset.psdel});if(res.error)alert(res.error.message);loadPs()});
 }
-let FBSHOW='new';
+let FBSHOW='review';
+// Feedback review (2026-11-26): Claude drafts a fix for each note (proposal); David picks Accept / Skip / Alter.
+// Accept applies card-data fixes (admin_feedback_review) and gives the sender 1 point. Undo puts it back.
 async function loadFb(){const r=await sb.rpc('admin_feedback');let el=$('#fb');if(!el){app.insertAdjacentHTML('beforeend','<div id="fb"></div>');el=$('#fb')}
   if(r.error){el.innerHTML=`<h2>Feedback</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
-  const all=r.data||[],rows=all.filter(x=>FBSHOW==='all'?x.status!=='archived':x.status===FBSHOW),K={card:'🃏 Card info',idea:'💡 Idea',bug:'🐞 Bug',other:'💬 Other'};
-  const cnt=s=>all.filter(x=>x.status===s).length;
-  el.innerHTML=`<h2>Feedback</h2><p class="mt" style="margin-bottom:10px">${['new','done','all'].map(s=>`<button class="ghost" data-fbs="${s}" style="${FBSHOW===s?'color:var(--ink);border-color:var(--acc)':''}">${s==='new'?'New ('+cnt('new')+')':s==='done'?'Done ('+cnt('done')+')':'All'}</button>`).join(' ')}</p>
-  <div class="tw box" style="padding:0"><table><thead><tr><th>When</th><th>Type</th><th>Note</th><th>From</th><th></th></tr></thead><tbody>${rows.length?rows.map(x=>`<tr><td>${day(x.created_at)}</td><td>${K[x.kind]||esc(x.kind)}${x.card_id?`<div class="tag"><a href="/#card=${encodeURIComponent(x.card_id)}" target="_blank">${esc(x.card_id)}</a></div>`:''}</td><td style="max-width:460px"><div style="white-space:pre-wrap">${esc(x.message)}</div>${x.target||x.page?`<div class="tag" style="margin-top:4px">${x.page?`<a href="${esc(x.page.split('#')[0]+(x.selector?(x.page.includes('?')?'&':'?')+'fbspot='+encodeURIComponent(x.selector):''))}" target="_blank">${esc(x.page.split('?')[0]||'/')}</a>`:''}${x.target?' · 📍 '+esc(x.target):''}</div>`:''}</td><td>${esc(x.name||'')}${x.contact?`<div class="tag">${esc(x.contact)}</div>`:''}${!x.name&&!x.contact?'<span class="tag">anonymous</span>':''}</td><td style="white-space:nowrap">${x.status==='new'?`<button class="ghost" data-fbset="${x.id}" data-to="done">✓ Done</button>`:`<button class="ghost" data-fbset="${x.id}" data-to="new">↺ New</button>`} <button class="ghost" data-fbset="${x.id}" data-to="archived">Archive</button></td></tr>`).join(''):'<tr><td colspan="5" class="tag">Nothing here.</td></tr>'}</tbody></table></div>`;
+  const all=r.data||[],K={card:'🃏 Card info',idea:'💡 Idea',bug:'🐞 Bug',other:'💬 Other'};
+  const open=x=>['drafting','awaiting','alter'].includes(x.review)&&x.status!=='archived';
+  const F={review:open,accepted:x=>x.review==='accepted',skipped:x=>x.review==='skipped',all:x=>x.status!=='archived'};
+  const rows=all.filter(F[FBSHOW]),cnt=k=>all.filter(F[k]).length;
+  const ids=[...new Set(rows.flatMap(x=>(x.proposal_change||[]).map(c=>c.card_id)).concat(rows.map(x=>x.card_id)).filter(Boolean))];
+  const cr=ids.length?await sb.from('cards').select('id,name,number,set_id,printings,editions,rarity').in('id',ids):{data:[]};
+  const CB=Object.fromEntries((cr.data||[]).map(c=>[c.id,c]));
+  const lst=v=>Array.isArray(v)?v:(v==null||v===''?[]:[String(v)]);
+  const diff=(b,a)=>{const B=lst(b),A=lst(a);return B.filter(x=>!A.includes(x)).map(x=>`<s class="fbdel">${esc(x)}</s>`).concat(A.map(x=>B.includes(x)?esc(x):`<b class="fbadd">${esc(x)}</b>`)).join(', ')||'<span class="tag">none</span>'};
+  const changeHtml=(x)=>{const ch=x.proposal_change||[];if(!ch.length)return'';const before=x.review==='accepted'&&x.applied?Object.fromEntries(x.applied.map(c=>[c.id,c])):CB;
+    const shown=ch.slice(0,6).map(c=>{const b=before[c.card_id]||{};return`<div class="fbch"><div><a href="/#card=${encodeURIComponent(c.card_id)}" target="_blank">${esc(b.name||c.card_id)}</a> <span class="tag">${esc(c.card_id)}</span></div>${Object.entries(c.set||{}).map(([k,v])=>`<div class="tag" style="margin-top:2px"><b style="color:var(--ink)">${esc(k)}:</b> ${diff(b[k],v)}</div>`).join('')}</div>`}).join('');
+    return shown+(ch.length>6?`<p class="tag">…and ${ch.length-6} more cards (${ch.length} in all)</p>`:'')};
+  const card=x=>`<div class="box fbn" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span class="tag">${day(x.created_at)} · ${K[x.kind]||esc(x.kind)}${x.card_id?` · <a href="/#card=${encodeURIComponent(x.card_id)}" target="_blank">${esc((CB[x.card_id]||{}).name||x.card_id)}</a>`:''}${x.page?` · <a href="${esc(x.page.split('#')[0]+(x.selector?(x.page.includes('?')?'&':'?')+'fbspot='+encodeURIComponent(x.selector):''))}" target="_blank">page</a>`:''}</span>
+    <span class="tag">${esc(x.name||'')} ${x.contact?esc(x.contact):''}${!x.name&&!x.contact?'anonymous':''}${x.user_id?' · signed in':''}</span></div>
+    <div style="white-space:pre-wrap;margin:8px 0 10px;font-size:15px">“${esc(x.message)}”</div>
+    ${x.review==='drafting'?`<p class="tag">Claude is drafting a fix (checked every hour).</p>`:''}
+    ${x.review==='alter'?`<p class="tag"><b style="color:var(--ink)">Your change:</b> ${esc(x.alter_note)}<br>Claude is redrafting (checked every hour).</p>`:''}
+    ${x.proposal&&x.review!=='drafting'?`<div class="fbp"><div class="tag" style="letter-spacing:1px;font-weight:700">PROPOSED FIX</div><div style="margin:4px 0 6px">${esc(x.proposal)}</div>${changeHtml(x)}${x.proposal_question&&x.review!=='accepted'?`<p class="tag" style="margin-top:8px">❓ ${esc(x.proposal_question)}</p>`:''}</div>`:''}
+    ${x.review==='awaiting'?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button data-fbr="accept" data-id="${x.id}">✓ Accept${x.proposal_change?' & apply':''} (+1 point)</button><button class="ghost" data-fbr="alter" data-id="${x.id}">✎ Alter</button><button class="ghost" data-fbr="skip" data-id="${x.id}">Skip</button></div>
+      <form class="fbalt" data-id="${x.id}" hidden style="margin-top:8px;display:grid;gap:6px"><textarea name="t" rows="2" placeholder="What should change? e.g. apply to all rares in this set" style="width:100%;box-sizing:border-box"></textarea><div><button type="submit">Send to Claude</button></div></form>`:''}
+    ${x.review==='accepted'?`<p class="tag" style="margin-top:8px">✓ Accepted ${day(x.reviewed_at)}${x.applied?` · ${x.applied.length} card${x.applied.length>1?'s':''} updated (on the site within ~15 min)`:''} · ${x.credit_user?'point given':'point waiting (no account with that email yet; it\'s given if they sign up with it)'} <button class="ghost" data-fbundo="${x.id}">Undo</button></p>`:''}
+    ${x.review==='skipped'?`<p class="tag">Skipped ${day(x.reviewed_at)}</p>`:''}
+  </div>`;
+  el.innerHTML=`<h2>Feedback</h2><p class="mt" style="margin-bottom:10px">${[['review','To review'],['accepted','Accepted'],['skipped','Skipped'],['all','All']].map(([k,l])=>`<button class="ghost" data-fbs="${k}" style="${FBSHOW===k?'color:var(--ink);border-color:var(--acc)':''}">${l}${k!=='all'?' ('+cnt(k)+')':''}</button>`).join(' ')}</p>
+  ${rows.length?rows.map(card).join(''):'<p class="tag">Nothing here.</p>'}`;
   el.querySelectorAll('[data-fbs]').forEach(b=>b.onclick=()=>{FBSHOW=b.dataset.fbs;loadFb()});
-  el.querySelectorAll('[data-fbset]').forEach(b=>b.onclick=async()=>{const r=await sb.rpc('admin_feedback_status',{p_id:+b.dataset.fbset,p_status:b.dataset.to});if(r.error)alert(r.error.message);loadFb()});
+  const act=async(id,a,note)=>{const r=await sb.rpc('admin_feedback_review',{p_id:id,p_action:a,p_note:note||null});if(r.error){alert(r.error.message);return}loadFb()};
+  el.querySelectorAll('[data-fbr]').forEach(b=>b.onclick=()=>{const id=+b.dataset.id;if(b.dataset.fbr==='alter'){const f=el.querySelector(`.fbalt[data-id="${id}"]`);f.hidden=!f.hidden;if(!f.hidden)f.t.focus();return}
+    b.disabled=true;act(id,b.dataset.fbr)});
+  el.querySelectorAll('.fbalt').forEach(f=>f.onsubmit=e=>{e.preventDefault();const t=f.t.value.trim();if(!t){f.t.focus();return}act(+f.dataset.id,'alter',t)});
+  el.querySelectorAll('[data-fbundo]').forEach(b=>b.onclick=async()=>{if(!confirm('Undo this? The cards go back to how they were and the point is taken away.'))return;const r=await sb.rpc('admin_feedback_undo',{p_id:+b.dataset.fbundo});if(r.error)alert(r.error.message);loadFb()});
 }
 load();
 }

@@ -272,6 +272,7 @@ header .pn>.pnb{height:30px;padding:0 12px 0 10px;font-size:14px}
   main{padding-top:16px}
   .picks{grid-template-columns:1fr;gap:10px}
 }
+.fbrank{align-items:center;flex-wrap:wrap;gap:8px}.fbrank b{font:800 18px "Baloo 2",sans-serif;color:#F2C14E}.fbbar{display:inline-block;width:120px;height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}.fbbar i{display:block;height:100%;background:#F2C14E}
 </style>
 <link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=5185ea88"><script src="/theme.js?v=2"></script>
 </head>
@@ -576,7 +577,7 @@ function marks(c){if(!ME&&!COLL.size&&!SLABS.length)return '<span class="mk"></s
 function refreshMarks(){if(VIEW==='sets'&&D)renderSets();document.querySelectorAll('.card[data-i]').forEach(b=>{const c=list[+b.dataset.i];const m=b.querySelector('.mk');if(c&&m)m.outerHTML=marks(c)})}
 function sbc(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPA,SUPA_KEY);return sb}
 async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;
-  if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));
+  if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));loadFbPts();
     if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest)}else gLoad();
   EST=null;if(MEMBER)await loadEstimates();if(VIEW==='cards'&&D&&D.byId)renderCards(true);
   if(sel>=0&&list[sel]){const px=$('#panel .px');if(px)px.outerHTML=priceBlock(list[sel]);loadExact(list[sel])}
@@ -702,10 +703,16 @@ function listView(el,title,src,ro){LAST=[el,title,src,ro];const st=collStats(src
   ${MTAB==='have'&&st.per.length?`<div class="sp">${st.per.map(({s,n,t,miss})=>`<div class="spc${MISS===s.id?' on':''}"><button data-set="${esc(s.id)}" title="Browse this set"><span><b>${esc(setLabel(s))}</b> · ${esc(s.name)}</span><span class="mt">${n} / ${t} cards · ${Math.floor(n/t*100)}%</span><span class="bar2"><i style="width:${Math.min(100,n/t*100)}%"></i></span></button>${miss.length?`<button class="msb" data-miss="${esc(s.id)}" aria-pressed="${MISS===s.id}">${MISS===s.id?'Hide missing':'Missing · '+miss.length}</button>`:'<span class="msb done">Complete ✓</span>'}</div>`).join('')}</div>`:''}
   ${ms?`<div class="row misshead"><b>Missing from ${esc(setLabel(ms.s))} · ${esc(ms.s.name)}: ${ms.miss.length} cards</b><button class="clear" data-copy="${esc(ms.miss.map(c=>c.n+'  '+c.name).join('\n'))}">Copy list</button>${ro?'':'<span class="mt">Open a card and tap ♡ Want to add it to your wants.</span>'}<button class="clear" data-miss="${esc(ms.s.id)}">Back to my haves</button></div>`:''}
   <div class="grid">${items.length?items.map((c,i)=>tile(c,i)).join(''):`<p class="empty">${ro?'Nothing here yet.':MTAB==='slab'?'No slabs yet. Open any card and tap + Add a slab.':MTAB==='have'?'No cards yet. Open any card and use + to add the printings you have.':'No wants yet. Open any card and tap ♡ Want.'}</p>`}</div>`}
+// Feedback points (2026-11-26): 1 point per accepted feedback note; rank names/thresholds are placeholders set in Supabase feedback_rank().
+let FBPTS=null;
+function loadFbPts(){if(!ME||!sbc())return;sb.rpc('my_feedback_points').then(r=>{if(!r.error&&r.data){FBPTS=r.data;const el=$('#v-mine');if(el&&el.innerHTML)renderMine()}}).catch(()=>{})}
+function rankRow(){if(!FBPTS)return '';const p=FBPTS.points||0;const pct=FBPTS.next_at?Math.min(100,Math.round(p/FBPTS.next_at*100)):100;
+  return `<div class="share fbrank"><span>Rank:</span><b>${esc(FBPTS.rank)}</b><span class="mt">${p} point${p===1?'':'s'} from accepted feedback${FBPTS.next?` · ${FBPTS.next_at-p} more to ${esc(FBPTS.next)}`:''}</span><span class="fbbar" aria-hidden="true"><i style="width:${pct}%"></i></span><button type="button" class="clear" data-fb>Send feedback</button></div>`}
 function renderMine(){const el=$('#v-mine');if(!ME){const n=gCount();if(!n){el.innerHTML='<h1>My collection</h1><p class="mt">Sign up or sign in to track your haves, wants and slabs.</p><div class="row"><button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button></div>';return}
     listView(el,`<h1>My collection</h1><div class="gsave"><span><b>Saved on this device only.</b> If you clear your browser or switch phones, it’s gone. Make a free account to keep it and share it.</span><button type="button" class="pill" data-auth="up">Sign up so you don’t lose it</button><button type="button" class="clear" data-auth="in">I have an account</button></div>`,COLL,false);return}
   const link=MYP?location.origin+'/#u='+MYP.share_slug:'';
   listView(el,`<h1 class="ph">${MYP?avImg(MYP.fav_character,MYP.avatar,48):''}<span>${esc(MYP&&MYP.handle?MYP.handle+"'s collection":'My collection')}</span></h1>
+  ${rankRow()}
   ${MYP?`<div class="share"><span>Share link${MYP.sharing?'':' (off)'}:</span>${MYP.sharing?`<code>${esc(link)}</code><button class="clear" data-copy="${esc(link)}">Copy</button>`:''}<button class="clear" data-share>${MYP.sharing?'Turn off sharing':'Turn on sharing'}</button></div>${igRow()}${favRow()}${avRow()}`:''}`,COLL,false)}
 // Favorite character on the profile: picked from the site's 40 characters, shown on their shared collection with a link to that character's page.
 let FAVEDIT=false;const chSlug=l=>l.toLowerCase().replace(/[^a-z0-9]+/g,'-');

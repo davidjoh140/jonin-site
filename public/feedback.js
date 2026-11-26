@@ -45,6 +45,7 @@
   <button type="button" class="jfb-x" data-jfbx aria-label="Close">✕</button>
   <h2>Feedback</h2>
   <p>Spotted a wrong card, have an idea, or found a bug? Leave a note on this page, or point at the exact spot.</p>
+  <p style="font-size:13px">⭐ Every note we use earns you a point and ranks you up. Sign in, or leave the email you signed up with.</p>
   <div class="jfb-about"></div>
   <button type="button" class="jfb-pick">📍 Point at a spot on the page</button>
   <div class="jfb-kinds" role="group" aria-label="What's it about"><button type="button" data-k="card" aria-pressed="false">🃏 Card info</button><button type="button" data-k="idea" aria-pressed="false">💡 Idea</button><button type="button" data-k="bug" aria-pressed="false">🐞 Bug</button><button type="button" data-k="other" aria-pressed="true">💬 Other</button></div>
@@ -126,7 +127,10 @@
     var row={kind:k,message:m,name:form.n.value.trim()||null,contact:form.c.value.trim()||user||null,card_id:CARD?CARD.id:null,
       page:(location.pathname+location.search+(location.hash&&location.hash!=='#feedback'?location.hash:'')).slice(0,300),visitor:vid(),target:TARGET,selector:SELECTOR};
     go.disabled=true;msg.className='jfb-msg';msg.textContent='Sending…';
-    fetch(SUPA+'/rest/v1/feedback',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(row)})
+    var hd={apikey:KEY,'Content-Type':'application/json',Prefer:'return=minimal'};
+    // Signed in? Send the session so the note is credited to the account (1 point if David accepts it).
+    try{var tk=JSON.parse(localStorage.getItem('sb-cfzpayanhvvqtkuqfgof-auth-token')||'null');if(tk&&tk.access_token&&(!tk.expires_at||tk.expires_at*1000>Date.now()))hd.Authorization='Bearer '+tk.access_token}catch(_){}
+    fetch(SUPA+'/rest/v1/feedback',{method:'POST',headers:hd,body:JSON.stringify(row)})
       .then(function(r){if(r.ok)return;return r.json().catch(function(){return{}}).then(function(j){throw new Error(j.message||'failed')})})
       .then(function(){msg.className='jfb-msg ok';msg.textContent='Thanks! Your note was sent.';setTimeout(function(){if(!ov.hidden)close()},1600)})
       .catch(function(x){go.disabled=false;msg.className='jfb-msg err';msg.textContent=/Too many/.test(x.message)?'Please wait 20 seconds before sending another note.':'Could not send. Please try again.'});
