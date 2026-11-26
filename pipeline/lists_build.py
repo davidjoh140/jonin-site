@@ -114,7 +114,7 @@ def pop_index(overall, all_voters, pop_chars, pop_ranked, chars, sets_by_id):
 def lists_index(mv_chars, pop_chars, popular_live):
     e, SITE = B.e, B.SITE
     url = f'{SITE}/lists/'
-    title = 'Naruto CCG card lists: the most valuable and most popular cards in the Naruto card game | Jonin'
+    title = 'Naruto CCG card lists: price guide, most valuable and most popular Naruto cards | Jonin'
     desc = ('Every Naruto card list on Jonin: the most expensive cards by highest sale and the most popular cards voted by '
             'collectors, for the original Bandai Naruto CCG.')
     chip = lambda c, path: f'<a class="chip" href="/character/{c["slug"]}/{path}/"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(c["name"])}</a>'
@@ -125,6 +125,7 @@ def lists_index(mv_chars, pop_chars, popular_live):
     body = (f'<nav class="crumb"><a href="/">All cards</a> › Lists</nav>\n'
             f'<section class="sethead"><h1>Naruto CCG card lists</h1>\n'
             f'<p class="lede">Ranked lists for the whole original Bandai Naruto card game (2006–2013), not just Naruto himself: the most expensive cards by highest recorded sale, and the most popular cards voted by collectors, with a list for each character.</p></section>\n'
+            + sec('/price-guide/', '📈 Naruto CCG price guide', 'What every card with a recorded sale is worth, grouped by value, plus what makes a Naruto card valuable.', '', '')
             + sec('/most-valuable/', '💰 Most valuable cards in the Naruto CCG', 'The most expensive cards in the game, ranked by the highest price each has sold for, with a top list per character. Updates as new sales come in.',
                   ''.join(chip(c, 'most-valuable') for c in mv_chars), '')
             + sec('/most-popular/', '⭐ Most popular cards in the Naruto CCG', 'Cards from across the game, ranked by collector votes, overall and per character. Every signed-in collector gets 3 votes per character.',

@@ -116,10 +116,11 @@ def price_block(c):
     lock = (f'<a class="pxt" href="/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}" '
             'aria-label="See exact prices and sold listings with Premium">'
             '<div class="rows" aria-hidden="true"><div><span>1st Edition · Foil · PSA 9</span><b>$000.00</b></div><div><span>Unlimited · Raw · NM</span><b>$00.00</b></div><div><span>1st Edition · Raw · LP</span><b>$00.00</b></div></div><span class="cta"><span><svg class="lk" viewBox="0 0 14 17" aria-hidden="true"><defs><linearGradient id="lkt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE99A"/><stop offset=".45" stop-color="#F2C14E"/><stop offset="1" stop-color="#B07A1C"/></linearGradient></defs><g class="lift"><path class="sh" d="M4 8.5V5.5a3 3 0 0 1 6 0v3" fill="none" stroke="#E0B045" stroke-width="2.1" stroke-linecap="round"/></g><g class="bd"><rect x="1" y="8" width="12" height="9" rx="2.2" fill="url(#lkt)" stroke="#8C5F14" stroke-width=".6"/><circle cx="7" cy="11.7" r="1.35" fill="#5C3D0A"/><rect x="6.4" y="12" width="1.2" height="2.6" rx=".55" fill="#5C3D0A"/></g></svg>Exact prices &amp; sold listings</span><small>Every sale by edition, foil and grade</small></span>' '</a>')
+    guide = '<p class="mt pgl"><a href="/price-guide/">Naruto CCG price guide →</a></p>'
     if pb is None or not 0 <= pb < len(BANDS):
-        return f'<section class="px"><h3>Market price</h3>{lock}</section>'
+        return f'<section class="px"><h3>Market price</h3>{lock}{guide}</section>'
     return (f'<section class="px"><h3>Market price<span>across all versions</span></h3>'
-            f'<p class="band">{e(BANDS[pb])}</p>{lock}</section>')
+            f'<p class="band">{e(BANDS[pb])}</p>{lock}{guide}</section>')
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -194,7 +195,7 @@ def char_page(ch, cs, sets_by_id, chars, notes):
         rc[c['r']] = rc.get(c['r'], 0) + 1
     rar = ', '.join(f'{rc[r]} {r}{"s" if rc[r] > 1 and r not in ("Common", "Uncommon") else ""}'
                     for r in sorted(rc, key=lambda r: RANK.get(r, 9)) if r != 'Unknown')
-    title = f"{ch['name']} Naruto CCG cards: all {n} cards | Jonin"
+    title = f"{ch['name']} Naruto cards: all {n} Bandai Naruto CCG cards | Jonin"
     span = (f" from {first['name']} ({year(first.get('rel'))}) to {last['name']} ({year(last.get('rel'))})"
             if first and last and first is not last else f" in {first['name']}" if first else '')
     desc = (f"Every {ch['name']} card in the original Bandai Naruto CCG: {n} cards across {len(in_sets)} sets{span}. "
@@ -258,7 +259,7 @@ def most_valuable(cs, top=MOST_VALUABLE_TOP):
 def mv_page(ch, ranked, sets_by_id, mv_chars):
     url = f'{SITE}/character/{ch["slug"]}/most-valuable/'
     n = len(ranked)
-    title = f"Most valuable {ch['name']} cards in the Naruto CCG (top {n}) | Jonin"
+    title = f"Most valuable {ch['name']} Naruto cards: top {n} by sale price | Jonin"
     lead = ranked[0]
     desc = (f"The {n} most valuable {ch['name']} cards in the original Bandai Naruto CCG, ranked by their highest recorded sale. "
             f"#1: {lead['name']} {lead['n']} ({sets_by_id[lead['s']]['name']}).")
@@ -309,8 +310,8 @@ def mv_index(mv_chars, ranked, sets_by_id):
     """/most-valuable/: every character's most-valuable list on one page (a list of lists), for search."""
     url = f'{SITE}/most-valuable/'
     names = ', '.join(c['label'] for c in mv_chars)
-    title = 'Most expensive Naruto CCG cards: top lists from the Naruto card game | Jonin'
-    desc = (f'The most valuable cards in the original Bandai Naruto CCG, ranked by highest recorded sale. '
+    title = 'Most valuable Naruto cards: the most expensive Bandai Naruto CCG cards ever sold | Jonin'
+    desc = (f'The most valuable and most expensive Naruto cards in the original Bandai Naruto CCG, ranked by highest recorded sale. '
             f'Top {MOST_VALUABLE_TOP} lists for {names}, updated as new sales come in.')
 
     def price(c):
@@ -332,17 +333,59 @@ def mv_index(mv_chars, ranked, sets_by_id):
             f'<div class="mvminis">{"".join(mini(c, i) for i, c in enumerate(r[:3]))}</div>'
             f'<p class="btns"><a class="primary" href="{lu}">See the full top {len(r)} →</a></p></section>')
     body = ('<nav class="crumb"><a href="/">All cards</a> › <a href="/lists/">Lists</a> › Most valuable</nav>\n'
-            '<section class="sethead"><h1>Most expensive Naruto CCG cards</h1>\n'
-            '<p class="lede">The most valuable cards in the whole original Bandai Naruto card game (2006–2013), with one list per character, '
+            '<section class="sethead"><h1>Most valuable Naruto CCG cards</h1>\n'
+            '<p class="lede">The most valuable and most expensive cards in the whole original Bandai Naruto card game (2006–2013), with one list per character, '
             'ranked by the highest price each card has sold for. Lists update on their own as new sales come in.</p></section>\n'
             + ''.join(blocks)
-            + '\n<p class="mt" style="margin-top:22px">More characters are coming. <a href="/characters/">Browse every character</a> · <a href="/most-popular/">Most popular cards</a> · <a href="/lists/">All card lists</a>.</p>\n')
+            + '\n<p class="mt" style="margin-top:22px">More characters are coming. <a href="/price-guide/">Naruto CCG price guide</a> · <a href="/characters/">Browse every character</a> · <a href="/most-popular/">Most popular cards</a> · <a href="/lists/">All card lists</a>.</p>\n')
     img = next((c['img'] for ch in mv_chars for c in ranked[ch['slug']] if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'ItemList', 'name': title, 'description': desc, 'url': url, 'numberOfItems': len(mv_chars),
          'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'name': f"Most valuable {ch['name']} cards",
                               'url': f'{SITE}/character/{ch["slug"]}/most-valuable/'} for i, ch in enumerate(mv_chars)]},
         crumbs(('Naruto CCG cards', SITE + '/'), ('Lists', SITE + '/lists/'), ('Most valuable', url))]})
+    return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(img), tw='summary_large_image', ld=ld) + body + FOOT
+
+
+def price_guide(cards, sets, sets_by_id, mv_chars):
+    """/price-guide/: every card with a recorded sale, grouped by its free price band (highest band first).
+    Free-tier rules hold: only the band shows here; exact prices by edition, foil and grade stay Premium."""
+    url = f'{SITE}/price-guide/'
+    priced = [c for c in cards if c.get('pb') is not None and 0 <= c['pb'] < len(BANDS)]
+    order = lambda c: (c['top'][0] if c.get('top') else 10 ** 6, RANK.get(c['r'], 9))
+    n = len(priced)
+    title = 'Naruto CCG price guide: Bandai Naruto card values from real sales | Jonin'
+    desc = (f'Price guide for the original Bandai Naruto CCG (2006–2013): {n} cards priced from real sold listings, '
+            'grouped by value. What makes a Naruto card valuable, and the most expensive cards ever sold.')
+    blocks = []
+    for b in range(len(BANDS) - 1, -1, -1):
+        cs = sorted([c for c in priced if c['pb'] == b], key=order)
+        if cs:
+            blocks.append(f'<section class="cgroup" id="band-{b}"><h2>{e(BANDS[b])}<span>{len(cs)} card{"s" if len(cs) != 1 else ""}</span></h2>'
+                          f'<div class="grid">{"".join(tile(c, sets_by_id[c["s"]]) for c in cs)}</div></section>')
+    jump = ''.join(f'<a class="chip" href="#band-{b}">{e(BANDS[b])}</a>' for b in range(len(BANDS) - 1, -1, -1)
+                   if any(c['pb'] == b for c in priced))
+    mv = ''.join(f'<a class="chip" href="/character/{o["slug"]}/most-valuable/"><img src="/chars/{o["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(o["label"])}</a>'
+                 for o in mv_chars)
+    setchips = ''.join(f'<a class="chip" href="/set/{set_slug(x)}/">{sym_img(x)}{e(x["name"])}</a>' for x in sets)
+    body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/lists/">Lists</a> › Price guide</nav>
+<section class="sethead"><h1>Naruto CCG price guide</h1>
+<p class="lede">What original Bandai Naruto CCG cards (2006–2013) are worth, from real sold listings. Every sale is checked by hand before it counts. {n} cards have a recorded sale so far, and the guide updates on its own as new sales come in.</p>
+<p class="mt">Each card's price range is based on its highest recorded sale across every version. <a href="/premium/">Premium</a> shows exact prices by edition, foil and grade, with every sold listing.</p>
+<div class="chips">{jump}</div></section>
+<section class="mvlistcard"><h2>What makes a Naruto CCG card valuable</h2>
+<p><b>Rarity.</b> Look for the dots after the copyright line: none is Common, one Uncommon, two Rare and three Super Rare. Super Rares and promos are the cards most collectors chase.</p>
+<p><b>Edition.</b> The same card can be 1st Edition or Unlimited. Check the card page for which editions each card was printed in.</p>
+<p><b>Foil.</b> Many cards came in more than one finish: flat foil, diamond, wavy, spiral or prism. The same card can sell for very different prices depending on its foil.</p>
+<p><b>Grade and condition.</b> Graded copies, especially PSA 10s, can sell for many times the price of a raw copy.</p></section>
+{"".join(blocks)}
+{f'<section class="others"><h2>Most valuable cards by character</h2><div class="chips">{mv}</div><p class="btns" style="margin-top:12px"><a class="primary" href="/most-valuable/">💰 Most valuable Naruto cards</a></p></section>' if mv else ''}
+<section class="others"><h2>Card lists by set</h2><div class="chips">{setchips}</div></section>
+'''
+    img = next((c['img'] for c in sorted(priced, key=order) if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('Lists', SITE + '/lists/'), ('Price guide', url))]})
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(img), tw='summary_large_image', ld=ld) + body + FOOT
 
 
@@ -382,10 +425,12 @@ def card_page(c, s, prev, nxt, chars_by_name=None):
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
     eds = [x for x in (c.get('ed') or []) if x]
-    title = f"{c['name']} {c['n']} · {s['name']} | Naruto CCG | Jonin"
+    title = f"{c['name']} {c['n']} · {s['name']} · Naruto CCG card value | Jonin"
     desc = (f"{c['name']} ({c['n']}) from {s['name']}"
             f"{' (' + s['rel'] + ')' if s.get('rel') else ''}: {c['r']} {c['t']} card in the Bandai Naruto CCG. "
-            f"Printings: {', '.join(c.get('v') or [])}{'; ' + ' and '.join(eds) if eds else ''}.")
+            f"Printings: {', '.join(c.get('v') or [])}{'; ' + ' and '.join(eds) if eds else ''}."
+            + (f" Market price: {BANDS[c['pb']]}." if c.get('pb') is not None and 0 <= c['pb'] < len(BANDS) else '')
+            + " eBay sold prices for raw and PSA graded copies.")
     psa = (f'<a href="{e(PSA_POP + PSA[c["s"]])}" target="_blank" rel="noopener">PSA pop report · {e(set_label(s))}</a>'
            if c['s'] in PSA else '<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>')
     art = (f'<img src="{e(img)}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card scan" width="750" height="1050">'
@@ -648,6 +693,7 @@ def main():
         changed += write(os.path.join(mvidx, 'index.html'), mv_index(mv_chars, ranked, sets_by_id))
     elif os.path.isdir(mvidx):
         shutil.rmtree(mvidx)
+    changed += write(os.path.join(ROOT, 'price-guide', 'index.html'), price_guide(d['cards'], sets, sets_by_id, mv_chars))
     for pg in load_pages():
         changed += write(os.path.join(ROOT, pg['slug'], 'index.html'), plain_page(pg))
     arts = load_news()
@@ -672,7 +718,7 @@ def main():
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
     urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
-           list_urls + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
+           list_urls + [SITE + '/price-guide/'] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
     lm = lastmods(urls)

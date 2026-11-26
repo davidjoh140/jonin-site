@@ -176,3 +176,4 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .mvmini .band{font:700 20px/1.1 "Baloo 2",sans-serif;color:var(--acc)}
 .mvlistcard .btns{margin:0}
 @media (max-width:620px){.mvminis{gap:8px}.mvmini{padding:6px}.mvmini b{font-size:13px}.mvmini .band{font-size:15px}.mvmini .mt{display:none}.mvmini .mvn{font-size:22px}}
+.px .pgl{margin:10px 0 0;font-size:13px}
