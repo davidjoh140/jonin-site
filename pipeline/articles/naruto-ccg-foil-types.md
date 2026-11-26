@@ -47,7 +47,7 @@ Super Rares mostly used the same foiling for the whole game. Full-art Super Rare
 
 - **Name the foil.** "Foil" isn't enough for sets 1 to 10. Write diamond, wavy, prism, spiral or flat.
 - **Check the card page.** Every card on Jonin lists the printings it came in, so you can see which foils exist before you buy.
-- **Compare like with like.** A wavy foil sale tells you little about the diamond foil of the same card. [Premium](/premium/) splits every sale by edition, foil and grade.
+- **Compare like with like.** A wavy foil sale tells you little about the diamond foil of the same card. [Jonin Club](/club/) splits every sale by edition, foil and grade.
 
 ## See more
 

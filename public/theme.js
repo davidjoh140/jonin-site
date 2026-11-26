@@ -85,7 +85,7 @@
   var tries=0,iv=setInterval(function(){if(window.umami&&umami.track){clearInterval(iv);q.forEach(function(x){umami.track(x[0],x[1])});q=[]}else if(++tries>40)clearInterval(iv)},500);
   document.addEventListener('click',function(ev){var l=ev.target.closest&&ev.target.closest('a[href]');
     if(l&&!l.hasAttribute('data-jt')){var h=l.getAttribute('href')||'';
-      var n=/sell\.jonin\.cards/.test(h)?'sell-click':/^\/premium\//.test(h)?'premium-click':/instagram\.com/.test(h)?'instagram-click':'';
+      var n=/sell\.jonin\.cards/.test(h)?'sell-click':/^\/club\//.test(h)?'premium-click':/instagram\.com/.test(h)?'instagram-click':'';
       if(n)jtrack(n,{})}},true);
   document.addEventListener('click',function(ev){var a=ev.target.closest&&ev.target.closest('[data-jt]');if(!a)return;
     var p={};for(var i=0;i<a.attributes.length;i++){var n=a.attributes[i].name;if(n.indexOf('data-jt-')===0)p[n.slice(8)]=a.attributes[i].value}

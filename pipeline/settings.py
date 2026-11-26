@@ -48,7 +48,7 @@ SALES_AUTO_APPROVE_CONFIDENCE = None   # David OKs every sale himself (None = no
 # but only if we saw it this close to the end (otherwise it waits for review).
 LAST_SEEN_MAX_MINUTES_BEFORE_END = 20  # PLACEHOLDER
 
-# Free price bands shown on jonin.cards. Exact prices by edition, foil and grade are Premium.
+# Free price bands shown on jonin.cards. Exact prices by edition, foil and grade are Jonin Club only.
 # A card's band comes from its highest recorded sale across every version and grade.
 PRICE_BAND_CUTOFFS = [10, 50, 200]   # PLACEHOLDER: Under $10 / $10–50 / $50–200 / $200+
 

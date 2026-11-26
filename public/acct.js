@@ -1,6 +1,6 @@
 /* jonin.cards header profile button (every page).
    Signed in: avatar + status symbol (founding = gold ring around the picture, premium = headband worn on the picture, free = leaf) + username + rank (from scrolls),
-   with a hover menu (rank/scrolls, My collection, Missions, Premium, Send feedback, Theme, Sign out).
+   with a hover menu (rank/scrolls, My collection, Missions, Jonin Club, Send feedback, Theme, Sign out).
    Signed out: one "Sign up" button whose hover menu holds Sign in, the guest collection and Theme.
    The homepage renders it through JoninAcct.html(state); other pages mark <span id="acct" data-auto> and this file fills it in,
    reading the signed-in session the homepage's Supabase client saved in localStorage (no Supabase library needed here). */
@@ -15,7 +15,7 @@
   function fleft(){var f=ls(FK);if(!f||Date.now()-f.t>6e5){fetch(SUPA+'/rest/v1/rpc/founding_spots_left',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:'{}'})
     .then(function(r){return r.ok?r.json():null}).then(function(n){if(typeof n==='number'){try{localStorage.setItem(FK,JSON.stringify({n:n,t:Date.now()}))}catch(_){}}}).catch(function(){})}
     return f?f.n:null}
-  function offerLine(){var n=fleft();return n===0?'Founding spots are gone. Premium opens soon: <a href="/premium/#join">join the waitlist</a>.':'The first 20 members get Premium free, forever.'}
+  function offerLine(){var n=fleft();return n===0?'Founding spots are gone. Jonin Club opens soon: <a href="/club/#join">join the waitlist</a>.':'The first 20 members get Jonin Club free, forever.'}
   function avSrc(sl,a){if(!sl)return '';if(a==='portrait'&&THEMEF.indexOf(sl)>-1)return '/theme-faces/'+sl+'.webp';if(a==='action')return '/char-art/'+sl+'.webp';return '/chars/'+sl+'.webp'}
 
   // Status symbols (PLACEHOLDER look, David to fine-tune)
@@ -24,7 +24,7 @@
     premium:'<svg viewBox="0 2 40 18" aria-hidden="true"><defs><linearGradient id="jhbC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#53689A"/><stop offset=".55" stop-color="#3A4D7A"/><stop offset="1" stop-color="#2A3A5F"/></linearGradient><linearGradient id="jhbM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3F6F9"/><stop offset=".46" stop-color="#C9D1DA"/><stop offset=".54" stop-color="#A9B4C1"/><stop offset="1" stop-color="#C7CED7"/></linearGradient></defs><path d="M29.3 11.17C31.9 11.47 35.7 13.67 38.1 17.67L36.2 18.87C34.9 15.47 32.1 13.47 29.3 12.97Z" fill="#33456F" stroke="#141C30" stroke-width=".6" stroke-linejoin="round"/><path d="M29.1 12.27C31.1 13.47 32.9 15.87 33.7 19.67L31.7 20.07C31.6 17.07 30.5 15.07 28.7 13.67Z" fill="#2A3A5F" stroke="#141C30" stroke-width=".6" stroke-linejoin="round"/><path d="M1.19 9.14Q15 4.06 28.81 9.14A15 15 0 0 1 30 15Q15 9 0 15A15 15 0 0 1 1.19 9.14Z" fill="url(#jhbC)" stroke="#141C30" stroke-width=".6" stroke-linejoin="round"/><path d="M2.09 12.17Q15 7.73 27.91 12.17" fill="none" stroke="#1E2B4A" stroke-width=".45" stroke-linecap="round" opacity=".55"/><ellipse cx="29.3" cy="12.07" rx="1.35" ry="1.55" fill="url(#jhbC)" stroke="#141C30" stroke-width=".6"/><path d="M9.3 6.23Q9.3 4.73 10.8 4.54Q15 4.06 19.2 4.54Q20.7 4.73 20.7 6.23L20.7 12.03Q20.7 13.53 19.2 13.34Q15 12.86 10.8 13.34Q9.3 13.53 9.3 12.03Z" fill="url(#jhbM)" stroke="#4A5462" stroke-width=".6" stroke-linejoin="round"/><path d="M10.15 6.36Q10.15 5.46 11.05 5.36Q15 4.94 18.95 5.36Q19.85 5.46 19.85 6.36L19.85 11.66Q19.85 12.56 18.95 12.46Q15 12.04 11.05 12.46Q10.15 12.56 10.15 11.66Z" fill="none" stroke="#fff" stroke-width=".4" opacity=".55"/><circle cx="10.85" cy="6.28" r=".5" fill="#7D8896"/><circle cx="10.71" cy="6.13" r=".18" fill="#fff" opacity=".8"/><circle cx="10.85" cy="12.03" r=".5" fill="#7D8896"/><circle cx="10.71" cy="11.88" r=".18" fill="#fff" opacity=".8"/><circle cx="19.15" cy="6.28" r=".5" fill="#7D8896"/><circle cx="19.01" cy="6.13" r=".18" fill="#fff" opacity=".8"/><circle cx="19.15" cy="12.03" r=".5" fill="#7D8896"/><circle cx="19.01" cy="11.88" r=".18" fill="#fff" opacity=".8"/><path d="M15 6.2L15.53 8.17L17.5 8.7L15.53 9.23L15 11.2L14.47 9.23L12.5 8.7L14.47 8.17Z" transform="translate(0 .35)" fill="none" stroke="#fff" stroke-width=".55" stroke-linejoin="round" opacity=".7"/><path d="M15 6.2L15.53 8.17L17.5 8.7L15.53 9.23L15 11.2L14.47 9.23L12.5 8.7L14.47 8.17Z" fill="none" stroke="#525C6A" stroke-width=".6" stroke-linejoin="round"/></svg>',
     free:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.2C12.6 3 14.6 7 13 11.4 11.7 14.6 6.9 15.6 4.3 13 1.8 10.4 2.9 5.4 8 1.2z" fill="#6FB27A" stroke="#2F5E37" stroke-width="1" stroke-linejoin="round"/><path d="M5 12.4C7 9.6 8.6 7.2 9.8 4.2" fill="none" stroke="#2F5E37" stroke-width="1" stroke-linecap="round"/></svg>'
   };
-  // Premium members' avatars wear the headband (sits across the forehead, tails hang off the right)
+  // Jonin Club members' avatars wear the headband (sits across the forehead, tails hang off the right)
   var WORN='<svg viewBox="0 0 40 30" aria-hidden="true"><defs><linearGradient id="jhbC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#53689A"/><stop offset=".55" stop-color="#3A4D7A"/><stop offset="1" stop-color="#2A3A5F"/></linearGradient><linearGradient id="jhbM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3F6F9"/><stop offset=".46" stop-color="#C9D1DA"/><stop offset=".54" stop-color="#A9B4C1"/><stop offset="1" stop-color="#C7CED7"/></linearGradient></defs><path d="M29.3 11.17C31.9 11.47 35.7 13.67 38.1 17.67L36.2 18.87C34.9 15.47 32.1 13.47 29.3 12.97Z" fill="#33456F" stroke="#141C30" stroke-width=".6" stroke-linejoin="round"/><path d="M29.1 12.27C31.1 13.47 32.9 15.87 33.7 19.67L31.7 20.07C31.6 17.07 30.5 15.07 28.7 13.67Z" fill="#2A3A5F" stroke="#141C30" stroke-width=".6" stroke-linejoin="round"/><path d="M1.19 9.14Q15 4.06 28.81 9.14A15 15 0 0 1 30 15Q15 9 0 15A15 15 0 0 1 1.19 9.14Z" fill="url(#jhbC)" stroke="#141C30" stroke-width=".6" stroke-linejoin="round"/><path d="M2.09 12.17Q15 7.73 27.91 12.17" fill="none" stroke="#1E2B4A" stroke-width=".45" stroke-linecap="round" opacity=".55"/><ellipse cx="29.3" cy="12.07" rx="1.35" ry="1.55" fill="url(#jhbC)" stroke="#141C30" stroke-width=".6"/><path d="M9.3 6.23Q9.3 4.73 10.8 4.54Q15 4.06 19.2 4.54Q20.7 4.73 20.7 6.23L20.7 12.03Q20.7 13.53 19.2 13.34Q15 12.86 10.8 13.34Q9.3 13.53 9.3 12.03Z" fill="url(#jhbM)" stroke="#4A5462" stroke-width=".6" stroke-linejoin="round"/><path d="M10.15 6.36Q10.15 5.46 11.05 5.36Q15 4.94 18.95 5.36Q19.85 5.46 19.85 6.36L19.85 11.66Q19.85 12.56 18.95 12.46Q15 12.04 11.05 12.46Q10.15 12.56 10.15 11.66Z" fill="none" stroke="#fff" stroke-width=".4" opacity=".55"/><circle cx="10.85" cy="6.28" r=".5" fill="#7D8896"/><circle cx="10.71" cy="6.13" r=".18" fill="#fff" opacity=".8"/><circle cx="10.85" cy="12.03" r=".5" fill="#7D8896"/><circle cx="10.71" cy="11.88" r=".18" fill="#fff" opacity=".8"/><circle cx="19.15" cy="6.28" r=".5" fill="#7D8896"/><circle cx="19.01" cy="6.13" r=".18" fill="#fff" opacity=".8"/><circle cx="19.15" cy="12.03" r=".5" fill="#7D8896"/><circle cx="19.01" cy="11.88" r=".18" fill="#fff" opacity=".8"/><path d="M15 6.2L15.53 8.17L17.5 8.7L15.53 9.23L15 11.2L14.47 9.23L12.5 8.7L14.47 8.17Z" transform="translate(0 .35)" fill="none" stroke="#fff" stroke-width=".55" stroke-linejoin="round" opacity=".7"/><path d="M15 6.2L15.53 8.17L17.5 8.7L15.53 9.23L15 11.2L14.47 9.23L12.5 8.7L14.47 8.17Z" fill="none" stroke="#525C6A" stroke-width=".6" stroke-linejoin="round"/></svg>';
   function band(st){return st==='premium'?'<i class="jhb">'+WORN+'</i>':''}
   // Menu item icons (bookcase, open scroll, closed scroll set by David; the rest are PLACEHOLDERS to fine-tune)
@@ -42,7 +42,7 @@
   function ic(k){return '<i class="jic">'+MI[k]+'</i>'}
   // Wraps a label (+ optional <small>) so the icon sits in its own column
   function lb(k,t){return ic(k)+'<span class="jtx">'+t+'</span>'}
-  var LABEL={founding:'Founding member',premium:'Premium member',free:'Free member'};
+  var LABEL={founding:'Founding member',premium:'Jonin Club member',free:'Free member'};
   var CARET='<svg class="jcar" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function themeRow(){
@@ -90,7 +90,7 @@
         '<button type="button" class="jmi" role="menuitem" data-jmsg>'+lb('mail','Messages<b class="jmn"'+(UNREAD?'':' hidden')+'>'+UNREAD+'</b><small>Questions from Jonin about your notes</small>')+'</button>'+
         '<a class="jmi" role="menuitem" href="/missions/">'+lb('scrollClosed','Missions<small>Earn scrolls and rank up</small>')+'</a>'+
         '<a class="jmi" role="menuitem" href="/missions/#m-inv">'+lb('join','Invite friends<small>Earn scrolls for each friend who joins</small>')+'</a>'+
-        (st==='free'?'<a class="jmi jprem" role="menuitem" href="/premium/">'+lb('lock','Unlock Premium')+'</a>':'')+
+        (st==='free'?'<a class="jmi jprem" role="menuitem" href="/club/">'+lb('lock','Join Jonin Club')+'</a>':'')+
         fb+themeRow()+
         '<button type="button" class="jmi jout" role="menuitem" '+(s.home?'data-signout':'data-jsignout')+'>'+lb('door','Sign out')+'</button>'+
       '</div></div>';
@@ -126,11 +126,11 @@
   function rest(path,tok,body){
     return fetch(SUPA+path,{method:body?'POST':'GET',headers:{apikey:KEY,Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined}).then(function(r){if(!r.ok)throw r.status;return r.json()});
   }
-  // ---- Premium unlock on every page (2026-11-26) ----
-  // Members (founding or premium) never see Premium locks: the header Premium button loses its lock and reads
-  // "⭐ Founder" / "⭐ Premium", static card pages swap the blurred teaser for real price estimates and sold listings,
+  // ---- Jonin Club unlock on every page (2026-11-26) ----
+  // Members (founding or premium) never see Jonin Club locks: the header Jonin Club button loses its lock and reads
+  // "⭐ Founder" / "⭐ Jonin Club", static card pages swap the blurred teaser for real price estimates and sold listings,
   // and the "Every sale of this card" locks on list pages link to the card page instead. Signing out puts it back.
-  // PLACEHOLDER wording ("Founder", "Your Premium includes", "See sales →") for David to fine-tune.
+  // PLACEHOLDER wording ("Founder", "Your Jonin Club includes", "See sales →") for David to fine-tune.
   var EPN='mkevt=1&mkcid=1&mkrid=711-53200-19255-0&campid=5339262225&toolid=10001&customid=jonin-site';
   var PREM='';
   function money(v){v=+v;return '$'+(v>=100?Math.round(v).toLocaleString('en-US'):v.toFixed(2).replace(/\.00$/,''))}
@@ -140,8 +140,8 @@
     if(!on&&was&&document.querySelector('[data-unlocked]')){location.reload();return}
     document.documentElement.classList.toggle('jmem',on);
     each('.pn>.pnb',function(a){if(a.dataset.orig==null)a.dataset.orig=a.innerHTML;
-      a.innerHTML=on?'<span aria-hidden="true">⭐</span>'+(b==='founding'?'Founder':'Premium'):a.dataset.orig;a.classList.toggle('mem',on)});
-    each('.pdd h4',function(h){if(h.dataset.orig==null)h.dataset.orig=h.textContent;h.textContent=on?'Your Premium includes':h.dataset.orig});
+      a.innerHTML=on?'<span aria-hidden="true">⭐</span>'+(b==='founding'?'Founder':'Jonin Club'):a.dataset.orig;a.classList.toggle('mem',on)});
+    each('.pdd h4',function(h){if(h.dataset.orig==null)h.dataset.orig=h.textContent;h.textContent=on?'Your Jonin Club includes':h.dataset.orig});
     if(!on)return;
     each('a.pxlock',function(a){var row=a.closest('.mvrow'),art=row&&row.querySelector('.mvart');if(!art)return;
       a.href=art.getAttribute('href');a.innerHTML='<span>Every sale of this card, by edition, foil and grade</span><b>See sales →</b>';a.setAttribute('data-unlocked','')});
@@ -151,10 +151,10 @@
   function unlockCard(a){
     var m=/[?&]card=([^&]+)/.exec(a.getAttribute('href')||''),s=session();if(!m||!s)return;
     var id=decodeURIComponent(m[1]),tok=s.access_token,box=document.createElement('div');
-    box.className='pxreal';box.setAttribute('data-unlocked','');box.innerHTML='<p class="none">Loading Premium prices…</p>';
+    box.className='pxreal';box.setAttribute('data-unlocked','');box.innerHTML='<p class="none">Loading prices…</p>';
     a.replaceWith(box);
     var sec=box.closest('.px'),h=sec&&sec.querySelector('h3');
-    if(h)h.innerHTML='Price estimate<span>⭐ Premium · by version</span>';
+    if(h)h.innerHTML='Price estimate<span>⭐ Jonin Club · by version</span>';
     var band=sec&&sec.querySelector('.band');if(band)band.remove();
     Promise.all([
       rest('/rest/v1/price_estimates?card_id=eq.'+encodeURIComponent(id)+'&select=printing,edition,grader,grade,estimate,sales_count,last_sold_at,last_price',tok).catch(function(){return null}),

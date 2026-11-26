@@ -82,7 +82,7 @@ HEAD = '''<!DOCTYPE html>
 </head>
 <body>
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/lists/">Lists</a><a href="/news/">News</a><a href="/articles/">Articles</a><div class="pn"><a class="pnb" href="/premium/"><svg class="lk" viewBox="0 0 14 17" aria-hidden="true"><defs><linearGradient id="lkn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE99A"/><stop offset=".45" stop-color="#F2C14E"/><stop offset="1" stop-color="#B07A1C"/></linearGradient></defs><g class="lift"><path class="sh" d="M4 8.5V5.5a3 3 0 0 1 6 0v3" fill="none" stroke="#E0B045" stroke-width="2.1" stroke-linecap="round"/></g><g class="bd"><rect x="1" y="8" width="12" height="9" rx="2.2" fill="url(#lkn)" stroke="#8C5F14" stroke-width=".6"/><circle cx="7" cy="11.7" r="1.35" fill="#5C3D0A"/><rect x="6.4" y="12" width="1.2" height="2.6" rx=".55" fill="#5C3D0A"/></g></svg>Premium</a><div class="pdd"><div class="scr"><i class="rod"></i><div class="paper"><div class="in"><div class="pad"><h4>What Premium unlocks</h4><ul><li>Exact prices by edition, foil and grade</li><li>Every sold listing, linked to the sale</li><li>Price estimates and sort by market value</li><li>Alerts for the cards you&#39;re hunting</li><li>Buy and sell posts from the Naruto CCG marketplaces</li><li>Your collection value, a spreadsheet export and a Premium badge</li></ul><a class="go" href="/premium/">See Premium →</a></div></div></div><i class="rod"></i></div></div></div></nav>{igh}</div></header>
+<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/lists/">Lists</a><a href="/news/">News</a><a href="/articles/">Articles</a><div class="pn"><a class="pnb" href="/club/"><svg class="lk" viewBox="0 0 14 17" aria-hidden="true"><defs><linearGradient id="lkn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE99A"/><stop offset=".45" stop-color="#F2C14E"/><stop offset="1" stop-color="#B07A1C"/></linearGradient></defs><g class="lift"><path class="sh" d="M4 8.5V5.5a3 3 0 0 1 6 0v3" fill="none" stroke="#E0B045" stroke-width="2.1" stroke-linecap="round"/></g><g class="bd"><rect x="1" y="8" width="12" height="9" rx="2.2" fill="url(#lkn)" stroke="#8C5F14" stroke-width=".6"/><circle cx="7" cy="11.7" r="1.35" fill="#5C3D0A"/><rect x="6.4" y="12" width="1.2" height="2.6" rx=".55" fill="#5C3D0A"/></g></svg>Jonin Club</a><div class="pdd"><div class="scr"><i class="rod"></i><div class="paper"><div class="in"><div class="pad"><h4>What Jonin Club unlocks</h4><ul><li>Exact prices by edition, foil and grade</li><li>Every sold listing, linked to the sale</li><li>Price estimates and sort by market value</li><li>Alerts for the cards you&#39;re hunting</li><li>Buy and sell posts from the Naruto CCG marketplaces</li><li>Your collection value, a spreadsheet export and a Jonin Club badge</li></ul><a class="go" href="/club/">See Jonin Club →</a></div></div></div><i class="rod"></i></div></div></div></nav>{igh}</div></header>
 <main>
 '''
 FOOT = '''</main>
@@ -122,10 +122,10 @@ BANDS = ['Under $10', '$10–50', '$50–200', '$200+']   # replaced by cards.js
 
 def price_block(c):
     """Free "Market price": one price band for the whole card. Exact prices by edition, foil and grade,
-    and every sold listing, are Premium."""
+    and every sold listing, are Jonin Club only."""
     pb = c.get('pb')
-    lock = (f'<a class="pxt" href="/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}" '
-            'aria-label="See exact prices and sold listings with Premium">'
+    lock = (f'<a class="pxt" href="/club/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}" '
+            'aria-label="See exact prices and sold listings with Jonin Club">'
             '<div class="rows" aria-hidden="true"><div><span>1st Edition · Foil · PSA 9</span><b>$000.00</b></div><div><span>Unlimited · Raw · NM</span><b>$00.00</b></div><div><span>1st Edition · Raw · LP</span><b>$00.00</b></div></div><span class="cta"><span><svg class="lk" viewBox="0 0 14 17" aria-hidden="true"><defs><linearGradient id="lkt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE99A"/><stop offset=".45" stop-color="#F2C14E"/><stop offset="1" stop-color="#B07A1C"/></linearGradient></defs><g class="lift"><path class="sh" d="M4 8.5V5.5a3 3 0 0 1 6 0v3" fill="none" stroke="#E0B045" stroke-width="2.1" stroke-linecap="round"/></g><g class="bd"><rect x="1" y="8" width="12" height="9" rx="2.2" fill="url(#lkt)" stroke="#8C5F14" stroke-width=".6"/><circle cx="7" cy="11.7" r="1.35" fill="#5C3D0A"/><rect x="6.4" y="12" width="1.2" height="2.6" rx=".55" fill="#5C3D0A"/></g></svg>Exact prices &amp; sold listings</span><small>Every sale by edition, foil and grade</small></span>' '</a>')
     guide = '<p class="mt pgl"><a href="/price-guide/">Naruto CCG price guide →</a></p>'
     if pb is None or not 0 <= pb < len(BANDS):
@@ -349,7 +349,7 @@ def mv_page(ch, ranked, sets_by_id, mv_chars):
         price = c['top'][4] if len(c['top']) > 4 else None
         sale_url = c['top'][5] if len(c['top']) > 5 else ''
         img = mv_art(c, eager=i == 0)
-        lock = f'/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}'
+        lock = f'/club/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}'
         band = ('$' + f'{price:,.2f}'.removesuffix('.00')) if price else (e(BANDS[b]) if 0 <= b < len(BANDS) else '—')
         src = AB.sale_link(sale_url, c['top'][6] if len(c['top']) > 6 else '').removeprefix(' · ') if price else ''
         rows.append(
@@ -359,7 +359,7 @@ def mv_page(ch, ranked, sets_by_id, mv_chars):
             f'<dl><dt>Top sale</dt><dd><b class="band">{band}</b></dd><dt>Version</dt><dd>{e(ver) or "—"}</dd>'
             f'<dt>Sold</dt><dd>{e(sold_on) or "—"}{" · " + src if src else ""}</dd></dl>'
             f'{recent_html(c)}'
-            f'<a class="pxlock" href="{lock}"><span>🔒 Every sale of this card, by edition, foil and grade</span><b>Premium →</b></a></div></li>')
+            f'<a class="pxlock" href="{lock}"><span>🔒 Every sale of this card, by edition, foil and grade</span><b>Jonin Club →</b></a></div></li>')
     others = ''.join(f'<a class="chip" href="/character/{o["slug"]}/most-valuable/"><img src="/chars/{o["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(o["label"])}</a>'
                      for o in mv_chars if o is not ch)
     others_html = (f'<section class="others"><h2>Most valuable cards of other characters</h2><div class="chips">{others}</div></section>'
@@ -430,7 +430,7 @@ def mv_index(mv_chars, ranked, sets_by_id):
 
 def price_guide(cards, sets, sets_by_id, mv_chars):
     """/price-guide/: every card with a recorded sale, grouped by its free price band (highest band first).
-    Free-tier rules hold: only the band shows here; exact prices by edition, foil and grade stay Premium."""
+    Free-tier rules hold: only the band shows here; exact prices by edition, foil and grade stay Jonin Club only."""
     url = f'{SITE}/price-guide/'
     priced = [c for c in cards if c.get('pb') is not None and 0 <= c['pb'] < len(BANDS)]
     order = lambda c: (c['top'][0] if c.get('top') else 10 ** 6, RANK.get(c['r'], 9))
@@ -452,7 +452,7 @@ def price_guide(cards, sets, sets_by_id, mv_chars):
     body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/lists/">Lists</a> › Price guide</nav>
 <section class="sethead"><h1>Naruto CCG price guide</h1>
 <p class="lede">What original Bandai Naruto CCG cards (2006–2013) are worth, from real sold listings. Every sale is checked by hand before it counts. {n} cards have a recorded sale so far, and the guide updates on its own as new sales come in.</p>
-<p class="mt">Each card's price range is based on its highest recorded sale across every version. <a href="/premium/">Premium</a> shows exact prices by edition, foil and grade, with every sold listing.</p>
+<p class="mt">Each card's price range is based on its highest recorded sale across every version. <a href="/club/">Jonin Club</a> shows exact prices by edition, foil and grade, with every sold listing.</p>
 <div class="chips">{jump}</div></section>
 <section class="mvlistcard"><h2>What makes a Naruto CCG card valuable</h2>
 <p><b>Rarity.</b> Look for the dots after the copyright line: none is Common, one Uncommon, two Rare and three Super Rare. Super Rares and promos are the cards most collectors chase.</p>
@@ -647,7 +647,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="slab">eBay sold · slabs</a>
 <a href="{e(sold(card_q(c), 'raw'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="raw">eBay sold · raw</a>
 {psa}
-<a href="/premium/?card={quote(c['s'] + ':' + c['n'])}&amp;name={quote(c['name'])}" data-jt="alerts-click">🔔 Alerts for this card</a>
+<a href="/club/?card={quote(c['s'] + ':' + c['n'])}&amp;name={quote(c['name'])}" data-jt="alerts-click">🔔 Alerts for this card</a>
 </div>
 {nt_html}{newbie('card')}
 </div>

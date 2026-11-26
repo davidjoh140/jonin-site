@@ -1,5 +1,5 @@
-/* Premium header button (lock opens on hover, feature dropdown) and the blurred sold-listings teaser.
-   Shared by the homepage, every built page and /premium/. */
+/* Jonin Club header button (lock opens on hover, feature dropdown) and the blurred sold-listings teaser.
+   Shared by the homepage, every built page and /club/. */
 .pn{position:relative;display:inline-flex;align-items:center}
 .pn>.pnb{display:inline-flex;align-items:center;gap:6px;padding:3px 11px 3px 9px;border-radius:999px;border:1px solid color-mix(in srgb,var(--acc) 50%,transparent);background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc)!important;font-weight:600;text-decoration:none;transition:background .2s,border-color .2s}
 .pn>.pnb:hover,.pn:focus-within>.pnb{background:color-mix(in srgb,var(--acc) 22%,transparent);border-color:var(--acc)}
@@ -14,7 +14,7 @@
 .pn:hover .lk .bd,.pxt:hover .lk .bd{animation:lkclunk .42s ease-out .1s}
 @keyframes lkclunk{0%{transform:none}25%{transform:rotate(-7deg)}55%{transform:rotate(5deg)}80%{transform:rotate(-2deg)}100%{transform:none}}
 
-/* Dropdown: a plain card that fades in under the Premium button. Kept simple on purpose (David: KISS). */
+/* Dropdown: a plain card that fades in under the Jonin Club button. Kept simple on purpose (David: KISS). */
 .pdd{position:absolute;right:-14px;top:100%;padding-top:8px;width:304px;white-space:normal;z-index:40;visibility:hidden;opacity:0;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility 0s .15s}
 .rod{display:none}
 .pad{padding:14px 18px 14px;text-align:left;background:#F5EAD0;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
@@ -29,7 +29,7 @@
 }
 @media (prefers-reduced-motion:reduce){.pdd,.lk *{transition:none!important;animation:none!important}}
 
-/* Blurred sold listings: free visitors see the shape of what Premium shows, not the data. */
+/* Blurred sold listings: free visitors see the shape of what Jonin Club shows, not the data. */
 .pxt{position:relative;display:block;border-radius:9px;border:1px solid var(--line);overflow:hidden;text-decoration:none;color:var(--ink)}
 .pxt .rows{padding:6px 12px;filter:blur(4.5px);opacity:.75;user-select:none;pointer-events:none;transition:filter .25s,opacity .25s}
 .pxt .rows div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font:400 13px Inter,sans-serif}
@@ -138,6 +138,6 @@ header .hw>.sell:hover{background:var(--red2,#8E0E15);border-color:var(--red2,#8
 .jmi:has(>.jic){display:flex;align-items:center;gap:11px}.jic{flex:none;width:24px;height:24px;display:grid;place-items:center;font-style:normal}.jic svg{width:22px;height:22px;display:block;overflow:visible}.jmi .jtx{min-width:0;flex:1}
 .jav:has(.jhb){margin-right:7px}
 
-/* Members: Premium unlocked (acct.js premUI) */
+/* Members: Jonin Club unlocked (acct.js premUI) */
 .pn>.pnb.mem span{font-size:12px}
 .pxreal{display:grid;gap:6px}.pxreal table{width:100%;border-collapse:collapse;font-size:13px}.pxreal td{padding:5px 0;border-top:1px solid var(--line)}.pxreal td:last-child{text-align:right;font-weight:600;white-space:nowrap}.pxreal td small{color:var(--mute);font-weight:400;margin-left:6px}.pxreal tr.sl td{border-top:0;padding:0 0 7px;text-align:left;font-weight:400;white-space:normal}.pxreal .sl a{display:inline-block;margin:2px 6px 0 0;padding:2px 7px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font-size:12px}.pxreal .sl a:hover{border-color:var(--acc);color:var(--acc)}.pxreal .none{margin:0;color:var(--mute);font-size:13px}

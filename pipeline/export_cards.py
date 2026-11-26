@@ -169,7 +169,7 @@ def _fetch_photo(url, dest, max_side=1000):
 
 def reveal_top_prices(data, sales, fetch=None):
     """Most-valuable pages show the exact top sale (David's call, 2026-11-25). Only the cards that make a
-    character's top list get [price, ebay_url] appended to "top"; every other card's prices stay Premium."""
+    character's top list get [price, ebay_url] appended to "top"; every other card's prices stay Jonin Club only."""
     import build_pages as bp
     from settings import MOST_VALUABLE_CHARACTERS, MOST_VALUABLE_RECENT_SALES
     best = best_sales(sales)
@@ -179,7 +179,7 @@ def reveal_top_prices(data, sales, fetch=None):
             continue
         cs = bp.char_cards(ch, data["cards"])
         if not bp.mv_live(cs):
-            continue   # list isn't live yet, so its top prices stay Premium
+            continue   # list isn't live yet, so its top prices stay Jonin Club
         for c in bp.most_valuable(cs):
             x = best.get(c["s"] + ":" + c["n"])
             if x and len(c["top"]) == 4:
@@ -249,7 +249,7 @@ def write_article_sales(sales):
 
 def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None, ranges=(), sales=()):
     """Pure transform: Supabase rows -> the cards.json object (same key order as before).
-    A card with recorded sales gets "pb": its free price band (see price_band); exact prices are Premium.
+    A card with recorded sales gets "pb": its free price band (see price_band); exact prices are Jonin Club only.
     "top": [rank, band, version, date] of its highest sale, for the most-valuable pages (see top_sales)."""
     best = {}
     for sc in scans:
@@ -288,7 +288,7 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
             u = best[c["id"]][1]["image_url"]
             o["img"] = url_for(u[len("storage:scans/"):]) if u.startswith("storage:scans/") else u
         if c["id"] in px:
-            o["pb"] = price_band(px[c["id"]])   # free price band only; exact prices stay in Supabase (Premium)
+            o["pb"] = price_band(px[c["id"]])   # free price band only; exact prices stay in Supabase (Jonin Club)
         if c["id"] in tops:
             o["top"] = tops[c["id"]]
         out_cards.append(o)

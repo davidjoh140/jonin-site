@@ -1,0 +1,3 @@
+/premium /club/ 301
+/premium/ /club/ 301
+/premium/* /club/:splat 301

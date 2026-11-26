@@ -127,7 +127,7 @@ def card_block(c, s, sale=None):
             f'<h3><a href="/card/{card}/">{e(c["name"])}</a></h3>'
             f'<p class="mt"><span class="stag">{B.sym_img(s)}{e(s["name"])}</span> · {e(c["n"])} · {e(c["r"])}</p>{sale}'
             f'<p class="btns"><a class="ghostbtn" href="/card/{card}/">Card page</a>'
-            f'<a class="ghostbtn" href="/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}">🔔 Alerts</a></p>'
+            f'<a class="ghostbtn" href="/club/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}">🔔 Alerts</a></p>'
             f'</figcaption></figure>')
 
 
