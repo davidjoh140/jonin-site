@@ -1,82 +1,82 @@
 {
  "gaara-of-the-desert-possessed-mode-n-179-psa-6-314.jpg": {
-  "note": "edge20 ratio 0.61 area 0.70 skew 4.3; cert/barcode position not certain, needs a look",
-  "status": "check"
+  "note": "mask8 ratio 0.63 area 0.76 skew 3.0",
+  "status": "ok"
  },
  "itachi-uchiha-n-203-psa-9-171.jpg": {
-  "note": "skewed photo (5 degrees off straight-on)",
+  "note": "skewed photo (6 degrees off straight-on)",
   "status": "noslab"
  },
  "itachi-uchiha-n-us-037-bgs-9-5-172.jpg": {
-  "note": "edge20 ratio 0.64 area 0.94 skew 4.1; cert/barcode position not certain, needs a look",
-  "status": "check"
+  "note": "mask8 ratio 0.64 area 0.52 skew 2.3",
+  "status": "ok"
  },
  "itachi-uchiha-n-us-061-psa-10-641.jpg": {
   "note": "whole photo ratio 0.57",
   "status": "ok"
  },
  "itachi-uchiha-pr-073-psa-10-173.jpg": {
-  "note": "skewed photo (9 degrees off straight-on)",
+  "note": "skewed photo (11 degrees off straight-on)",
   "status": "noslab"
  },
  "itachi-uchiha-pr058-psa-10-138.jpg": {
-  "note": "mask8 ratio 0.61 area 0.51 skew 3.0",
+  "note": "mask8 ratio 0.63 area 0.53 skew 2.2",
   "status": "ok"
  },
  "jiraiya-n-101-psa-8-289.jpg": {
-  "note": "edge20 ratio 0.60 area 0.98 skew 0.8",
+  "note": "edge20 ratio 0.60 area 0.98 skew 1.3",
   "status": "ok"
  },
  "jiraiya-pr059-psa-10-212.jpg": {
-  "note": "edge40 ratio 0.58 area 0.40 skew 1.4",
+  "note": "mask8 ratio 0.58 area 0.40 skew 1.3",
   "status": "ok"
  },
  "jiraiya-sage-mode-n-1067-psa-10-205.jpg": {
-  "note": "edge40 ratio 0.59 area 0.97 skew 2.0",
+  "note": "edge20 ratio 0.59 area 0.98 skew 0.9",
   "status": "ok"
  },
  "kakashi-hatake-itachi-uchiha-pr-063-psa-10-174.jpg": {
-  "note": "edge40 ratio 0.63 area 0.98 skew 0.6",
+  "note": "edge40 ratio 0.62 area 0.98 skew 1.0",
   "status": "ok"
  },
  "kakashi-hatake-pr-071-psa-10-198.jpg": {
-  "note": "edge20 ratio 0.62 area 0.82 skew 0.1; cert/barcode position not certain, needs a look",
-  "status": "check"
+  "note": "edge20 ratio 0.62 area 0.82 skew 0.0",
+  "status": "ok"
  },
  "kakashi-hatake-ps004-bgs-9-274.jpg": {
-  "note": "edge20 ratio 0.64 area 0.98 skew 0.3",
+  "note": "edge20 ratio 0.65 area 0.98 skew 0.6",
   "status": "ok"
  },
  "kakashi-hatake-the-fourth-hokage-n-1060-psa-10-196.jpg": {
-  "note": "edge20 ratio 0.59 area 0.97 skew 0.9",
+  "note": "edge20 ratio 0.59 area 0.97 skew 1.7",
   "status": "ok"
  },
  "kisame-hoshigaki-n-1603-bgs-9-5-508.jpg": {
-  "note": "skewed photo (31 degrees off straight-on)",
+  "note": "no clean slab crop (no label found on top)",
   "status": "noslab"
  },
  "might-guy-kakashi-hatake-n-1525-psa-10-202.jpg": {
-  "note": "edge20 ratio 0.60 area 0.98 skew 1.0",
+  "note": "edge40 ratio 0.59 area 0.96 skew 1.2",
   "status": "ok"
  },
  "naruto-uzumaki-9-tails-cloak-n-1646-psa-10-131.jpg": {
-  "note": "edge80 ratio 0.59 area 0.97 skew 2.0",
+  "note": "edge20 ratio 0.59 area 0.97 skew 1.3",
   "status": "ok"
  },
  "naruto-uzumaki-n-001-psa-9-161.jpg": {
-  "note": "edge20 ratio 0.59 area 0.87 skew 0.8",
+  "note": "edge20 ratio 0.59 area 0.87 skew 0.7",
   "status": "ok"
  },
  "naruto-uzumaki-n-1340-psa-10-137.jpg": {
-  "note": "whole photo ratio 0.59",
+  "note": "edge20 ratio 0.59 area 0.98 skew 0.7",
   "status": "ok"
  },
  "naruto-uzumaki-sage-mode-n-1395-psa-10-639.jpg": {
-  "note": "edge20 ratio 0.57 area 0.95 skew 2.8",
+  "note": "edge20 ratio 0.60 area 0.56 skew 4.0",
   "status": "ok"
  },
  "naruto-uzumaki-sasuke-uchiha-n-us-066-psa-10-158.jpg": {
-  "note": "edge20 ratio 0.59 area 0.96 skew 1.9",
+  "note": "edge20 ratio 0.58 area 0.95 skew 1.2",
   "status": "ok"
  },
  "naruto-uzumaki-tailed-beast-form-n-1184-psa-10-167.jpg": {
@@ -88,79 +88,79 @@
   "status": "noslab"
  },
  "pain-deva-path-itachi-uchiha-n-1096-psa-10-170.jpg": {
-  "note": "edge20 ratio 0.60 area 0.76 skew 3.5; cert/barcode position not certain, needs a look",
-  "status": "check"
+  "note": "rejected by eye: shop background inside the crop",
+  "status": "noslab"
  },
  "pain-deva-path-itachi-uchiha-n-1096-psa-10-275.jpg": {
   "note": "edge80 ratio 0.59 area 0.96 skew 2.2",
   "status": "ok"
  },
  "pain-deva-path-itachi-uchiha-n-1096-psa-10-276.jpg": {
-  "note": "whole photo ratio 0.60",
-  "status": "ok"
+  "note": "skewed photo (5 degrees off straight-on)",
+  "status": "noslab"
  },
  "pain-deva-path-n-1422-bgs-8-5-329.jpg": {
   "note": "mask8 ratio 0.63 area 0.41 skew 1.7",
   "status": "ok"
  },
  "pain-deva-path-n-1619-psa-9-317.jpg": {
-  "note": "edge20 ratio 0.59 area 0.96 skew 0.6",
+  "note": "edge20 ratio 0.59 area 0.95 skew 1.1",
   "status": "ok"
  },
  "sai-n-1115-psa-10-160.jpg": {
-  "note": "whole photo ratio 0.64",
-  "status": "ok"
+  "note": "skewed photo (34 degrees off straight-on)",
+  "status": "noslab"
  },
  "sakura-haruno-n-1655-psa-10-217.jpg": {
-  "note": "edge20 ratio 0.58 area 0.94 skew 3.7",
+  "note": "edge20 ratio 0.58 area 0.94 skew 3.3",
   "status": "ok"
  },
  "sakura-haruno-n-c-003-psa-8-218.jpg": {
-  "note": "edge20 ratio 0.60 area 0.98 skew 1.0",
-  "status": "ok"
- },
- "sakura-haruno-pr057-psa-10-220.jpg": {
-  "note": "edge40 ratio 0.58 area 0.98 skew 0.9",
-  "status": "ok"
- },
- "sasori-n-542-psa-9-531.jpg": {
-  "note": "edge40 ratio 0.60 area 0.97 skew 1.8",
-  "status": "ok"
- },
- "sasori-pr-069-bgs-9-306.jpg": {
-  "note": "edge20 ratio 0.65 area 0.54 skew 4.2",
-  "status": "ok"
- },
- "sasuke-uchiha-n-1129-psa-10-135.jpg": {
-  "note": "edge20 ratio 0.62 area 0.92 skew 3.2; cert/barcode position not certain, needs a look",
-  "status": "check"
- },
- "sasuke-uchiha-n-1250-psa-10-184.jpg": {
-  "note": "edge20 ratio 0.59 area 0.98 skew 0.8",
-  "status": "ok"
- },
- "sasuke-uchiha-pr088-psa-10-182.jpg": {
-  "note": "edge20 ratio 0.59 area 0.98 skew 0.7",
-  "status": "ok"
- },
- "susanoo-sasuke-n-1537-psa-10-130.jpg": {
-  "note": "whole photo ratio 0.56",
-  "status": "ok"
- },
- "susanoo-sasuke-n-1537-psa-10-258.jpg": {
-  "note": "edge40 ratio 0.59 area 0.96 skew 3.1",
-  "status": "ok"
- },
- "the-4th-hokage-n-1590-psa-10-291.jpg": {
   "note": "edge20 ratio 0.60 area 0.98 skew 0.7",
   "status": "ok"
  },
+ "sakura-haruno-pr057-psa-10-220.jpg": {
+  "note": "edge40 ratio 0.58 area 0.98 skew 1.5",
+  "status": "ok"
+ },
+ "sasori-n-542-psa-9-531.jpg": {
+  "note": "edge20 ratio 0.59 area 0.97 skew 1.6",
+  "status": "ok"
+ },
+ "sasori-pr-069-bgs-9-306.jpg": {
+  "note": "edge40 ratio 0.65 area 0.53 skew 4.2",
+  "status": "ok"
+ },
+ "sasuke-uchiha-n-1129-psa-10-135.jpg": {
+  "note": "no clean slab crop (no label found on top)",
+  "status": "noslab"
+ },
+ "sasuke-uchiha-n-1250-psa-10-184.jpg": {
+  "note": "edge20 ratio 0.59 area 0.97 skew 1.6",
+  "status": "ok"
+ },
+ "sasuke-uchiha-pr088-psa-10-182.jpg": {
+  "note": "edge20 ratio 0.59 area 0.97 skew 1.1",
+  "status": "ok"
+ },
+ "susanoo-sasuke-n-1537-psa-10-130.jpg": {
+  "note": "edge40 ratio 0.57 area 0.98 skew 1.1",
+  "status": "ok"
+ },
+ "susanoo-sasuke-n-1537-psa-10-258.jpg": {
+  "note": "edge40 ratio 0.59 area 0.96 skew 1.3",
+  "status": "ok"
+ },
+ "the-4th-hokage-n-1590-psa-10-291.jpg": {
+  "note": "edge20 ratio 0.59 area 0.97 skew 1.3",
+  "status": "ok"
+ },
  "the-fourth-hokage-gamabunta-n-391-psa-9-292.jpg": {
-  "note": "skewed photo (17 degrees off straight-on)",
+  "note": "skewed photo (16 degrees off straight-on)",
   "status": "noslab"
  },
  "the-fourth-hokage-jiraiya-pr-065-psa-10-147.jpg": {
-  "note": "edge20 ratio 0.59 area 0.98 skew 0.7",
+  "note": "edge20 ratio 0.59 area 0.97 skew 1.4",
   "status": "ok"
  }
 }

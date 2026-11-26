@@ -2,10 +2,10 @@
 uniform and clean"). Every sold-slab photo in public/img/sales is turned, once, into a straight-on tile:
   1. find the whole slab (edge maps + background-removal mask; largest quad with a slab's shape),
   2. warp it flat to a fixed slab shape, centred on one dark canvas (same size for every photo),
-  3. blur the cert number (and the PSA barcode, which encodes it).
+  3. only if BLUR_CERTS: blur the cert number (and the PSA barcode). Off: these are public sales (David, 2026-11-26).
 The eBay original is kept in pipeline/sale_photos_raw/. Results go to pipeline/slab_tiles.json:
-  ok      tile made, cert found and blurred
-  check   tile made, but we couldn't place the cert for sure: David looks first. Until he sets it to "ok"
+  ok      tile made (and, with BLUR_CERTS, cert found and blurred)
+  check   only with BLUR_CERTS: tile made, but we couldn't place the cert for sure: David looks first. Until he sets it to "ok"
           the lists show the card scan (PLACEHOLDER rule, 2026-11-26)
   noslab  no clean slab crop, or the photo is skewed: the lists show the card scan instead of this photo (build_pages.sale_photo)
 Usage: python slab_tiles.py            process new slab photos
@@ -24,6 +24,7 @@ CANVAS_W, CANVAS_H = 600, 1000          # matches the 3:5 frame the pages alread
 SLAB_W, SLAB_H = 560, 952               # PSA/BGS/CGC slabs are ~3.1 x 5.3 in (0.59)
 BG = (20, 17, 17)                       # BGR, near-black like the list background (#0b0b0d-ish)
 SLAB_RATIO = (0.54, 0.66)               # width/height range accepted as "a slab"
+BLUR_CERTS = False                      # David, 2026-11-26: these are public sales, no need to blur the cert
 MAX_SKEW_DEG = 5.0                      # PLACEHOLDER: photos shot at an angle are not used (David, 2026-11-26:
                                         # "if it's skewed don't use it"); corner angles or tilt beyond this = skewed
 SLAB_FILE = re.compile(r"-(psa|bgs|cgc|sgc|tag)-[0-9-]+\.jpg$")
@@ -250,9 +251,11 @@ def process(name, man):
     if tile is None:
         man[name] = {"status": "noslab", "note": note}
         return
-    read = blur_cert(tile)
-    if read and "-psa-" in name and _psa_label(tile[:300]) is None:
-        read = False   # PSA slab but its label is too pale to outline, so its barcode may still show
+    read = True
+    if BLUR_CERTS:
+        read = blur_cert(tile)
+        if read and "-psa-" in name and _psa_label(tile[:300]) is None:
+            read = False   # PSA slab but its label is too pale to outline, so its barcode may still show
     cv2.imwrite(str(src), tile, [cv2.IMWRITE_JPEG_QUALITY, 88, cv2.IMWRITE_JPEG_PROGRESSIVE, 1])
     man[name] = {"status": "ok" if read else "check", "note": note + ("" if read else "; cert/barcode position not certain, needs a look")}
 
