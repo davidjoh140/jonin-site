@@ -55,7 +55,7 @@ def card_q(c):
 
 IG_URL = 'https://www.instagram.com/jonin.cards/'
 IG_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg>'
-IG_HEADER = '<a class="igf" href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener" aria-label="Follow Jonin on Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg><span>Follow<span class="h"> @jonin.cards</span></span></a>'
+IG_HEADER = '<a class="igf" href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener" aria-label="Follow Jonin on Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg><span>Follow<span class="h"> @jonin.cards</span></span></a><a class="sell" href="https://sell.jonin.cards">Sell to Jonin</a><span class="acct" id="acct" data-auto></span><script src="/acct.js?v=1"></script>'
 IG_FOOT = '<div class="igrow"><a class="igbtn" href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg><span>Follow <b class="h">@jonin.cards</b></span></a><span>New finds, top sales and set spotlights on Instagram.</span></div>'
 
 IG_END = ('<div class="igend"><p>Get Naruto CCG news and top sales in your feed.</p>'
@@ -77,7 +77,7 @@ HEAD = '''<!DOCTYPE html>
 <meta name="twitter:card" content="{tw}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/pages.css?v={cssv}"><link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v={premv}"><script src="/theme.js?v=3"></script>
+<link rel="stylesheet" href="/pages.css?v={cssv}"><link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v={premv}"><script src="/theme.js?v=4"></script>
 {ld}
 </head>
 <body>

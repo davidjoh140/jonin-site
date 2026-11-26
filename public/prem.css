@@ -66,3 +66,66 @@ header nav{gap:16px;white-space:nowrap}header nav>a,header nav>.pn{flex:none}
 @media (min-width:1025px){header .hw{flex-wrap:nowrap}}
 @media (max-width:1180px){header nav{gap:13px;font-size:14.5px}header .hw{gap:14px}}
 @media (max-width:1024px){header nav{max-width:100%;overflow-x:auto;scrollbar-width:none}header nav::-webkit-scrollbar{display:none}}
+
+/* Header (2026-11-26): Instagram icon · Sell to Jonin · profile button, profile always far right */
+header .igf{box-sizing:border-box;width:36px;height:36px;padding:0!important;justify-content:center;gap:0;margin-left:auto!important;background:var(--panel);border-color:var(--edge)}
+header .igf>span{display:none}
+header .igf:hover{border-color:var(--acc)}
+header .hw>.sell{margin-left:0!important}
+header .acct{display:flex;align-items:center;margin:0!important}
+.jac{position:relative;flex:none}
+.jab{box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 11px 0 4px;border-radius:999px;background:var(--panel);border:1px solid var(--edge);color:var(--ink)!important;text-decoration:none!important;font:600 14px Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:border-color .15s,background-color .15s}
+.jab.jsu{height:36px;padding:0 12px 0 16px;background:color-mix(in srgb,var(--acc) 14%,transparent);border-color:color-mix(in srgb,var(--acc) 55%,transparent)}
+.jac:hover .jab,.jac:focus-within .jab,.jac.open .jab{border-color:var(--acc)}
+.jav{position:relative;width:30px;height:30px;flex:none;display:block}
+.jav img,.jini{box-sizing:border-box;width:100%;height:100%;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:var(--deep);border:1.5px solid var(--edge);font:800 15px 'Baloo 2',sans-serif;color:var(--acc)}
+.st-founding .jav img,.st-founding .jav .jini,.st-premium .jav img,.st-premium .jav .jini{border-color:#F2C14E}
+.jbg{position:absolute;right:-6px;top:-7px;width:17px;height:15px;transform:rotate(16deg);filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.6))}
+.st-free .jbg{top:auto;bottom:-4px;right:-5px;width:14px;height:14px;transform:none}
+.jbg svg,.jst svg{display:block;width:100%;height:100%}
+.jat{display:flex;flex-direction:column;line-height:1.12;max-width:130px;min-width:0}
+.jat b{font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.jat small{font:700 10.5px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--acc)}
+.jcar{width:10px;height:6px;flex:none;color:var(--mute);transition:transform .2s}
+.jac:hover .jcar,.jac:focus-within .jcar,.jac.open .jcar{transform:rotate(180deg)}
+.jam{position:absolute;right:0;top:calc(100% + 8px);z-index:40;box-sizing:border-box;width:290px;max-width:calc(100vw - 24px);padding:8px;background:var(--panel);border:1px solid var(--edge);border-radius:14px;box-shadow:0 18px 44px rgba(0,0,0,.55);text-align:left;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s}
+.jam::before{content:"";position:absolute;left:0;right:0;top:-10px;height:10px}
+@media (hover:hover){.jac:hover .jam{opacity:1;visibility:visible;transform:none}}
+.jac:focus-within .jam,.jac.open .jam{opacity:1;visibility:visible;transform:none}
+.jah{display:flex;align-items:center;gap:12px;padding:6px 8px 10px}
+.jav.big{width:48px;height:48px}
+.jah b{display:block;font:700 16px Inter,sans-serif;color:var(--ink);overflow-wrap:anywhere}
+.jst{display:inline-flex;align-items:center;gap:6px;margin-top:3px;font:600 12.5px Inter,sans-serif;color:var(--mute)}
+.jst svg{width:16px;height:14px}
+.jst.st-founding,.jst.st-premium{color:#F2C14E}
+.jrk{margin:0 2px 6px;padding:10px 11px;border-radius:10px;background:var(--deep);border:1px solid var(--line);font:500 13px Inter,sans-serif;color:var(--mute)}
+.jrk b{color:var(--acc);font-weight:700}
+.jpt{float:right}
+.jbar{display:block;height:5px;margin:8px 0 6px;border-radius:3px;background:var(--line);overflow:hidden}
+.jbar i{display:block;height:100%;border-radius:3px;background:var(--acc)}
+.jrk small{font-size:11.5px}
+.jmi{all:unset;box-sizing:border-box;display:block;width:100%;padding:9px 10px;border-radius:9px;cursor:pointer;font:500 14px Inter,sans-serif;color:var(--ink)!important;text-decoration:none!important}
+.jmi small{display:block;margin-top:1px;font-size:11.5px;font-weight:400;color:var(--mute)}
+.jmi:hover,.jmi:focus-visible{background:color-mix(in srgb,var(--acc) 13%,transparent)}
+.jmi.jgo{color:var(--acc)!important;font-weight:700}
+.jmi.jprem{color:#F2C14E!important;font-weight:600}
+.jmi.jout{margin-top:4px;border-top:1px solid var(--line);border-radius:0 0 9px 9px;color:var(--mute)!important}
+.jth{display:flex;flex-direction:column;gap:7px;margin-top:4px;padding:9px 10px 6px;border-top:1px solid var(--line);font:500 12px Inter,sans-serif;color:var(--mute)}
+.jsw{display:flex;flex-wrap:wrap;gap:6px}
+.jsw button{all:unset;box-sizing:border-box;width:22px;height:22px;border-radius:50%;cursor:pointer;background:linear-gradient(135deg,var(--b) 0 50%,var(--c) 50% 100%);border:2px solid var(--a);box-shadow:0 0 0 1px var(--edge)}
+.jsw button:hover{box-shadow:0 0 0 1px var(--mute)}
+.jsw button[aria-checked=true]{box-shadow:0 0 0 2px var(--ink)}
+.jmp{padding:6px 10px 8px;font:400 12.5px/1.4 Inter,sans-serif;color:var(--mute)}
+.jmp b{display:block;margin-bottom:2px;font-size:14px;color:var(--ink)}
+@media (max-width:600px){
+  .jat,.jx{display:none}
+  .jab{padding:0 8px 0 3px;gap:6px}
+  .jab.jsu{padding:0 10px 0 13px}
+  header .hw>.sell{padding:0 13px!important}
+  .jsu .jcar{display:none}
+  header .hw{column-gap:7px!important}
+}
+@media (max-width:380px){header .hw>.sell{padding:0 10px!important;font-size:13px}header .igf{width:34px;height:34px}.jab.jsu{padding:0 11px}}
+header .hw>.sell{display:inline-flex;align-items:center;box-sizing:border-box;height:36px;padding:0 16px;border-radius:999px;border:1px solid var(--red);background:var(--red);color:var(--ont,#fff)!important;text-decoration:none!important;font:700 14px Inter,sans-serif;white-space:nowrap;flex:none}
+header .hw>.sell:hover{background:var(--red2,#8E0E15);border-color:var(--red2,#8E0E15)}
+@media (max-width:600px){header nav{order:9;flex-basis:100%}}

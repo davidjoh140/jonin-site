@@ -26,7 +26,7 @@
   function st(t){return '--a:'+t.bg+';--b:'+t.a+';--c:'+t.c+";--f:url('"+t.f+"')"}
   function sw(t){return 'style="'+st(t)+'"'}
   function build(){
-    var hw=document.querySelector('header .hw');if(!hw||hw.querySelector('.tp'))return;
+    var hw=document.querySelector('header .hw');if(!hw||hw.querySelector('.tp')||hw.querySelector('#acct'))return; // pages with the profile button keep the theme in its menu
     var cur=find(get());
     var w=document.createElement('div');w.className='tp';
     w.innerHTML='<button type="button" class="tpb" aria-haspopup="menu" aria-expanded="false" aria-label="Theme: '+cur.n+'" title="Change theme"><span class="tsw" '+sw(cur)+'></span><span class="tpn">'+cur.n+'</span></button>'+
