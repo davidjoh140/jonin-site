@@ -577,17 +577,12 @@ function marks(c){if(!ME&&!COLL.size&&!SLABS.length)return '<span class="mk"></s
 function refreshMarks(){if(VIEW==='sets'&&D)renderSets();document.querySelectorAll('.card[data-i]').forEach(b=>{const c=list[+b.dataset.i];const m=b.querySelector('.mk');if(c&&m)m.outerHTML=marks(c)})}
 function sbc(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPA,SUPA_KEY);return sb}
 async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;
-<<<<<<< Updated upstream
   if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));loadFbPts();
-    if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest)}else gLoad();
-=======
-  if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));
     if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest);
     // Theme follows the account across devices.
     if(MYP&&MYP.theme&&window.joninSetTheme){let cur='';try{cur=localStorage.getItem('jtheme')||''}catch(_){}if(cur!==MYP.theme)joninSetTheme(MYP.theme)}
     // One-time setup page after sign-up (favorite characters, a few questions, theme). Finishing or skipping sets setup_done_at.
     if(MYP&&!MYP.setup_done_at){try{sessionStorage.setItem('jret',location.pathname+location.hash)}catch(_){}location.href='/welcome/';return}}else gLoad();
->>>>>>> Stashed changes
   EST=null;if(MEMBER)await loadEstimates();if(VIEW==='cards'&&D&&D.byId)renderCards(true);
   if(sel>=0&&list[sel]){const px=$('#panel .px');if(px)px.outerHTML=priceBlock(list[sel]);loadExact(list[sel])}
   paintAcct();favFirst();refreshMarks();if(sel>=0&&list[sel])renderMyColl(list[sel]);if(VIEW==='mine'){if(ME||gCount())renderMine();else{history.replaceState(null,'',location.pathname);view('cards')}}}
