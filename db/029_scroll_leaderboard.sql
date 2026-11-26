@@ -1,7 +1,7 @@
 -- Applied to Supabase on 2026-11-26 (migration scroll_leaderboard). Kept here as the record. /leaderboard/ reads this.
--- David (2026-11-26): only members who turned on sharing appear (sharing is off by default).
--- Scrolls leaderboard. PLACEHOLDERS, David to set: top 25; only members with at least 1 scroll; admin accounts
--- left off; ties share a place (the earlier member is listed first).
+-- David (2026-11-26): only members who turned on sharing appear (sharing is off by default). Admin accounts included
+-- (David, 2026-11-26; migration scroll_leaderboard_include_admins).
+-- Scrolls leaderboard. PLACEHOLDERS, David to set: top 25; only members with at least 1 scroll; ties share a place (the earlier member is listed first).
 -- Shows name, picture, status badge, rank and scrolls only. Nothing from collections or slabs.
 -- me_hidden: true when the signed-in member isn't sharing, so the page can tell them how to appear.
 create or replace function public.scroll_leaderboard(p_limit int default 25) returns jsonb
@@ -14,7 +14,7 @@ language sql stable security definer set search_path = public as $$
     from public.profiles p
     left join public.memberships m on m.user_id = p.id
     cross join lateral (select public.user_xp(p.id) x) xx
-    where p.sharing and not exists (select 1 from public.admins a where a.user_id = p.id)
+    where p.sharing
   ),
   r as (select s.*, rank() over (order by xp desc) pos, row_number() over (order by xp desc, created_at) ord from s where xp > 0)
   select jsonb_build_object(
