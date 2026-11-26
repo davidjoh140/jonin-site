@@ -1,6 +1,6 @@
 /* jonin.cards header profile button (every page).
-   Signed in: avatar + status symbol (crown = founding, gem = premium, leaf = free) + username + XP rank,
-   with a hover menu (rank/XP, My collection, Missions, Premium, Send feedback, Theme, Sign out).
+   Signed in: avatar + status symbol (crown = founding, gem = premium, leaf = free) + username + rank (from scrolls),
+   with a hover menu (rank/scrolls, My collection, Missions, Premium, Send feedback, Theme, Sign out).
    Signed out: one "Sign up" button whose hover menu holds Sign in, the guest collection and Theme.
    The homepage renders it through JoninAcct.html(state); other pages mark <span id="acct" data-auto> and this file fills it in,
    reading the signed-in session the homepage's Supabase client saved in localStorage (no Supabase library needed here). */
@@ -38,13 +38,13 @@
     var up=s.home?'<button type="button" class="jab jsu" data-auth="up"':'<a class="jab jsu" href="/#signup"';
     var upEnd=s.home?'</button>':'</a>';
     var inB=s.home?'<button type="button" class="jmi" role="menuitem" data-auth="in">Sign in</button>':'<a class="jmi" role="menuitem" href="/#signin">Sign in</a>';
-    var fb='<button type="button" class="jmi" role="menuitem" data-fb data-fbname="Header profile menu">Send feedback<small>Notes we use earn XP</small></button>';
+    var fb='<button type="button" class="jmi" role="menuitem" data-fb data-fbname="Header profile menu">Send feedback<small>Notes we use earn scrolls</small></button>';
     if(!s.user){
       return '<div class="jac">'+up+' aria-haspopup="menu">'+'<span>'+(s.guest?'Sign up<span class="jx"> to save</span>':'Sign up')+'</span>'+CARET+upEnd+
         '<div class="jam" role="menu"><div class="jmp"><b>Free account</b><span>Save your collection and vote for the coolest cards. The first 20 members get Premium free, forever.</span></div>'+
         (s.home?'<button type="button" class="jmi jgo" role="menuitem" data-auth="up">Create free account</button>':'<a class="jmi jgo" role="menuitem" href="/#signup">Create free account</a>')+
         inB+(s.guest?'<a class="jmi" role="menuitem" '+mine+'>My collection<small>'+s.guest+' card'+(s.guest===1?'':'s')+' saved on this device only</small></a>':'')+
-        '<a class="jmi" role="menuitem" href="/missions/">Missions<small>Earn XP and rank up</small></a>'+fb+themeRow()+'</div></div>';
+        '<a class="jmi" role="menuitem" href="/missions/">Missions<small>Earn scrolls and rank up</small></a>'+fb+themeRow()+'</div></div>';
     }
     var st=s.badge==='founding'?'founding':s.badge==='premium'?'premium':'free';
     var p=s.pts,rank=p&&p.rank?p.rank:'',pts=p?(p.xp!=null?p.xp:(p.points||0)):0,lo=p&&p.prev_at||0;
@@ -56,11 +56,11 @@
         '<span class="jat">'+(ld?'<i class="jld"></i>':'<b>'+esc(name)+'</b>')+(rank?'<small>'+esc(rank)+'</small>':'')+'</span>'+CARET+'</a>'+
       '<div class="jam" role="menu">'+
         '<div class="jah"><span class="jav big">'+avatar(s,48)+'</span><div><b>'+esc(name||'Loading…')+'</b><span class="jst st-'+st+'">'+ICON[st]+LABEL[st]+'</span></div></div>'+
-        (p?'<a class="jrk" href="/missions/" role="menuitem" style="display:block;text-decoration:none" title="See your missions"><div><span>Rank</span> <b>'+esc(rank)+'</b><span class="jpt">'+pts+' XP</span></div><span class="jbar"><i style="width:'+pct+'%"></i></span>'+
-          (p.next?'<small>'+(p.next_at-pts)+' XP to '+esc(p.next)+'</small>':'<small>Top rank</small>')+'</a>':'')+
+        (p?'<a class="jrk" href="/missions/" role="menuitem" style="display:block;text-decoration:none" title="See your missions"><div><span>Rank</span> <b>'+esc(rank)+'</b><span class="jpt">📜 '+pts+(pts===1?' scroll':' scrolls')+'</span></div><span class="jbar"><i style="width:'+pct+'%"></i></span>'+
+          (p.next?'<small>'+(p.next_at-pts)+((p.next_at-pts)===1?' scroll':' scrolls')+' to '+esc(p.next)+'</small>':'<small>Top rank</small>')+'</a>':'')+
         '<a class="jmi" role="menuitem" '+mine+'>My collection<small>Haves, wants, slabs and profile</small></a>'+
         '<a class="jmi" role="menuitem" '+(s.home?'href="#lists" data-v="mine" data-lmine':'href="/#lists"')+'>My lists<small>Your own card lists</small></a>'+
-        '<a class="jmi" role="menuitem" href="/missions/">Missions<small>Earn XP and rank up</small></a>'+
+        '<a class="jmi" role="menuitem" href="/missions/">Missions<small>Earn scrolls and rank up</small></a>'+
         (st==='free'?'<a class="jmi jprem" role="menuitem" href="/premium/">Unlock Premium</a>':'')+
         fb+themeRow()+
         '<button type="button" class="jmi jout" role="menuitem" '+(s.home?'data-signout':'data-jsignout')+'>Sign out</button>'+

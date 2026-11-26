@@ -232,7 +232,7 @@ def char_page(ch, cs, sets_by_id, chars, notes):
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
 <p class="btns"><a class="primary" href="/#quick={quote('char:' + '|'.join(ch['names']))}">Browse and filter {e(ch['label'])} cards</a>{mvlink}</p></section>
 <section class="votetop" id="vote-top" data-character="{ch['slug']}" data-name="{e(ch['label'])}"><h2>Coolest {e(ch['label'])} cards<span>Top 3, voted by collectors</span></h2>
-<p class="mt vxp">Your first vote on {e(ch['label'])} earns XP. <a href="/missions/">See all missions</a></p><p class="vbar" id="vote-bar"></p><p class="vnote" id="vote-note"></p><div class="grid" id="vote-grid"></div><p class="vtoast" id="vote-toast" role="status" hidden></p></section>
+<p class="mt vxp">Your first vote on {e(ch['label'])} earns scrolls. <a href="/missions/">See all missions</a></p><p class="vbar" id="vote-bar"></p><p class="vnote" id="vote-note"></p><div class="grid" id="vote-grid"></div><p class="vtoast" id="vote-toast" role="status" hidden></p></section>
 {f'<section class="cgroup"><h2>Key cards<span>Super Rares and promos</span></h2><div class="grid">{"".join(tile(c, sets_by_id[c["s"]]) for c in key)}</div></section>' if key else ''}
 {groups}
 <section class="others"><h2>More characters</h2><div class="chips">{others}</div></section>
@@ -414,23 +414,23 @@ def chars_index(chars, counts):
 
 
 def missions_page(chars):
-    """/missions/: ways to earn XP and rank up. Static shell; /missions.js fills in the signed-in member's progress
-    and the XP numbers from Supabase (xp_rules, xp_ranks), so changing the rules there updates this page."""
+    """/missions/: ways to earn scrolls and rank up. Static shell; /missions.js fills in the signed-in member's progress
+    and the scroll amounts from Supabase (xp_rules, xp_ranks), so changing the rules there updates this page."""
     url = f'{SITE}/missions/'
-    title = 'Missions: earn XP and rank up | Jonin'
-    desc = 'Earn XP on Jonin by voting for the coolest Naruto CCG cards for every character and sending feedback we use. Rank up from Academy Student to Kage.'
+    title = 'Missions: earn scrolls and rank up | Jonin'
+    desc = 'Earn scrolls on Jonin by voting for the coolest Naruto CCG cards for every character and sending feedback we use. Rank up from Academy Student to Kage.'
     chips = ''.join(f'<a class="chip mch" data-ch="{c["slug"]}" href="/character/{c["slug"]}/#vote-top"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(c["label"])}<i class="mok" aria-hidden="true">✓</i></a>' for c in chars)
     body = f'''<nav class="crumb"><a href="/">All cards</a> › Missions</nav>
 <section class="sethead"><h1>Missions</h1>
-<p class="lede">Earn XP and rank up from Academy Student to Kage. Your rank shows on your profile next to your name.</p></section>
+<p class="lede">Earn scrolls and rank up from Academy Student to Kage. Your rank shows on your profile next to your name.</p></section>
 <section class="mhero" id="mhero"><p class="mt">Loading your rank…</p></section>
 <section class="mlist">
-<article class="mcard" id="m-vote"><div class="mtop"><h2>Vote for every character's coolest cards</h2><span class="mxp" data-xp="vote_character">+XP</span></div>
-<p class="mt">Open a character and vote for up to 3 of their best cards. Your first vote on each character earns XP, once per character. Moving a vote later keeps your XP.</p>
+<article class="mcard" id="m-vote"><div class="mtop"><h2>Vote for every character's coolest cards</h2><span class="mxp" data-xp="vote_character">+📜</span></div>
+<p class="mt">Open a character and vote for up to 3 of their best cards. Your first vote on each character earns scrolls, once per character. Moving a vote later keeps your scrolls.</p>
 <div class="mprog"><span class="mbar"><i style="width:0%"></i></span><b class="mcount">0 / {len(chars)}</b></div>
 <div class="chips mchips">{chips}</div></article>
-<article class="mcard" id="m-fb"><div class="mtop"><h2>Send feedback we use</h2><span class="mxp" data-xp="feedback_accepted">+XP</span></div>
-<p class="mt">Spotted a wrong card, a missing foil or a bug? Send a note from any page. Every note that leads to a fix earns XP. Sign in first, or leave the email you signed up with, so it's credited to you.</p>
+<article class="mcard" id="m-fb"><div class="mtop"><h2>Send feedback we use</h2><span class="mxp" data-xp="feedback_accepted">+📜</span></div>
+<p class="mt">Spotted a wrong card, a missing foil or a bug? Send a note from any page. Every note that leads to a fix earns scrolls. Sign in first, or leave the email you signed up with, so it's credited to you.</p>
 <div class="mprog"><b class="mfb">0 notes used so far</b></div>
 <p class="btns"><button type="button" class="primary" data-fb data-fbname="Missions page">💬 Send feedback</button></p></article>
 </section>

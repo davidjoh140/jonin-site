@@ -1,5 +1,5 @@
-/* jonin.cards /missions/ page: fills in the signed-in member's XP, rank and mission progress.
-   XP numbers and ranks come from Supabase (xp_rules, xp_ranks, my_xp), so changing them there updates this page.
+/* jonin.cards /missions/ page: fills in the signed-in member's scrolls, rank and mission progress.
+   Scroll amounts and ranks come from Supabase (xp_rules, xp_ranks, my_xp), so changing them there updates this page.
    Signed out: shows the missions with a sign-up prompt. */
 (function () {
   var SUPA = 'https://cfzpayanhvvqtkuqfgof.supabase.co', KEY = 'sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe';
@@ -31,23 +31,23 @@
   function paint(rules, ranks, me) {
     document.querySelectorAll('[data-xp]').forEach(function (el) {
       var n = rules[el.getAttribute('data-xp')];
-      if (n != null) el.textContent = '+' + n + ' XP' + (el.getAttribute('data-xp') === 'vote_character' ? ' each' : ' per note');
+      if (n != null) el.textContent = '+' + n + (n===1?' scroll':' scrolls') + (el.getAttribute('data-xp') === 'vote_character' ? ' each' : ' per note');
     });
     var xp = me ? me.xp || 0 : 0;
     $('#mladder').innerHTML = ranks.map(function (r, i) {
       var next = ranks[i + 1], cur = me && xp >= r.at && (!next || xp < next.at);
-      return '<li class="' + (cur ? 'cur ' : '') + (me && xp >= r.at ? 'got' : '') + '"><b>' + esc(r.rank) + '</b><span>' + (r.at ? r.at + ' XP' : 'Start') + '</span></li>';
+      return '<li class="' + (cur ? 'cur ' : '') + (me && xp >= r.at ? 'got' : '') + '"><b>' + esc(r.rank) + '</b><span>' + (r.at ? r.at + (r.at===1?' scroll':' scrolls') : 'Start') + '</span></li>';
     }).join('');
     var hero = $('#mhero');
     if (!me) {
-      hero.innerHTML = '<div class="mrk"><b>Start your ninja path</b></div><p class="mt" style="margin:8px 0 12px">Make a free account to earn XP and show your rank on your profile.</p>' +
+      hero.innerHTML = '<div class="mrk"><b>Start your ninja path</b></div><p class="mt" style="margin:8px 0 12px">Make a free account to earn scrolls and show your rank on your profile.</p>' +
         '<p class="btns"><a class="primary" href="/#signup">Sign up free</a><a class="ghostbtn" href="/#signin">Sign in</a></p>';
       return;
     }
     var lo = me.prev_at || 0, hi = me.next_at, pct = hi ? Math.min(100, Math.round((xp - lo) / (hi - lo) * 100)) : 100;
-    hero.innerHTML = '<div class="mrk"><b>' + esc(me.rank) + '</b><span>' + xp + ' XP</span></div>' +
+    hero.innerHTML = '<div class="mrk"><b>' + esc(me.rank) + '</b><span>📜 ' + xp + (xp===1?' scroll':' scrolls') + '</span></div>' +
       '<span class="mbar"><i style="width:' + pct + '%"></i></span>' +
-      '<p class="mt" style="margin:0">' + (me.next ? (hi - xp) + ' XP to ' + esc(me.next) : 'Top rank. You made Kage.') + '</p>';
+      '<p class="mt" style="margin:0">' + (me.next ? (hi - xp) + ((hi - xp)===1?' scroll':' scrolls') + ' to ' + esc(me.next) : 'Top rank. You made Kage.') + '</p>';
     var voted = me.voted || [], set = {};
     voted.forEach(function (c) { set[c] = 1; });
     var done = 0;

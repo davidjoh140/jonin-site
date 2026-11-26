@@ -9,7 +9,7 @@
   if (!box) return;
   var CHAR = box.dataset.character, CNAME = box.dataset.name || 'this character';
   var sb = null, me = null, mine = new Set(), limit = 3, busy = false;
-  // XP (2026-11-26): the first vote on a character earns XP once (Supabase xp_on_vote / xp_rules; amount is a PLACEHOLDER David sets there).
+  // Scrolls (XP, 2026-11-26): the first vote on a character earns scrolls once (Supabase xp_on_vote / xp_rules; amount is a PLACEHOLDER David sets there).
   var earned = true, xpEach = 0;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
@@ -110,7 +110,7 @@
       if (on) mine.delete(card); else mine.add(card);
       if (!on && !earned) {
         earned = true;
-        if (xpEach) say('+' + xpEach + ' XP for voting on ' + CNAME + '! More missions on the Missions page.');
+        if (xpEach) say('📜 +' + xpEach + (xpEach===1?' scroll':' scrolls') + ' for voting on ' + CNAME + '! More missions on the Missions page.');
         if (window.JoninAcct && JoninAcct.refresh) JoninAcct.refresh();
       }
       refresh();
