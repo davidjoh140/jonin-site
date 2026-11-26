@@ -85,8 +85,8 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
       <div class="watch" id="watch" hidden>🔔 <span></span></div>
       <h1>See Naruto CCG cards the moment they're listed.</h1>
       <p class="lede">Jonin Club includes a private Discord that posts new listings, buy and sell posts and collection lots as they go up, with photos and a link straight to the seller.</p>
-      <!-- Price not set yet (David, Nov 25 2026). Put the number back here once it's decided. -->
-      <div class="price"><b>Pricing</b><span>coming soon</span></div>
+      <!-- Price set by David, 2026-11-26: $9.99/month or $89/year. -->
+      <div class="price"><b>$9.99</b><span>a month, or $89 a year (save 25%)</span></div>
       <!-- Founding members (David, 2026-11-26): first 20 accounts get Jonin Club free, forever. Spots left come from Supabase founding_spots_left(). -->
       <div class="founding" id="founding" hidden><b>⭐ Founding members</b><span>The first 20 people to make a free Jonin account get Jonin Club free, forever.<span id="fleft"></span></span><a class="btn" href="/#signup">Claim a free spot</a></div>
       <div class="join" id="join">
@@ -144,8 +144,20 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
     <h2>Free vs. members</h2>
     <div class="free">
       <div class="col"><h3>Free, always</h3><ul><li>Every card, set, rarity and printing</li><li>Search, filters and character buttons</li><li>Foil and rarity guide</li><li>Links to eBay and pop reports</li></ul></div>
-      <div class="col paid"><h3>Jonin Club · pricing coming soon</h3><ul><li>Private alerts Discord</li><li>Alt Art /20 sniper alerts</li><li>Buy/sell posts, eBay listings and lots</li><li>Set and character channels</li><li>Prices and extra data on the site</li><li>Collection value, export and badge</li></ul></div>
+      <div class="col paid"><h3>Jonin Club · $9.99/mo or $89/yr</h3><ul><li>Private alerts Discord</li><li>Alt Art /20 sniper alerts</li><li>Buy/sell posts, eBay listings and lots</li><li>Set and character channels</li><li>Prices and extra data on the site</li><li>Collection value, export and badge</li></ul></div>
     </div>
+  </section>
+
+  <!-- Free months for scroll ranks (David, 2026-11-26): Jonin rank (300 scrolls) = 1 free month, Kage (750) = 1 more.
+       Free accounts get it as a month of Jonin Club; paying members get a month off. Founders already have it free. -->
+  <section class="blk">
+    <h2>Rank up, get a free month</h2>
+    <p class="lede">Earn scrolls by voting, logging your cards, sending feedback we use and inviting friends. Hit these ranks and Jonin Club is on us.</p>
+    <div class="free">
+      <div class="col paid"><h3>📜 Reach Jonin · 300 scrolls</h3><ul><li>One free month of Jonin Club</li><li>Free account? You get the month to try it</li><li>Already a member? Your next month is free</li></ul></div>
+      <div class="col paid"><h3>📜 Reach Kage · 750 scrolls</h3><ul><li>Another free month of Jonin Club</li><li>Stacks with the Jonin month</li></ul></div>
+    </div>
+    <p class="small" style="margin-top:12px"><a href="/missions/">See how to earn scrolls →</a></p>
   </section>
 
   <section class="blk">
@@ -153,6 +165,8 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
     <div class="faq">
       <details><summary>Is there a chat?</summary><p>No. The Discord is alerts only, so it stays quiet and easy to scan.</p></details>
       <details><summary>What is the Alt Art /20 sniper?</summary><p>Tales of the Gallant Sage has 20 limited alternate-art cards, with only 20 copies of each. Some sellers list one with a regular title because they don't know what it is. The sniper checks the photos of every new listing for those 20 cards and pings members the moment one matches.</p></details> <details><summary>How fast are the alerts?</summary><p>Most come through within minutes of the post or listing going up.</p></details>
+      <details><summary>How much is Jonin Club?</summary><p>$9.99 a month, or $89 a year. The first 20 accounts got it free, forever, as founding members.</p></details>
+      <details><summary>How do I earn a free month?</summary><p>Reach the Jonin rank (300 scrolls) for one free month, and Kage (750 scrolls) for another. Scrolls come from <a href="/missions/">missions</a>: voting on every character, logging 100 cards, feedback we use and friends you invite.</p></details>
       <details><summary>Can I cancel?</summary><p>Yes, anytime. You keep access until the end of the month you paid for.</p></details>
       <details><summary>Do you earn from the eBay links?</summary><p>Some eBay links are affiliate links, so Jonin may earn a small commission at no cost to you.</p></details>
     </div>
