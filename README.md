@@ -101,3 +101,11 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 ## Last seen
 
 - `acct.js` (every page) calls `touch_seen()` for signed-in members, at most every 5 minutes, setting `profiles.last_seen_at` (`db/024_last_seen.sql`). `/admin/` → Accounts shows "Last seen" (falls back to the last sign-in) plus "Active last 24 hours / 7 days".
+
+## Messages (David ↔ members)
+
+- `db/025_messages.sql`: one private conversation per member in `messages`, only reachable through functions (no direct table access).
+- `/admin/` → **Messages**: every conversation with unread replies. Start one from a feedback note (💬 Message sender, which fills in Claude's drafted question for that note) or from Accounts / View profile (💬 Message). Senders with no account get an "Email them instead" link.
+- A member's reply about a note has **Use in fix**: it sends their answer to Claude as an Alter on that note, and Accept (in the conversation or in Feedback) then applies the fix to the cards.
+- Members: red dot on the profile button, **Messages** in the profile menu (in `acct.js`), reply box once David has written. `jonin.cards/#messages` opens it.
+- PLACEHOLDERS for David: members can't start a conversation themselves, one member message per 10 seconds, 2000 characters max, unread checked every minute.

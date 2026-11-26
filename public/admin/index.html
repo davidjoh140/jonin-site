@@ -32,6 +32,15 @@ button.ghost{background:none;color:var(--mute);border-color:var(--line);min-heig
 .tag{font-size:12px;color:var(--mute)}
 .fbp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:rgba(242,193,78,.06)}.fbch{padding:6px 0;border-top:1px dashed var(--line)}.fbdel{color:#ff8a80}.fbadd{color:var(--ok)}.fbalt[hidden]{display:none!important}
 .gate{max-width:440px}
+.mn{display:inline-block;margin-left:6px;min-width:18px;padding:0 5px;border-radius:99px;background:var(--red);color:#fff;font:700 11px/18px Inter,sans-serif;text-align:center}
+.mrow{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}.mrow:hover{background:#2B2435}.mrow:last-child{border-bottom:0}
+.mrow img,.mrow .mi{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--bg);flex:none;display:grid;place-items:center;font-weight:700}
+.mrow .mb{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--mute);font-size:13px}.mrow.un .mb{color:var(--ink);font-weight:600}
+.th{display:grid;gap:8px;max-height:46vh;overflow:auto;padding:4px 2px;margin:10px 0}
+.bb{max-width:80%;padding:9px 12px;border-radius:12px;white-space:pre-wrap;font-size:14px}.bb.me{justify-self:end;background:#3A2A10;border:1px solid #5A4318}.bb.them{justify-self:start;background:var(--bg);border:1px solid var(--line)}
+.bb .tag{display:block;margin-top:4px;font-size:11px}.bb .use{margin-top:6px;min-height:28px;padding:2px 10px;font-size:12px}
+.tnote{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;margin-bottom:6px}
+textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:15px/1.45 Inter,sans-serif;resize:vertical}textarea:focus{outline:none;border-color:var(--acc)}
 form.psale{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end}form.psale .wide{grid-column:span 2}
 @media(max-width:760px){form.psale{grid-template-columns:1fr 1fr}form.psale .wide{grid-column:1/-1}}
 .jump{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}.jump a{padding:6px 12px;border:1px solid var(--line);border-radius:99px;color:var(--mute);text-decoration:none;font-size:13px}.jump a:hover{color:var(--ink);border-color:var(--acc)}
@@ -45,7 +54,7 @@ select{width:100%;min-height:42px;padding:8px 10px;border-radius:8px;border:1px 
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a><span class="tag">Admin</span></div></header>
 <main>
   <h1>Jonin admin</h1>
-  <nav class="jump" id="jump" hidden><a href="#acc">Accounts</a><a href="#founders">Founding members</a><a href="#prem">Premium members</a><a href="#wl">Waitlist</a><a href="#ps">Add a sale</a><a href="#fb">Feedback</a></nav>
+  <nav class="jump" id="jump" hidden><a href="#acc">Accounts</a><a href="#founders">Founding members</a><a href="#prem">Premium members</a><a href="#wl">Waitlist</a><a href="#ps">Add a sale</a><a href="#fb">Feedback</a><a href="#msg">Messages<b id="msgn" class="mn" hidden></b></a></nav>
   <section id="acc"></section>
   <h2 id="prem" class="big" hidden>Premium members</h2>
   <p class="mt" id="premnote" hidden>Everyone with Premium, free or paid. Give it to anyone by email; if they don't have an account yet, it turns on when they sign up with that email.</p>
@@ -88,6 +97,7 @@ async function load(){
   loadWl();
   loadPs();
   loadFb();
+  loadMsg();
 }
 // Accounts: everyone who made an account, plus the founding members (first 20 non-admin sign-ups get Premium free forever).
 const ago=d=>{if(!d)return '';const m=Math.round((Date.now()-new Date(d))/6e4);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'};
@@ -109,8 +119,9 @@ async function loadAcc(){const el=$('#acc');const r=await sb.rpc('admin_accounts
   <h2 id="founders">Founding members</h2><p class="mt" style="margin-bottom:10px">The first ${TOTAL} people to make an account get Premium free, forever. ${Math.max(0,TOTAL-fnd.length)} spots left. New sign-ups fill the next spot automatically.${fnd.length?' <button class="ghost" id="fcopy">Copy founder emails</button>':''}</p>
   <div class="fgrid">${slots}</div>
   <h2>Everyone who made an account</h2><p class="mt" style="margin-bottom:10px">Newest first.${real.length?' <button class="ghost" id="acopy">Copy all emails</button>':''}</p>
-  <div class="tw box" style="padding:0"><table><thead><tr><th>Account</th><th>Joined</th><th>Last seen</th><th>Signed up with</th><th>Premium</th><th>Collection</th><th>Setup answers</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.handle?`@${esc(x.handle)}<div class="tag">${esc(x.email)}</div>`:esc(x.email)}${x.is_admin?'<div class="tag">you (admin)</div>':''}</td><td>${when(x.created_at)}<div class="tag">${ago(x.created_at)}</div></td><td>${x.last_seen_at?`${ago(x.last_seen_at)}<div class="tag">${when(x.last_seen_at)}</div>`:'<span class="tag">never</span>'}${x.last_sign_in_at?`<div class="tag">signed in ${when(x.last_sign_in_at)}</div>`:''}</td><td>${x.provider==='google'?'Google':x.provider==='discord'?'Discord':x.provider==='email'?'Email':esc(x.provider)}</td><td>${x.founding&&x.founder_no?`<span class="st f">⭐ Founder #${x.founder_no}</span>`:x.premium==='active'?'<span class="st active">active</span>':`<span class="tag">${x.premium==='none'?'—':esc(x.premium)}</span>`}</td><td>${x.cards_have?`${x.cards_have} card${x.cards_have===1?'':'s'}`:'<span class="tag">none yet</span>'}${x.slabs?`<div class="tag">${x.slabs} slab${x.slabs===1?'':'s'}</div>`:''}${x.cards_have||x.slabs?`<button class="ghost" data-view="${esc(x.email)}" style="margin-top:4px">View profile</button>`:''}</td><td>${setupCell(x)}</td></tr>`).join('')||'<tr><td colspan="7" class="tag">No accounts yet.</td></tr>'}</tbody></table></div>`;
+  <div class="tw box" style="padding:0"><table><thead><tr><th>Account</th><th>Joined</th><th>Last seen</th><th>Signed up with</th><th>Premium</th><th>Collection</th><th>Setup answers</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.handle?`@${esc(x.handle)}<div class="tag">${esc(x.email)}</div>`:esc(x.email)}${x.is_admin?'<div class="tag">you (admin)</div>':''}</td><td>${when(x.created_at)}<div class="tag">${ago(x.created_at)}</div></td><td>${x.last_seen_at?`${ago(x.last_seen_at)}<div class="tag">${when(x.last_seen_at)}</div>`:'<span class="tag">never</span>'}${x.last_sign_in_at?`<div class="tag">signed in ${when(x.last_sign_in_at)}</div>`:''}</td><td>${x.provider==='google'?'Google':x.provider==='discord'?'Discord':x.provider==='email'?'Email':esc(x.provider)}</td><td>${x.founding&&x.founder_no?`<span class="st f">⭐ Founder #${x.founder_no}</span>`:x.premium==='active'?'<span class="st active">active</span>':`<span class="tag">${x.premium==='none'?'—':esc(x.premium)}</span>`}</td><td>${x.cards_have?`${x.cards_have} card${x.cards_have===1?'':'s'}`:'<span class="tag">none yet</span>'}${x.slabs?`<div class="tag">${x.slabs} slab${x.slabs===1?'':'s'}</div>`:''}${x.cards_have||x.slabs?`<button class="ghost" data-view="${esc(x.email)}" style="margin-top:4px">View profile</button> <button class="ghost" data-dm="${esc(x.email)}" style="margin-top:4px">💬 Message</button>`:''}</td><td>${setupCell(x)}</td></tr>`).join('')||'<tr><td colspan="7" class="tag">No accounts yet.</td></tr>'}</tbody></table></div>`;
   el.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>viewUser(b.dataset.view));
+  el.querySelectorAll('[data-dm]').forEach(b=>b.onclick=()=>openThread({email:b.dataset.dm}));
   const fc=$('#fcopy');if(fc)fc.onclick=async()=>{await navigator.clipboard.writeText(fnd.map(x=>x.email).join(', '));fc.textContent='Copied ✓'};
   const ac=$('#acopy');if(ac)ac.onclick=async()=>{await navigator.clipboard.writeText(real.map(x=>x.email).join(', '));ac.textContent='Copied ✓'};
 }
@@ -141,11 +152,12 @@ async function viewUser(email){let dlg=$('#uview');if(!dlg){document.body.insert
   const pub=p.sharing?`<a href="/#u=${esc(p.share_slug)}" target="_blank" rel="noopener">public profile ↗</a>`:'not shared';
   dlg.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:start"><div><h2 class="big" style="margin:0">${p.handle?'@'+esc(p.handle):esc(email)}</h2>
     <p class="tag">${esc(email)} · joined ${when(p.created_at)} · ${esc(d.xp&&d.xp.rank||'')}${d.xp&&d.xp.xp?' · '+d.xp.xp+' scrolls':''}</p>
-    <p class="tag">Sharing: <b style="color:var(--ink)">${p.sharing?'on':'off'}</b> (${pub}) · Slabs on public profile: <b style="color:var(--ink)">${p.show_slabs?'shown':'hidden'}</b>${p.instagram?` · IG <a href="https://www.instagram.com/${esc(p.instagram)}/" target="_blank" rel="noopener">@${esc(p.instagram)}</a>`:''}${p.fav_character?' · Fav: '+esc(cap(p.fav_character)):''}</p></div><button class="ghost" data-close>Close</button></div>
+    <p class="tag">Sharing: <b style="color:var(--ink)">${p.sharing?'on':'off'}</b> (${pub}) · Slabs on public profile: <b style="color:var(--ink)">${p.show_slabs?'shown':'hidden'}</b>${p.instagram?` · IG <a href="https://www.instagram.com/${esc(p.instagram)}/" target="_blank" rel="noopener">@${esc(p.instagram)}</a>`:''}${p.fav_character?' · Fav: '+esc(cap(p.fav_character)):''}</p></div><button class="ghost" data-dmv="${esc(email)}">💬 Message</button> <button class="ghost" data-close>Close</button></div>
   <h2>Slabs · ${d.slabs.length}</h2>${d.slabs.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px">${d.slabs.map(x=>`<div>${/^https:\/\//.test(x.psa_front||'')?`<img src="${esc(x.psa_front)}" alt="" loading="lazy" style="width:100%;aspect-ratio:5/8.5;object-fit:cover;border-radius:6px">`:pic(x.card_id)}<div style="font-weight:700;margin-top:4px">${esc(x.grader)} ${esc(x.grade)} ${x.psa_status==='verified'?'<span style="color:#7fdc9a">✓ verified</span>':x.psa_status==='mismatch'?'<span style="color:#ffb36b">⚠ cert is another card</span>':x.psa_status==='pending'?'<span class="tag" style="display:inline">PSA pending</span>':x.psa_status==='not_found'?'<span style="color:#ffb36b">⚠ cert not found</span>':''}</div><div class="tag">${nm(x.card_id)}</div><div class="tag">${ver(x)}</div>${x.cert?`<div class="tag">Cert ${esc(x.cert)}${x.grader==='PSA'?` · <a href="https://www.psacard.com/cert/${encodeURIComponent(x.cert)}" target="_blank" rel="noopener">PSA ↗</a>`:''}</div>`:''}${x.note?`<div class="tag">${esc(x.note)}</div>`:''}<div class="tag">added ${ago(x.created_at)}</div></div>`).join('')}</div>`:'<p class="tag">None.</p>'}
   <h2>Haves · ${haves.length} versions</h2>${haves.length?`<div class="tw box" style="padding:0;max-height:300px;overflow:auto"><table><tbody>${haves.map(i=>`<tr><td>${nm(i.card_id)}</td><td>${ver(i)}</td><td>×${i.qty}</td></tr>`).join('')}</tbody></table></div>`:'<p class="tag">None.</p>'}
   <h2>Wants · ${wants.length}</h2>${wants.length?`<div class="tw box" style="padding:0;max-height:220px;overflow:auto"><table><tbody>${wants.map(i=>`<tr><td>${nm(i.card_id)}</td><td>${ver(i)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="tag">None.</p>'}
-  ${d.lists.length?`<h2>Lists · ${d.lists.length}</h2><p class="tag">${d.lists.map(l=>esc(l.name)+' ('+l.cards+')').join(' · ')}</p>`:''}`}
+  ${d.lists.length?`<h2>Lists · ${d.lists.length}</h2><p class="tag">${d.lists.map(l=>esc(l.name)+' ('+l.cards+')').join(' · ')}</p>`:''}`;
+  const dm=dlg.querySelector('[data-dmv]');if(dm)dm.onclick=()=>{dlg.close();openThread({email})}}
 async function cardsList(){if(CARDS)return CARDS;const d=await fetch('/cards.json').then(r=>r.json());const sets=Object.fromEntries(d.sets.map(s=>[s.id,s.name]));
   CARDS=d.cards.map(c=>({id:c.s+':'+c.n,label:`${c.name} · ${c.n} · ${sets[c.s]||c.s}`,v:c.v||[],ed:(c.ed||[]).filter(Boolean)}));return CARDS}
 async function loadPs(){let el=$('#ps');if(!el){app.insertAdjacentHTML('beforeend','<div id="ps"></div>');el=$('#ps')}
@@ -172,10 +184,59 @@ async function loadPs(){let el=$('#ps');if(!el){app.insertAdjacentHTML('beforeen
   el.querySelectorAll('[data-pscode]').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(`{{sale ${b.dataset.pscode}}}`);b.textContent='Copied ✓'});
   el.querySelectorAll('[data-psdel]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this sale?'))return;const res=await sb.rpc('admin_delete_private_sale',{p_id:+b.dataset.psdel});if(res.error)alert(res.error.message);loadPs()});
 }
+
+// Messages (2026-11-26): direct conversations with members, mainly to ask feedback senders a follow-up question.
+// One conversation per member (Supabase messages table, db/025_messages.sql). Members see it in their profile menu → Messages.
+// A member's answer can be sent into the note's fix ("Use in fix" = Alter with their answer), then Accept applies it to the cards.
+let MSGN={};
+async function loadMsg(){let el=$('#msg');if(!el){app.insertAdjacentHTML('beforeend','<div id="msg"></div>');el=$('#msg')}
+  const r=await sb.rpc('admin_inbox');if(r.error){el.innerHTML=`<h2>Messages</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
+  const rows=r.data||[],un=rows.reduce((a,x)=>a+x.unread,0),n=$('#msgn');if(n){n.hidden=!un;n.textContent=un}
+  el.innerHTML=`<h2>Messages${un?` <span class="mn">${un} new</span>`:''}</h2><p class="mt" style="margin-bottom:10px">Your conversations with members. Start one from a feedback note (💬 Message sender) or from Accounts (💬 Message). They see it under Messages in their profile menu, with a red dot on their profile button.</p>
+  ${rows.length?`<div class="box" style="padding:0">${rows.map(x=>`<div class="mrow${x.unread?' un':''}" data-mu="${esc(x.user_id)}">${x.fav_character?`<img src="/chars/${esc(x.fav_character)}.webp" alt="">`:`<span class="mi">${esc((x.handle||x.email||'?').charAt(0).toUpperCase())}</span>`}
+    <div style="flex:1;min-width:0"><div><b>${x.handle?'@'+esc(x.handle):esc(x.email)}</b> <span class="tag">${ago(x.last_at)}</span>${x.unread?` <span class="mn">${x.unread}</span>`:''}</div><div class="mb">${x.last_from_admin?'You: ':''}${esc(x.last_body)}</div></div></div>`).join('')}</div>`:'<p class="tag">No conversations yet.</p>'}`;
+  el.querySelectorAll('[data-mu]').forEach(d=>d.onclick=()=>openThread({user:d.dataset.mu}));
+}
+setInterval(()=>{if(!document.hidden&&$('#msg'))loadMsg()},60000);
+async function openThread(o){let dlg=$('#mthread');if(!dlg){document.body.insertAdjacentHTML('beforeend','<dialog id="mthread" style="max-width:640px;width:94vw;max-height:92vh;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:18px"></dialog>');dlg=$('#mthread');
+    dlg.addEventListener('click',e=>{if(e.target===dlg||e.target.closest('[data-close]'))dlg.close()});dlg.addEventListener('close',()=>{loadMsg();loadFb()})}
+  if(!dlg.open){dlg.innerHTML='<p class="tag">Loading…</p>';dlg.showModal()}
+  let user=o.user||null;
+  if(!user&&o.email){const u=await sb.rpc('admin_user_id',{p_email:o.email});user=u.data||null;if(!user){dlg.innerHTML=`<p class="msg err">No account found for ${esc(o.email)}.</p><button class="ghost" data-close>Close</button>`;return}}
+  const r=await sb.rpc('admin_thread',{p_user:user,p_feedback:o.feedback||null});
+  if(r.error){dlg.innerHTML=`<p class="msg err">${esc(r.error.message)}</p><button class="ghost" data-close>Close</button>`;return}
+  const t=r.data;
+  if(!t.user_id){const f=(await sb.rpc('admin_feedback')).data?.find(x=>x.id===o.feedback)||{};
+    dlg.innerHTML=`<h2 style="margin-top:0">No account yet</h2><p>This sender left ${f.contact?'the email <b>'+esc(f.contact)+'</b>':'no account'} but hasn't signed up with it, so there's no Messages inbox to send to.</p>${f.contact&&/@/.test(f.contact)?`<p><a href="mailto:${esc(f.contact)}?subject=${encodeURIComponent('Your jonin.cards feedback')}&body=${encodeURIComponent('Hey, thanks for your note on jonin.cards: "'+(f.message||'').slice(0,200)+'"\n\n')}">Email them instead ↗</a></p>`:''}<button class="ghost" data-close>Close</button>`;return}
+  const notes=t.notes||[],NB=Object.fromEntries(notes.map(n=>[n.id,n])),open=n=>n&&['drafting','awaiting','alter'].includes(n.review);
+  const RV={drafting:'Claude drafting a fix',awaiting:'Fix ready for you',alter:'Claude redrafting',accepted:'Accepted',skipped:'Skipped'};
+  const cur=o.feedback||((t.messages||[]).slice().reverse().find(m=>m.feedback_id)||{}).feedback_id||(notes.find(open)||{}).id||'';
+  const pre=o.feedback&&NB[o.feedback]&&NB[o.feedback].proposal_question&&!(t.messages||[]).some(m=>m.feedback_id===o.feedback)?NB[o.feedback].proposal_question:'';
+  const who=t.handle?'@'+esc(t.handle):esc(t.email);
+  dlg.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:start"><div><h2 class="big" style="margin:0">${who}</h2><p class="tag" style="margin:2px 0 0">${esc(t.email)} · <a href="#" data-pv>View profile</a></p></div><button class="ghost" data-close>Close</button></div>
+  ${notes.length?`<div style="margin-top:12px"><div class="tag" style="font-weight:700;letter-spacing:1px">THEIR FEEDBACK</div>${notes.slice(0,4).map(n=>`<div class="tnote"${n.id===+cur?' style="border-color:var(--acc)"':''}><span class="tag">#${n.id} · ${day(n.created_at)} · ${esc(RV[n.review]||n.review||'')}</span><div>“${esc(n.message)}”</div>
+    ${n.proposal&&n.review==='awaiting'?`<div class="tag" style="margin-top:4px"><b style="color:var(--ink)">Proposed fix:</b> ${esc(n.proposal)}</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button data-acc="${n.id}" style="min-height:30px;padding:2px 12px;font-size:13px">✓ Accept${n.has_change?' & apply':''} (+📜)</button><a class="tag" href="#fb" data-close style="align-self:center">See it in Feedback</a></div>`:''}</div>`).join('')}</div>`:''}
+  <div class="th" id="thl">${(t.messages||[]).map(m=>`<div class="bb ${m.from_admin?'me':'them'}">${esc(m.body)}<span class="tag">${m.from_admin?'You':who} · ${when(m.created_at)}${m.feedback_id?' · about note #'+m.feedback_id:''}${m.from_admin?(m.read_at?' · seen':' · not seen yet'):''}</span>${!m.from_admin&&open(NB[m.feedback_id])?`<button class="ghost use" data-use="${m.id}">Use in fix for #${m.feedback_id} →</button>`:''}</div>`).join('')||'<p class="tag">No messages yet. Ask your question below.</p>'}</div>
+  <form id="mf" style="display:grid;gap:8px"><textarea name="b" rows="3" maxlength="2000" placeholder="Ask ${who} something…">${esc(pre)}</textarea>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select name="f" style="width:auto;flex:1;min-height:38px"><option value="">General (not about a note)</option>${notes.map(n=>`<option value="${n.id}"${n.id===+cur?' selected':''}>About note #${n.id}: ${esc(n.message.slice(0,50))}</option>`).join('')}</select><button>Send</button></div>
+  <p class="msg" id="mfm">${pre?'Claude\'s question for this note is filled in. Edit it or send as is.':''}</p></form>`;
+  const l=$('#thl');l.scrollTop=l.scrollHeight;
+  dlg.querySelector('[data-pv]').onclick=e=>{e.preventDefault();dlg.close();viewUser(t.email)};
+  const f=$('#mf');f.onsubmit=async e=>{e.preventDefault();const b=f.b.value.trim();if(!b){f.b.focus();return}f.querySelector('button').disabled=true;
+    const s=await sb.rpc('admin_send_message',{p_body:b,p_user:t.user_id,p_feedback:f.f.value?+f.f.value:null});
+    if(s.error){$('#mfm').className='msg err';$('#mfm').textContent=s.error.message;f.querySelector('button').disabled=false;return}
+    openThread({user:t.user_id,feedback:f.f.value?+f.f.value:null})};
+  f.b.onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))f.requestSubmit()};
+  dlg.querySelectorAll('[data-use]').forEach(b=>b.onclick=async()=>{const m=t.messages.find(x=>x.id===+b.dataset.use);
+    const s=await sb.rpc('admin_feedback_review',{p_id:m.feedback_id,p_action:'alter',p_note:`The sender answered in Messages: "${m.body}"`});
+    if(s.error){alert(s.error.message);return}b.outerHTML='<span class="tag" style="color:var(--ok)">✓ Sent to Claude. The fix is redrafted with their answer, then you Accept it in Feedback.</span>'});
+  dlg.querySelectorAll('[data-acc]').forEach(b=>b.onclick=async()=>{b.disabled=true;const s=await sb.rpc('admin_feedback_review',{p_id:+b.dataset.acc,p_action:'accept',p_note:null});
+    if(s.error){alert(s.error.message);b.disabled=false;return}openThread({user:t.user_id})});
+}
 let FBSHOW='review';
 // Feedback review (2026-11-26): Claude drafts a fix for each note (proposal); David picks Accept / Skip / Alter.
 // Accept applies card-data fixes (admin_feedback_review) and gives the sender feedback scrolls (xp_rules). Undo puts it back.
-async function loadFb(){const r=await sb.rpc('admin_feedback');let el=$('#fb');if(!el){app.insertAdjacentHTML('beforeend','<div id="fb"></div>');el=$('#fb')}
+async function loadFb(){const [r,mc]=await Promise.all([sb.rpc('admin_feedback'),sb.rpc('admin_note_message_counts')]);MSGN=Object.fromEntries((mc.data||[]).map(x=>[x.feedback_id,x.n+(x.unread?', '+x.unread+' new':'')]));let el=$('#fb');if(!el){app.insertAdjacentHTML('beforeend','<div id="fb"></div>');el=$('#fb')}
   if(r.error){el.innerHTML=`<h2>Feedback</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
   const all=r.data||[],K={card:'🃏 Card info',idea:'💡 Idea',bug:'🐞 Bug',other:'💬 Other'};
   const open=x=>['drafting','awaiting','alter'].includes(x.review)&&x.status!=='archived';
@@ -193,6 +254,7 @@ async function loadFb(){const r=await sb.rpc('admin_feedback');let el=$('#fb');i
     <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span class="tag">${day(x.created_at)} · ${K[x.kind]||esc(x.kind)}${x.card_id?` · <a href="/#card=${encodeURIComponent(x.card_id)}" target="_blank">${esc((CB[x.card_id]||{}).name||x.card_id)}</a>`:''}${x.page?` · <a href="${esc(x.page.split('#')[0]+(x.selector?(x.page.includes('?')?'&':'?')+'fbspot='+encodeURIComponent(x.selector):''))}" target="_blank">page</a>`:''}</span>
     <span class="tag">${esc(x.name||'')} ${x.contact?esc(x.contact):''}${!x.name&&!x.contact?'anonymous':''}${x.user_id?' · signed in':''}</span></div>
     <div style="white-space:pre-wrap;margin:8px 0 10px;font-size:15px">“${esc(x.message)}”</div>
+    ${x.user_id||x.credit_user||x.contact?`<p style="margin:-4px 0 10px"><button class="ghost" data-fbdm="${x.id}">💬 ${MSGN[x.id]?'Conversation ('+MSGN[x.id]+')':'Message sender'}</button></p>`:''}
     ${x.review==='drafting'?`<p class="tag">Claude is drafting a fix (checked every hour).</p>`:''}
     ${x.review==='alter'?`<p class="tag"><b style="color:var(--ink)">Your change:</b> ${esc(x.alter_note)}<br>Claude is redrafting (checked every hour).</p>`:''}
     ${x.proposal&&x.review!=='drafting'?`<div class="fbp"><div class="tag" style="letter-spacing:1px;font-weight:700">PROPOSED FIX</div><div style="margin:4px 0 6px">${esc(x.proposal)}</div>${changeHtml(x)}${x.proposal_question&&x.review!=='accepted'?`<p class="tag" style="margin-top:8px">❓ ${esc(x.proposal_question)}</p>`:''}</div>`:''}
@@ -204,6 +266,7 @@ async function loadFb(){const r=await sb.rpc('admin_feedback');let el=$('#fb');i
   el.innerHTML=`<h2>Feedback</h2><p class="mt" style="margin-bottom:10px">${[['review','To review'],['accepted','Accepted'],['skipped','Skipped'],['all','All']].map(([k,l])=>`<button class="ghost" data-fbs="${k}" style="${FBSHOW===k?'color:var(--ink);border-color:var(--acc)':''}">${l}${k!=='all'?' ('+cnt(k)+')':''}</button>`).join(' ')}</p>
   ${rows.length?rows.map(card).join(''):'<p class="tag">Nothing here.</p>'}`;
   el.querySelectorAll('[data-fbs]').forEach(b=>b.onclick=()=>{FBSHOW=b.dataset.fbs;loadFb()});
+  el.querySelectorAll('[data-fbdm]').forEach(b=>b.onclick=()=>openThread({feedback:+b.dataset.fbdm}));
   const act=async(id,a,note)=>{const r=await sb.rpc('admin_feedback_review',{p_id:id,p_action:a,p_note:note||null});if(r.error){alert(r.error.message);return}loadFb()};
   el.querySelectorAll('[data-fbr]').forEach(b=>b.onclick=()=>{const id=+b.dataset.id;if(b.dataset.fbr==='alter'){const f=el.querySelector(`.fbalt[data-id="${id}"]`);f.hidden=!f.hidden;if(!f.hidden)f.t.focus();return}
     b.disabled=true;act(id,b.dataset.fbr)});

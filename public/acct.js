@@ -36,6 +36,7 @@
     chat:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4h0A2.5 2.5 0 0 1 4 13.5z" fill="#7FB3E8" stroke="#2F5A86" stroke-width="1" stroke-linejoin="round"/><circle cx="8.5" cy="9.5" r="1.1" fill="#2F5A86"/><circle cx="12" cy="9.5" r="1.1" fill="#2F5A86"/><circle cx="15.5" cy="9.5" r="1.1" fill="#2F5A86"/></svg>',
     key:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="4.5" fill="#F2C14E" stroke="#8C5F14" stroke-width="1"/><circle cx="8" cy="12" r="1.6" fill="#8C5F14"/><path d="M12.3 12H21M18 12v3M20.5 12v2.2" stroke="#8C5F14" stroke-width="2" stroke-linecap="round"/></svg>',
     join:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="4" fill="#F0A13A" stroke="#8C4F14" stroke-width="1"/><path d="M2.5 21a7.5 7.5 0 0 1 15 0z" fill="#F0A13A" stroke="#8C4F14" stroke-width="1" stroke-linejoin="round"/><circle cx="18.5" cy="6.5" r="4" fill="#6FB27A" stroke="#2F5E37" stroke-width="1"/><path d="M18.5 4.6v3.8M16.6 6.5h3.8" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    mail:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.2" fill="#F3E2B8" stroke="#8C5F14" stroke-width="1"/><path d="M3.2 6.2l8.8 6.6 8.8-6.6" fill="none" stroke="#8C5F14" stroke-width="1.2" stroke-linejoin="round"/><circle cx="12" cy="12.6" r="2" fill="#D9534F" stroke="#8C2B28" stroke-width=".7"/></svg>',
     door:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2.5" width="11" height="19" rx="1.2" fill="#A9784A" stroke="#4A2E14" stroke-width="1"/><circle cx="12.4" cy="12.4" r="1" fill="#F2C14E"/><path d="M14.5 12H21M18.2 9l2.9 3-2.9 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   };
   function ic(k){return '<i class="jic">'+MI[k]+'</i>'}
@@ -76,7 +77,7 @@
     var name=s.handle||'',ld=!name; // no name yet: profile still loading, show a quiet placeholder
     return '<div class="jac">'+
       '<a class="jab jpf st-'+st+'" '+mine+' aria-haspopup="menu" title="'+esc((name||'Profile')+' · '+LABEL[st]+(rank?' · '+rank:''))+'">'+
-        '<span class="jav">'+avatar(s,30)+(st==='premium'?band(st):st==='free'?'<i class="jbg">'+ICON[st]+'</i>':'')+'</span>'+
+        '<span class="jav">'+avatar(s,30)+(st==='premium'?band(st):st==='free'?'<i class="jbg">'+ICON[st]+'</i>':'')+'<i class="jdot"'+(UNREAD?'':' hidden')+' title="New message"></i></span>'+
         '<span class="jat">'+(ld?'<i class="jld"></i>':'<b>'+esc(name)+'</b>')+(rank?'<small>'+esc(rank)+'</small>':'')+'</span>'+CARET+'</a>'+
       '<div class="jam" role="menu">'+
         '<div class="jah st-'+st+'"><span class="jav big">'+avatar(s,48)+band(st)+'</span><div><b>'+esc(name||'Loading…')+'</b><span class="jst st-'+st+'">'+ICON[st]+LABEL[st]+'</span></div></div>'+
@@ -84,6 +85,7 @@
           (p.next?'<small>'+(p.next_at-pts)+((p.next_at-pts)===1?' scroll':' scrolls')+' to '+esc(p.next)+'</small>':'<small>Top rank</small>')+'</a>':'')+
         '<a class="jmi" role="menuitem" '+mine+'>'+lb('shelf','My collection<small>Haves, wants, slabs and profile</small>')+'</a>'+
         '<a class="jmi" role="menuitem" '+(s.home?'href="#lists" data-v="mine" data-lmine':'href="/#lists"')+'>'+lb('scrollOpen','My lists<small>Your own card lists</small>')+'</a>'+
+        '<button type="button" class="jmi" role="menuitem" data-jmsg>'+lb('mail','Messages<b class="jmn"'+(UNREAD?'':' hidden')+'>'+UNREAD+'</b><small>Questions from Jonin about your notes</small>')+'</button>'+
         '<a class="jmi" role="menuitem" href="/missions/">'+lb('scrollClosed','Missions<small>Earn scrolls and rank up</small>')+'</a>'+
         '<a class="jmi" role="menuitem" href="/missions/#m-inv">'+lb('join','Invite friends<small>Earn scrolls for each friend who joins</small>')+'</a>'+
         (st==='free'?'<a class="jmi jprem" role="menuitem" href="/premium/">'+lb('lock','Unlock Premium')+'</a>':'')+
@@ -105,6 +107,7 @@
     var th=t.closest&&t.closest('[data-jt]');
     if(th&&window.joninSetTheme){var id=window.joninSetTheme(th.getAttribute('data-jt'));var b=document.querySelectorAll('[data-jt]');for(var i=0;i<b.length;i++)b[i].setAttribute('aria-checked',b[i].getAttribute('data-jt')===id);return}
     if(t.closest&&t.closest('[data-jsignout]')){signOut();return}
+    if(t.closest&&t.closest('[data-jmsg]')){closeAll();openMsgs();return}
     if(t.closest&&t.closest('.jmi'))closeAll();
     else if(!(t.closest&&t.closest('.jac')))closeAll();
   },true);
@@ -232,6 +235,64 @@
     fetch(SUPA+'/rest/v1/rpc/touch_seen',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:'{}'}).catch(function(){})}
   seen();setInterval(seen,6e4);document.addEventListener('visibilitychange',function(){if(!document.hidden)seen()});
   window.addEventListener('storage',function(e){if(e.key===TK)claimInvite()});
+
+  // ---- Messages (2026-11-26) ----
+  // David can message members from /admin/ (mostly follow-up questions about their feedback notes). Members see a red dot
+  // on their profile button, a count on Messages in the menu, and can reply here. Supabase: my_unread_messages, my_messages,
+  // send_message (replies only once David has written; one message per 10 seconds). jonin.cards/#messages opens it.
+  var UNREAD=0;
+  (function(){var c=document.createElement('style');c.textContent=
+    '.jdot{position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:#E5322D;box-shadow:0 0 0 2px var(--bg,#1B1622)}.jdot[hidden],.jmn[hidden]{display:none}'+
+    '.jmn{display:inline-block;margin-left:6px;min-width:17px;padding:0 5px;border-radius:99px;background:#E5322D;color:#fff;font:700 11px/17px Inter,system-ui,sans-serif;text-align:center;vertical-align:1px}'+
+    '.jmo{position:fixed;inset:0;z-index:1000;background:rgba(10,7,14,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px}'+
+    '.jmo[hidden]{display:none}.jmbox{position:relative;width:min(480px,100%);max-height:100%;display:flex;flex-direction:column;gap:10px;background:var(--deep,#17121D);border:1px solid var(--edge2,#30283A);border-radius:18px;padding:20px;color:var(--ink,#FFF4E6);font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}'+
+    '.jmbox h2{margin:0;font:800 24px "Baloo 2",sans-serif}.jmbox p{margin:0;color:var(--mute,#B8AEA6)}.jmx{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--mute,#B8AEA6);font-size:20px;cursor:pointer;padding:6px}'+
+    '.jml{display:grid;gap:8px;overflow-y:auto;min-height:80px;max-height:52vh;padding:2px}.jmb{max-width:85%;padding:9px 12px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word}'+
+    '.jmb.a{justify-self:start;background:var(--panel,#241E2D);border:1px solid var(--edge,#3A3046)}.jmb.m{justify-self:end;background:var(--red,#B5121B);color:#fff}'+
+    '.jmb small{display:block;margin-top:3px;font-size:11px;opacity:.75}.jmq{display:block;margin-bottom:6px;padding:6px 8px;border-left:3px solid var(--acc,#F57C00);background:rgba(255,255,255,.04);border-radius:4px;font-size:12.5px;color:var(--mute,#B8AEA6)}'+
+    '.jmbox textarea{background:var(--panel,#241E2D);border:1px solid var(--edge,#3A3046);border-radius:10px;padding:10px 12px;color:var(--ink,#FFF4E6);font:15px/1.45 Inter,system-ui,sans-serif;outline:none;width:100%;box-sizing:border-box;resize:vertical;min-height:70px}'+
+    '.jmbox textarea:focus{border-color:var(--red,#B5121B)}.jmgo{min-height:42px;border-radius:10px;background:var(--red,#B5121B);border:0;color:var(--ont,#fff);font:600 15px Inter,system-ui,sans-serif;cursor:pointer}.jmgo:disabled{opacity:.6}'+
+    '.jme{font-size:13px;min-height:18px}.jme.err{color:#ff8b8b}';
+    document.head.appendChild(c)})();
+  function setUnread(n){UNREAD=n||0;each('.jdot',function(d){d.hidden=!UNREAD});each('.jmn',function(b){b.hidden=!UNREAD;b.textContent=UNREAD})}
+  var lastPoll=0;
+  function pollUnread(force){var s=session();if(!s){setUnread(0);return}if(s.expires_at&&s.expires_at*1000<Date.now()+5000)return;
+    if(!force&&Date.now()-lastPoll<55e3){setUnread(UNREAD);return}lastPoll=Date.now();
+    rest('/rest/v1/rpc/my_unread_messages',s.access_token,{}).then(function(n){setUnread(typeof n==='number'?n:0)}).catch(function(){})}
+  function mDate(d){try{return new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}catch(_){return ''}}
+  var MO=null;
+  function openMsgs(){var s=session();if(!s){location.href='/#signin';return}
+    if(!MO){MO=document.createElement('div');MO.className='jmo';MO.hidden=true;
+      MO.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="jmh"><button class="jmx" type="button" aria-label="Close">×</button><h2 id="jmh">Messages</h2><p>Questions from David at Jonin, usually about feedback you sent.</p><div class="jml"></div><form class="jmf"><textarea name="b" maxlength="2000" placeholder="Write a reply…"></textarea><div class="jme"></div><button class="jmgo">Send</button></form></div>';
+      document.body.appendChild(MO);
+      MO.addEventListener('click',function(e){if(e.target===MO||e.target.closest('.jmx'))MO.hidden=true});
+      document.addEventListener('keydown',function(e){if(e.key==='Escape'&&MO&&!MO.hidden)MO.hidden=true});
+      MO.querySelector('.jmf').onsubmit=function(e){e.preventDefault();var f=e.target,b=f.b.value.trim(),er=MO.querySelector('.jme'),s=session();if(!b||!s)return;
+        f.querySelector('button').disabled=true;er.className='jme';er.textContent='';
+        fetch(SUPA+'/rest/v1/rpc/send_message',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:JSON.stringify({p_body:b})})
+          .then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j})})
+          .then(function(){f.b.value='';fillMsgs()}).catch(function(j){er.className='jme err';er.textContent=(j&&j.message)||'Could not send. Try again.'})
+          .then(function(){f.querySelector('button').disabled=false})};
+      MO.querySelector('textarea').addEventListener('keydown',function(e){if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))MO.querySelector('.jmf').requestSubmit()});
+    }
+    MO.hidden=false;MO.querySelector('.jml').innerHTML='<p>Loading…</p>';fillMsgs();
+  }
+  function fillMsgs(){var s=session(),l=MO.querySelector('.jml'),f=MO.querySelector('.jmf');if(!s)return;
+    rest('/rest/v1/rpc/my_messages',s.access_token,{}).then(function(d){
+      var ms=d.messages||[],notes=d.notes||{},shown={};
+      f.hidden=!ms.some(function(m){return m.from_admin});
+      l.innerHTML=ms.length?ms.map(function(m){var q='';
+        if(m.from_admin&&m.feedback_id&&notes[m.feedback_id]&&!shown[m.feedback_id]){shown[m.feedback_id]=1;q='<span class="jmq">Your note: “'+esc(notes[m.feedback_id].message)+'”</span>'}
+        return '<div class="jmb '+(m.from_admin?'a':'m')+'">'+q+esc(m.body)+'<small>'+(m.from_admin?'David · Jonin':'You')+' · '+esc(mDate(m.created_at))+'</small></div>'}).join('')
+        :'<p>No messages yet. If David has a question about a note you sent, it shows up here.</p>';
+      l.scrollTop=l.scrollHeight;setUnread(0);
+    }).catch(function(){l.innerHTML='<p>Could not load your messages. Refresh to try again.</p>'});
+  }
+  pollUnread(true);setInterval(function(){if(!document.hidden)pollUnread()},6e4);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)pollUnread()});
+  window.addEventListener('storage',function(e){if(e.key===TK)pollUnread(true)});
+  function hashOpen(){if(location.hash==='#messages'){if(session())openMsgs();try{history.replaceState(null,'',location.pathname+location.search)}catch(_){}}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hashOpen);else setTimeout(hashOpen,0);
 
   window.JoninAcct={html:html,cache:cache,cached:function(){return ls(CK)},icon:ICON,label:LABEL,refresh:function(){LAST='';load()}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',auto);else auto();
