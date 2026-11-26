@@ -102,7 +102,46 @@ def top_sales(sales, cuts=PRICE_BAND_CUTOFFS):
                   (best[cid][1].get("sold_at") or "")[:10]] for i, cid in enumerate(order)}
 
 
-def reveal_top_prices(data, sales):
+SALE_PHOTOS = OUT.parent / "img" / "sales"   # listing photos of top sales (the slab itself), served by jonin.cards
+
+
+def ebay_big(url):
+    """Largest copy eBay offers of a listing photo (both URL styles eBay uses)."""
+    url = re.sub(r"/s-l\d+\.", "/s-l1600.", url or "")
+    return re.sub(r"\$_\d+\.(JPG|jpg|PNG|png)", r"$_57.\1", url)
+
+
+def sale_photo(x, fetch=None):
+    """The sale's own listing photo (usually the slab), copied onto the site once as img/sales/<sale id>.jpg.
+    eBay photos disappear after a while, so we keep our own copy. Returns the site URL, or "" without one."""
+    sid, src = x.get("id"), x.get("image_url") or ""
+    if not sid or not src.startswith("https://"):
+        return ""
+    dest = SALE_PHOTOS / f"{int(sid)}.jpg"
+    if not dest.is_file():
+        try:
+            (fetch or _fetch_photo)(ebay_big(src), dest)
+        except Exception as err:
+            print("sale photo failed for sale", sid, err)
+            return ""
+    return f"{SITE}/img/sales/{int(sid)}.jpg"
+
+
+def _fetch_photo(url, dest, max_side=1000):
+    import io
+    import requests
+    from PIL import Image
+    r = requests.get(url, timeout=60)
+    r.raise_for_status()
+    im = Image.open(io.BytesIO(r.content)).convert("RGB")
+    im.thumbnail((max_side, max_side))
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_suffix(".part")
+    im.save(tmp, "JPEG", quality=84, optimize=True, progressive=True)
+    tmp.rename(dest)
+
+
+def reveal_top_prices(data, sales, fetch=None):
     """Most-valuable pages show the exact top sale (David's call, 2026-11-25). Only the cards that make a
     character's top list get [price, ebay_url] appended to "top"; every other card's prices stay Premium."""
     import build_pages as bp
@@ -119,7 +158,8 @@ def reveal_top_prices(data, sales):
             x = best.get(c["s"] + ":" + c["n"])
             if x and len(c["top"]) == 4:
                 url = x.get("url") or ""
-                c["top"] += [_num(x["price"]), url if url.startswith("https://") else "", x.get("source") or ""]
+                c["top"] += [_num(x["price"]), url if url.startswith("https://") else "", x.get("source") or "",
+                             sale_photo(x, fetch)]   # [7]: photo of the sold copy (the slab), shown instead of the card scan
                 shown += 1
     return shown
 
@@ -247,7 +287,7 @@ def image_url(path):
 def main():
     import supa
     with supa.Run("export_cards") as run:
-        sales = supa.select("sales", {"select": "id,card_id,price,sold_at,status,printing,edition,grader,grade,url,source",
+        sales = supa.select("sales", {"select": "id,card_id,price,sold_at,status,printing,edition,grader,grade,url,source,image_url",
                                       "status": "eq.approved"})
         data = build(supa.select("sets"), supa.select("cards"),
                      supa.select("scans", {"select": "*", "public": "eq.true"}),

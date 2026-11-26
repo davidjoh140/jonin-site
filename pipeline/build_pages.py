@@ -275,6 +275,24 @@ def most_valuable(cs, top=MOST_VALUABLE_TOP):
     return sorted([c for c in cs if c.get('top')], key=lambda c: c['top'][0])[:top]
 
 
+def sale_photo(c):
+    """Photo of the copy that set the card's top sale (its slab), when we have one."""
+    t = c.get('top') or []
+    return t[7] if len(t) > 7 and re.match(r'^https://', t[7] or '') else ''
+
+
+def mv_art(c, eager=False):
+    """Most-valuable lists show the actual sold copy (the slab) when we have its photo, else the card scan."""
+    load = 'eager' if eager else 'lazy'
+    ph, ver = sale_photo(c), c['top'][2] if c.get('top') else ''
+    if ph:
+        return (f'<img class="slab" loading="{load}" src="{e(ph)}" alt="{e(c["name"])} {e(c["n"])} {e(ver)} Naruto card, the copy that sold" '
+                f'width="600" height="1000">')
+    if re.match(r'^https://', c.get('img') or ''):
+        return f'<img loading="{load}" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
+    return f'<span class="noimg sm"><b>{e(c["n"])}</b></span>'
+
+
 def mv_page(ch, ranked, sets_by_id, mv_chars):
     url = f'{SITE}/character/{ch["slug"]}/most-valuable/'
     n = len(ranked)
@@ -289,8 +307,7 @@ def mv_page(ch, ranked, sets_by_id, mv_chars):
         b, ver, sold_on = c['top'][1], c['top'][2], c['top'][3]
         price = c['top'][4] if len(c['top']) > 4 else None
         sale_url = c['top'][5] if len(c['top']) > 5 else ''
-        img = (f'<img loading="{"eager" if i == 0 else "lazy"}" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
-               if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
+        img = mv_art(c, eager=i == 0)
         lock = f'/premium/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}'
         band = ('$' + f'{price:,.2f}'.removesuffix('.00')) if price else (e(BANDS[b]) if 0 <= b < len(BANDS) else '—')
         src = AB.sale_link(sale_url, c['top'][6] if len(c['top']) > 6 else '').removeprefix(' · ') if price else ''
@@ -314,7 +331,7 @@ def mv_page(ch, ranked, sets_by_id, mv_chars):
 <p class="btns" style="margin-top:26px"><a class="primary" href="/character/{ch["slug"]}/">All {e(ch["label"])} cards</a><a class="ghostbtn" href="/most-valuable/">💰 Every most-valuable list</a></p>
 {others_html}
 '''
-    img = next((c['img'] for c in ranked if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
+    img = next((sale_photo(c) for c in ranked if sale_photo(c)), '') or next((c['img'] for c in ranked if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'ItemList', 'name': title, 'description': desc, 'url': url, 'numberOfItems': n,
          'itemListOrder': 'https://schema.org/ItemListOrderDescending',
@@ -338,8 +355,7 @@ def mv_index(mv_chars, ranked, sets_by_id):
         return ('$' + f'{p:,.2f}'.removesuffix('.00')) if p else (e(BANDS[c['top'][1]]) if 0 <= c['top'][1] < len(BANDS) else '')
 
     def mini(c, i):
-        img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
-               if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
+        img = mv_art(c)
         return (f'<a class="mvmini" href="/card/{slug(c)}/"><span class="mvn">{i + 1}</span>{img}'
                 f'<b>{e(c["name"])}</b><span class="mt">{e(c["n"])} · {e(sets_by_id[c["s"]]["name"])}</span><span class="band">{price(c)}</span></a>')
     blocks = []
@@ -357,7 +373,8 @@ def mv_index(mv_chars, ranked, sets_by_id):
             'ranked by the highest price each card has sold for. Lists update on their own as new sales come in.</p></section>\n'
             + ''.join(blocks)
             + '\n<p class="mt" style="margin-top:22px">More characters are coming. <a href="/price-guide/">Naruto CCG price guide</a> · <a href="/characters/">Browse every character</a> · <a href="/most-popular/">Most popular cards</a> · <a href="/lists/">All card lists</a>.</p>\n')
-    img = next((c['img'] for ch in mv_chars for c in ranked[ch['slug']] if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
+    img = next((sale_photo(c) for ch in mv_chars for c in ranked[ch['slug']] if sale_photo(c)), '') or \
+        next((c['img'] for ch in mv_chars for c in ranked[ch['slug']] if re.match(r'^https://', c.get('img') or '')), SITE + '/og.png')
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'ItemList', 'name': title, 'description': desc, 'url': url, 'numberOfItems': len(mv_chars),
          'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'name': f"Most valuable {ch['name']} cards",
