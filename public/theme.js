@@ -53,3 +53,12 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
 })();
+/* Umami visitor analytics (cloud.umami.is, Jonin site). theme.js loads on every public page, so this covers the whole site. */
+(function(){
+  if(document.querySelector('script[data-website-id]'))return;
+  var s=document.createElement('script');
+  s.defer=true;s.src='https://cloud.umami.is/script.js';
+  s.setAttribute('data-website-id','8f5abd87-d29c-4e49-8544-c1ca76ff15b0');
+  s.setAttribute('data-domains','jonin.cards');
+  document.head.appendChild(s);
+})();
