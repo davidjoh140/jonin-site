@@ -636,7 +636,7 @@ function qtyOf(c,kind){let n=0;for(const [k,v] of COLL)if(k.startsWith(cid(c)+'|
 function marks(c){if(!ME&&!COLL.size&&!SLABS.length)return '<span class="mk"></span>';const h=qtyOf(c,'have'),w=qtyOf(c,'want');const sl=SLABS.filter(x=>x.card_id===cid(c));return `<span class="mk">${h?`<span class="h" title="You have ${h}">✓ ${h}</span>`:''}${w?'<span class="w" title="On your wants">♡</span>':''}${sl.length?`<span class="sl" title="${esc(sl.map(x=>x.grader+' '+x.grade).join(', '))}">▣ ${esc(sl[0].grader+' '+sl[0].grade)}${sl.length>1?' +'+(sl.length-1):''}</span>`:''}</span>`}
 function refreshMarks(){if(VIEW==='sets'&&D)renderSets();document.querySelectorAll('.card[data-i]').forEach(b=>{const c=list[+b.dataset.i];const m=b.querySelector('.mk');if(c&&m)m.outerHTML=marks(c)})}
 function sbc(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPA,SUPA_KEY);return sb}
-async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;MYBADGE=null;LISTS=[];LITEMS=new Map();OPENL='';
+async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;MYBADGE=null;NMNEXT=undefined;NMEDIT=false;LISTS=[];LITEMS=new Map();OPENL='';
   if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until,founding').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));MYBADGE=MEMBER?(m.founding?'founding':'premium'):null;loadFbPts();loadLists();
     if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest);
     // Theme follows the account across devices.
@@ -829,17 +829,21 @@ function favFirst(){const cl=$('#clist');if(!cl||!cl.children.length)return;
 async function saveFav(sl){const v=sl||null;const rest=((MYP&&MYP.fav_characters)||[]).filter(x=>x!==v&&x!==(MYP&&MYP.fav_character));const r=await sb.from('profiles').update({fav_character:v,fav_characters:v?[v,...rest].slice(0,3):rest}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data){MYP=r.data;FAVEDIT=false}favFirst();renderMine();paintAcct()}
 // Instagram handle on the profile: shown on their shared collection page with a link to their IG.
 // Profile name (2026-11-26): members can change their name any time. Rules come from the database: 3-24 letters, numbers or _, unique.
-let NMEDIT=false;
-function nameRow(){if(!MYP)return '';const h=MYP.handle||'';
-  if(h&&!NMEDIT)return `<div class="share nmrow"><span>Profile name:</span><b>${esc(h)}</b><button class="clear" data-nmedit>Change</button></div>`;
-  return `<div class="share nmrow"><label for="nmin">Profile name</label><input id="nmin" class="nmin" maxlength="24" placeholder="yourname" value="${esc(h)}" autocomplete="off" spellcheck="false"><button class="pill" data-nmsave>Save</button>${h?'<button class="clear" data-nmcancel>Cancel</button>':''}<span class="mt nmtip" id="nmmsg">3–24 letters, numbers or _. Shows in the header, on your collection and on your share link.</span></div>`}
+// Cooldown and protected names are enforced in Supabase (db/018_profile_name_rules.sql); this only explains them.
+let NMEDIT=false,NMNEXT,NMDAYS=30;
+function loadNmRules(){if(!ME||!sbc()||NMNEXT!==undefined)return;NMNEXT=null;
+  Promise.all([sb.rpc('my_handle_next_change'),sb.rpc('handle_cooldown_days')]).then(([a,b])=>{if(!a.error)NMNEXT=a.data?new Date(a.data):null;if(!b.error&&b.data)NMDAYS=b.data;const el=$('#v-mine');if(el&&el.innerHTML&&$('.nmrow'))renderMine()}).catch(()=>{})}
+const nmDate=d=>d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+function nameRow(){if(!MYP)return '';loadNmRules();const h=MYP.handle||'';const locked=NMNEXT&&NMNEXT>new Date();
+  if(h&&!NMEDIT)return `<div class="share nmrow"><span>Profile name:</span><b>${esc(h)}</b>${locked?`<span class="mt">You can change it again on ${esc(nmDate(NMNEXT))}</span>`:'<button class="clear" data-nmedit>Change</button>'}</div>`;
+  return `<div class="share nmrow"><label for="nmin">Profile name</label><input id="nmin" class="nmin" maxlength="24" placeholder="yourname" value="${esc(h)}" autocomplete="off" spellcheck="false"><button class="pill" data-nmsave>Save</button>${h?'<button class="clear" data-nmcancel>Cancel</button>':''}<span class="mt nmtip" id="nmmsg">3–24 letters, numbers or _. ${MYP.handle_changed_at?'':'Your first change is free. '}After a change you can change it again in ${NMDAYS} days.</span></div>`}
 async function saveName(v){const m=$('#nmmsg');const h=String(v||'').trim().replace(/^@/,'').replace(/\s+/g,'_');
   if(!/^[A-Za-z0-9_]{3,24}$/.test(h)){if(m)m.textContent='Use 3–24 letters, numbers or _ (no spaces or symbols).';return}
   if(h===MYP.handle){NMEDIT=false;renderMine();return}
   if(m)m.textContent='Saving…';
   const r=await sb.from('profiles').update({handle:h}).eq('id',ME.id).select().maybeSingle();
-  if(r.error){if(m)m.textContent=r.error.code==='23505'?'That name is taken. Try another.':'Could not save. Try again.';return}
-  if(r.data)MYP=r.data;NMEDIT=false;renderMine();paintAcct()}
+  if(r.error){const e=r.error;if(m)m.textContent=e.code==='23505'?'That name is taken. Try another.':e.hint==='reserved'?'That name is reserved. Try another.':e.hint==='cooldown'?(e.message||'You changed your name recently.')+'.':'Could not save. Try again.';return}
+  if(r.data)MYP=r.data;NMEDIT=false;NMNEXT=undefined;renderMine();paintAcct()}
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='nmin'){e.preventDefault();saveName(e.target.value)}else if(e.key==='Escape'&&e.target&&e.target.id==='nmin'&&MYP&&MYP.handle){NMEDIT=false;renderMine()}});
 let IGEDIT=false;const igUrl=h=>'https://www.instagram.com/'+encodeURIComponent(h)+'/';
 function igRow(){const h=MYP&&MYP.instagram;
