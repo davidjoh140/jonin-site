@@ -111,20 +111,46 @@ def ebay_big(url):
     return re.sub(r"\$_\d+\.(JPG|jpg|PNG|png)", r"$_57.\1", url)
 
 
-def sale_photo(x, fetch=None):
-    """The sale's own listing photo (usually the slab), copied onto the site once as img/sales/<sale id>.jpg.
+def photo_name(x, c=None):
+    """Search-friendly file name for a sale photo, e.g. susanoo-sasuke-n-1537-psa-10-130.jpg (Google Images reads it)."""
+    gr = x.get("grader") or "Raw"
+    words = [c["name"], c["n"]] if c else []
+    words += ["raw"] if gr == "Raw" else [gr, x.get("grade") or ""]
+    stem = re.sub(r"[^a-z0-9]+", "-", " ".join(words).lower().replace("'", "")).strip("-")
+    return f"{stem}-{int(x['id'])}.jpg" if stem else f"{int(x['id'])}.jpg"
+
+
+def sale_photo(x, fetch=None, c=None):
+    """The sale's own listing photo (usually the slab), copied onto the site once as img/sales/<name>-<sale id>.jpg.
     eBay photos disappear after a while, so we keep our own copy. Returns the site URL, or "" without one."""
     sid, src = x.get("id"), x.get("image_url") or ""
     if not sid or not src.startswith("https://"):
         return ""
-    dest = SALE_PHOTOS / f"{int(sid)}.jpg"
+    name = photo_name(x, c)
+    dest = SALE_PHOTOS / name
+    old = SALE_PHOTOS / f"{int(sid)}.jpg"          # first version saved photos by sale id only
+    if not dest.is_file() and old.is_file() and old != dest:
+        old.rename(dest)
     if not dest.is_file():
         try:
             (fetch or _fetch_photo)(ebay_big(src), dest)
         except Exception as err:
             print("sale photo failed for sale", sid, err)
             return ""
-    return f"{SITE}/img/sales/{int(sid)}.jpg"
+    return f"{SITE}/img/sales/{name}"
+
+
+def recent_sales(sales, card_id, skip_id, n):
+    """A card's newest approved sales other than its top sale: [[price, version, date, url, source], ...]."""
+    xs = [x for x in sales if x.get("card_id") == card_id and x.get("status") == "approved" and x.get("id") != skip_id
+          and float(x.get("price") or 0) > 0 and (x.get("printing") or "") != "?" and (x.get("edition") or "") != "?"]
+    xs.sort(key=lambda x: (x.get("sold_at") or "", x.get("id") or 0), reverse=True)
+    out = []
+    for x in xs[:n]:
+        url = x.get("url") or ""
+        out.append([_num(x["price"]), version_label(x), (x.get("sold_at") or "")[:10],
+                    url if url.startswith("https://") else "", x.get("source") or ""])
+    return out
 
 
 def _fetch_photo(url, dest, max_side=1000):
@@ -145,7 +171,7 @@ def reveal_top_prices(data, sales, fetch=None):
     """Most-valuable pages show the exact top sale (David's call, 2026-11-25). Only the cards that make a
     character's top list get [price, ebay_url] appended to "top"; every other card's prices stay Premium."""
     import build_pages as bp
-    from settings import MOST_VALUABLE_CHARACTERS
+    from settings import MOST_VALUABLE_CHARACTERS, MOST_VALUABLE_RECENT_SALES
     best = best_sales(sales)
     shown = 0
     for ch in bp.load_chars():
@@ -159,7 +185,11 @@ def reveal_top_prices(data, sales, fetch=None):
             if x and len(c["top"]) == 4:
                 url = x.get("url") or ""
                 c["top"] += [_num(x["price"]), url if url.startswith("https://") else "", x.get("source") or "",
-                             sale_photo(x, fetch)]   # [7]: photo of the sold copy (the slab), shown instead of the card scan
+                             sale_photo(x, fetch, c)]   # [7]: photo of the sold copy (the slab), shown instead of the card scan
+                if MOST_VALUABLE_RECENT_SALES and "rs" not in c:
+                    rs = recent_sales(sales, c["s"] + ":" + c["n"], x.get("id"), MOST_VALUABLE_RECENT_SALES)
+                    if rs:
+                        c["rs"] = rs                     # other recent sales, shown under the card on its list
                 shown += 1
     return shown
 

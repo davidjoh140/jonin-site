@@ -55,6 +55,7 @@ MOST_VALUABLE_CHARACTERS = ["naruto", "sasuke", "itachi", "kakashi", "sakura", "
                             "gaara", "madara", "pain", "obito", "tsunade", "orochimaru", "might-guy"]   # character slugs; PLACEHOLDER pick of 15 main characters (David asked for 10-15, 2026-11-25)
 MOST_VALUABLE_MIN_CARDS = 5   # a character's list goes live once this many of their cards have an approved sale (David, 2026-11-25)
 MOST_VALUABLE_TOP = 5
+MOST_VALUABLE_RECENT_SALES = 3   # PLACEHOLDER (2026-11-26): other recent sales shown under each card on most-valuable pages; David to confirm
 VOTE_MIN_VOTERS = 5   # people who must vote for a character before its Most popular page goes live (David confirmed 5; matches vote.js MIN_VOTERS)
 POPULAR_TOP = 10      # cards on a character's Most popular page (David OK'd 10 for now)
 # Card names that count toward a character on top of their homepage filter names (exact card name, parentheses included).
