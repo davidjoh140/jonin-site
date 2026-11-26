@@ -31,6 +31,7 @@ button.ghost{background:none;color:var(--mute);border-color:var(--line);min-heig
 .st{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;background:#2E2638}.st.active{background:#1F3A1A;color:var(--ok)}.st.invited{background:#3A2A10;color:var(--acc2)}.st.revoked,.st.expired{color:var(--mute)}
 .tag{font-size:12px;color:var(--mute)}
 .fbp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:rgba(242,193,78,.06)}.fbch{padding:6px 0;border-top:1px dashed var(--line)}.fbdel{color:#ff8a80}.fbadd{color:var(--ok)}.fbalt[hidden]{display:none!important}
+.fbfix{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}.fbq{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}.fbc{min-height:30px;padding:3px 11px;font-size:13px;border-radius:99px;background:#3A2A10;border-color:#5A4318;color:var(--ink)}.fbc:hover{border-color:var(--acc)}.fbed{border:1px solid var(--acc);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:rgba(245,124,0,.05)}.fbrow{padding:8px 0;border-bottom:1px dashed var(--line)}.fbtg{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:6px}.fbtg>.tag{width:64px}.fbt{min-height:28px;padding:2px 10px;font-size:12px;font-weight:500;border-radius:99px;background:none;border-color:var(--line);color:var(--mute)}.fbt.on{background:#2E2638;color:var(--ink);border-color:#5b4f6b}.fbt.ch{border-color:var(--ok);color:var(--ok)}.fbt.ch:not(.on){text-decoration:line-through;color:#ff8a80;border-color:#ff8a80}
 .gate{max-width:440px}
 .mn{display:inline-block;margin-left:6px;min-width:18px;padding:0 5px;border-radius:99px;background:var(--red);color:#fff;font:700 11px/18px Inter,sans-serif;text-align:center}
 .mrow{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}.mrow:hover{background:#2B2435}.mrow:last-child{border-bottom:0}
@@ -279,44 +280,133 @@ async function openThread(o){let dlg=$('#mthread');if(!dlg){document.body.insert
     if(s.error){alert(s.error.message);b.disabled=false;return}openThread({user:t.user_id})});
 }
 let FBSHOW='review';
-// Feedback review (2026-11-26): Claude drafts a fix for each note (proposal); David picks Accept / Skip / Alter.
+// Feedback review (2026-11-26): Claude drafts a fix for each note (proposal); David picks Accept / Skip / change it.
 // Accept applies card-data fixes (admin_feedback_review) and gives the sender feedback scrolls (xp_rules). Undo puts it back.
+// Fix panel (2026-11-26 b) on every open note:
+//  - quick-fix chips built from the note's words and the card (one click puts that change in the card editor)
+//  - card editor: toggle printings / editions / rarity per card, add cards, copy the change to a whole set+rarity,
+//    then "Accept & apply now" (admin_feedback_set_fix: saves David's fix and applies it in one go) or save it as the proposal
+//  - text box: "⚡ Start in Claude now" opens a new Claude chat with the note, card, current fix and David's direction
+//    (and saves the direction on the note); "Save note" just saves it.
+const PRINTS=['Normal','Flat foil','Diamond foil','Wavy foil','Prism foil','Spiral foil','Super Rare foil','Black & Gold foil','Full art','Promo','Starter (no foil)'];
+const EDS=['1st Edition','Unlimited'],RARS=['Common','Uncommon','Rare','Super Rare','Promo','Starter','Unknown'];
+const FBED={},FBTXT={};let FBD=null;
 async function loadFb(){const [r,mc]=await Promise.all([sb.rpc('admin_feedback'),sb.rpc('admin_note_message_counts')]);MSGN=Object.fromEntries((mc.data||[]).map(x=>[x.feedback_id,x.n+(x.unread?', '+x.unread+' new':'')]));let el=$('#fb');if(!el){app.insertAdjacentHTML('beforeend','<div id="fb"></div>');el=$('#fb')}
   if(r.error){el.innerHTML=`<h2>Feedback</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
-  const all=r.data||[],K={card:'🃏 Card info',idea:'💡 Idea',bug:'🐞 Bug',other:'💬 Other'};
-  const open=x=>['drafting','awaiting','alter'].includes(x.review)&&x.status!=='archived';
-  const F={review:open,accepted:x=>x.review==='accepted',skipped:x=>x.review==='skipped',all:x=>x.status!=='archived'};
-  const rows=all.filter(F[FBSHOW]),cnt=k=>all.filter(F[k]).length;
-  const ids=[...new Set(rows.flatMap(x=>(x.proposal_change||[]).map(c=>c.card_id)).concat(rows.map(x=>x.card_id)).filter(Boolean))];
+  const all=r.data||[];
+  const ids=[...new Set(all.flatMap(x=>(x.proposal_change||[]).map(c=>c.card_id)).concat(all.map(x=>x.card_id)).filter(Boolean))];
   const cr=ids.length?await sb.from('cards').select('id,name,number,set_id,printings,editions,rarity').in('id',ids):{data:[]};
-  const CB=Object.fromEntries((cr.data||[]).map(c=>[c.id,c]));
-  const lst=v=>Array.isArray(v)?v:(v==null||v===''?[]:[String(v)]);
+  FBD={all,CB:Object.fromEntries((cr.data||[]).map(c=>[c.id,c]))};renderFb()}
+async function fbCards(ids){ids=ids.filter(i=>!FBD.CB[i]);if(!ids.length)return;const r=await sb.from('cards').select('id,name,number,set_id,printings,editions,rarity').in('id',ids);(r.data||[]).forEach(c=>FBD.CB[c.id]=c)}
+const lst=v=>Array.isArray(v)?v:(v==null||v===''?[]:[String(v)]);
+const fbOpen=x=>['drafting','awaiting','alter'].includes(x.review)&&x.status!=='archived';
+// Editor rows: {id, set:{printings,editions,rarity}} compared against the live card (FBD.CB).
+function fbEdInit(x){if(FBED[x.id])return FBED[x.id];const CB=FBD.CB,rows=[];
+  const mk=(id,s)=>{const b=CB[id]||{};return{id,set:{printings:lst(s&&s.printings||b.printings).slice(),editions:lst(s&&s.editions||b.editions).slice(),rarity:(s&&s.rarity)||b.rarity||''}}};
+  if(x.proposal_change&&x.review!=='accepted')x.proposal_change.forEach(c=>rows.push(mk(c.card_id,c.set)));else if(x.card_id&&CB[x.card_id])rows.push(mk(x.card_id));
+  return FBED[x.id]={rows,sum:null}}
+function fbDelta(r){const b=FBD.CB[r.id]||{},d={},bp=lst(b.printings),be=lst(b.editions);
+  const add=r.set.printings.filter(v=>!bp.includes(v)),rem=bp.filter(v=>!r.set.printings.includes(v)),eadd=r.set.editions.filter(v=>!be.includes(v)),erem=be.filter(v=>!r.set.editions.includes(v));
+  if(add.length||rem.length)d.printings=r.set.printings;if(eadd.length||erem.length)d.editions=r.set.editions;if(r.set.rarity&&r.set.rarity!==b.rarity)d.rarity=r.set.rarity;
+  return{d,add,rem,eadd,erem,rar:d.rarity}}
+function fbAutoSum(ed){const parts=ed.rows.map(r=>{const b=FBD.CB[r.id]||{},t=fbDelta(r),bits=[];
+  if(t.add.length)bits.push('add '+t.add.join(', '));if(t.rem.length)bits.push('remove '+t.rem.join(', '));if(t.eadd.length)bits.push('add '+t.eadd.join(', '));if(t.erem.length)bits.push('remove '+t.erem.join(', '));if(t.rar)bits.push('rarity → '+t.rar);
+  return bits.length?`${b.name||r.id} (${b.number||r.id}): ${bits.join('; ')}`:''}).filter(Boolean);
+  return parts.length>4?parts.slice(0,3).join('. ')+`. …and ${parts.length-3} more cards the same way.`:parts.join('. ')+(parts.length?'.':'')}
+// Quick-fix chips: read foil / edition words in the note and offer the missing ones (or the extra ones, when it says "only").
+function fbQuick(x){const m=(x.message||'').toLowerCase(),c=FBD.CB[x.card_id],out=[];
+  const KW=[[/flat/,'Flat foil'],[/diamond/,'Diamond foil'],[/wavy/,'Wavy foil'],[/prism/,'Prism foil'],[/spiral/,'Spiral foil'],[/black\s*(&|and)\s*gold|b&g/,'Black & Gold foil'],[/full\s*art/,'Full art'],[/super\s*rare foil/,'Super Rare foil']];
+  if(c){const er=FBED[x.id]&&FBED[x.id].rows.find(r=>r.id===c.id),cp=er?er.set.printings:lst(c.printings),ce=er?er.set.editions:lst(c.editions),hit=KW.filter(([re])=>re.test(m)).map(k=>k[1]);
+    hit.filter(v=>!cp.includes(v)).forEach(v=>out.push({l:'＋ '+v,a:'add',v}));
+    if(hit.length&&/\b(only|just|either|no other|not)\b/.test(m))cp.filter(v=>/foil|art/i.test(v)&&!hit.includes(v)).forEach(v=>out.push({l:'− '+v,a:'rem',v}));
+    if(/\bfoil/.test(m)&&!hit.length&&!cp.some(v=>/foil/i.test(v)))out.push({l:'＋ Flat foil (guess)',a:'add',v:'Flat foil'});
+    if(/1st/.test(m)&&!ce.includes('1st Edition'))out.push({l:'＋ 1st Edition',a:'add',v:'1st Edition',ed:1});
+    if(/unlimited/.test(m)&&!ce.includes('Unlimited'))out.push({l:'＋ Unlimited',a:'add',v:'Unlimited',ed:1});
+    if(c.rarity&&c.set_id)out.push({l:`Same for all ${c.rarity}s in set ${c.set_id}`,a:'wide'})}
+  if(c||x.proposal_change)out.push({l:x.proposal_change?'✎ Edit this fix':'✎ Edit the card myself',a:'edit'});
+  if(x.user_id||x.credit_user||x.contact)out.push({l:'💬 Ask the sender',a:'ask'});
+  return out}
+function fbClaudeUrl(x,dir){const CB=FBD.CB,c=CB[x.card_id];
+  const t=`Jonin feedback note #${x.id} needs a fix (jonin.cards → /admin Feedback; Supabase project cfzpayanhvvqtkuqfgof, table feedback).\n\nThe note: "${(x.message||'').slice(0,1200)}"`+
+  (c?`\nCard: ${c.name} (${c.id}), rarity ${c.rarity}; printings now: ${lst(c.printings).join(', ')||'none'}; editions now: ${lst(c.editions).join(', ')||'none'}.`:'')+
+  (x.page?`\nSent from page: ${x.page}`:'')+(x.proposal?`\nCurrent proposed fix: ${x.proposal}`:'')+(dir?`\n\nMy direction: ${dir}`:'')+
+  `\n\nDraft it now. For card data, write the proposal on the note (proposal, proposal_change as [{card_id, set:{printings, editions, rarity}}], proposal_question if something is unsure, review = 'awaiting') so I can Accept it in /admin; don't change the cards table yourself. For a site or code fix, make the change in the jonin-site repo and open a PR.`;
+  return 'https://claude.ai/new?q='+encodeURIComponent(t)}
+function renderFb(){const el=$('#fb');if(!el||!FBD)return;const {all,CB}=FBD,K={card:'🃏 Card info',idea:'💡 Idea',bug:'🐞 Bug',other:'💬 Other'};
+  const F={review:fbOpen,accepted:x=>x.review==='accepted',skipped:x=>x.review==='skipped',all:x=>x.status!=='archived'};
+  const rows=all.filter(F[FBSHOW]),cnt=k=>all.filter(F[k]).length;
   const diff=(b,a)=>{const B=lst(b),A=lst(a);return B.filter(x=>!A.includes(x)).map(x=>`<s class="fbdel">${esc(x)}</s>`).concat(A.map(x=>B.includes(x)?esc(x):`<b class="fbadd">${esc(x)}</b>`)).join(', ')||'<span class="tag">none</span>'};
   const changeHtml=(x)=>{const ch=x.proposal_change||[];if(!ch.length)return'';const before=x.review==='accepted'&&x.applied?Object.fromEntries(x.applied.map(c=>[c.id,c])):CB;
     const shown=ch.slice(0,6).map(c=>{const b=before[c.card_id]||{};return`<div class="fbch"><div><a href="/#card=${encodeURIComponent(c.card_id)}" target="_blank">${esc(b.name||c.card_id)}</a> <span class="tag">${esc(c.card_id)}</span></div>${Object.entries(c.set||{}).map(([k,v])=>`<div class="tag" style="margin-top:2px"><b style="color:var(--ink)">${esc(k)}:</b> ${diff(b[k],v)}</div>`).join('')}</div>`}).join('');
     return shown+(ch.length>6?`<p class="tag">…and ${ch.length-6} more cards (${ch.length} in all)</p>`:'')};
-  const card=x=>`<div class="box fbn" style="margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span class="tag">${day(x.created_at)} · ${K[x.kind]||esc(x.kind)}${x.card_id?` · <a href="/#card=${encodeURIComponent(x.card_id)}" target="_blank">${esc((CB[x.card_id]||{}).name||x.card_id)}</a>`:''}${x.page?` · <a href="${esc(x.page.split('#')[0]+(x.selector?(x.page.includes('?')?'&':'?')+'fbspot='+encodeURIComponent(x.selector):''))}" target="_blank">page</a>`:''}</span>
+  const chips=(r,i,key,opts)=>{const cur=r.set[key],o=[...new Set(opts.concat(cur,lst((CB[r.id]||{})[key])))];
+    return o.map(v=>`<button type="button" class="fbt${cur.includes(v)?' on':''}${cur.includes(v)!==lst((CB[r.id]||{})[key]).includes(v)?' ch':''}" data-tg="${i}" data-k="${key}" data-v="${esc(v)}">${esc(v)}</button>`).join('')};
+  const editor=x=>{const ed=FBED[x.id];if(!ed)return'';const sum=ed.sum??fbAutoSum(ed),n=ed.rows.filter(r=>Object.keys(fbDelta(r).d).length).length;
+    return`<div class="fbed"><div class="tag" style="letter-spacing:1px;font-weight:700">YOUR FIX · tap to toggle, <span class="fbadd">green</span> = changed</div>
+    ${ed.rows.map((r,i)=>{const b=CB[r.id]||{};return`<div class="fbrow"><div style="display:flex;justify-content:space-between;gap:8px"><span><a href="/#card=${encodeURIComponent(r.id)}" target="_blank">${esc(b.name||r.id)}</a> <span class="tag">${esc(b.number||'')} · set ${esc(b.set_id||'')}</span></span><button type="button" class="ghost" data-rmrow="${i}" title="Remove from this fix" style="min-height:26px;padding:0 8px">✕</button></div>
+      <div class="fbtg"><span class="tag">Printings</span>${chips(r,i,'printings',PRINTS)}<input data-other="${i}" placeholder="+ other" style="width:110px;min-height:28px;padding:2px 8px;font-size:13px"></div>
+      <div class="fbtg"><span class="tag">Editions</span>${chips(r,i,'editions',EDS)}</div>
+      <div class="fbtg"><span class="tag">Rarity</span><select data-rar="${i}" style="width:auto;min-height:30px;padding:2px 8px;font-size:13px">${[...new Set(RARS.concat(r.set.rarity||[]))].map(v=>`<option${v===r.set.rarity?' selected':''}>${esc(v)}</option>`).join('')}</select></div></div>`}).join('')||'<p class="tag">No card on this fix yet. Add one below.</p>'}
+    <div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap"><input list="fbcl" data-addc="${x.id}" placeholder="Add a card: type a name or number…" style="flex:1;min-width:220px;min-height:34px;font-size:14px"></div>
+    <label><span>What the fix says (filled in for you, edit if you want)</span><textarea data-sum="${x.id}" rows="2">${esc(sum)}</textarea></label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" data-fbapply="${x.id}">✓ Accept & apply now${n?` (${n} card${n>1?'s':''})`:''} (+📜)</button><button type="button" class="ghost" data-fbprop="${x.id}">Save as the proposal</button><button type="button" class="ghost" data-fbcancel="${x.id}">Cancel</button></div></div>`};
+  const panel=x=>{const q=fbQuick(x);return`<div class="fbfix">
+    ${x.proposal&&x.review!=='drafting'?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button data-fbr="accept" data-id="${x.id}">✓ Accept${x.proposal_change?' & apply':''} (+📜)</button><button class="ghost" data-fbr="skip" data-id="${x.id}">Skip</button></div>`:''}
+    ${q.length?`<div class="fbq"><span class="tag">Quick fixes:</span>${q.map((c,i)=>`<button type="button" class="fbc" data-q="${x.id}:${i}">${esc(c.l)}</button>`).join('')}</div>`:''}
+    ${editor(x)}
+    <textarea data-txt="${x.id}" rows="2" placeholder="Suggest the fix or what to change… e.g. it's Diamond for the GenCon promo, Wavy for E3 · apply to all TP3 rares · ask them for a photo">${esc(FBTXT[x.id]||'')}</textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button type="button" data-fbgo="${x.id}">⚡ Start in Claude now</button><button type="button" class="ghost" data-fbnote="${x.id}">Save note</button>${!(x.proposal&&x.review!=='drafting')?`<button type="button" class="ghost" data-fbr="skip" data-id="${x.id}">Skip</button>`:''}</div></div>`};
+  const card=x=>`<div class="box fbn" data-nid="${x.id}" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span class="tag">#${x.id} · ${day(x.created_at)} · ${K[x.kind]||esc(x.kind)}${x.card_id?` · <a href="/#card=${encodeURIComponent(x.card_id)}" target="_blank">${esc((CB[x.card_id]||{}).name||x.card_id)}</a>`:''}${x.page?` · <a href="${esc(x.page.split('#')[0]+(x.selector?(x.page.includes('?')?'&':'?')+'fbspot='+encodeURIComponent(x.selector):''))}" target="_blank">page</a>`:''}</span>
     <span class="tag">${esc(x.name||'')} ${x.contact?esc(x.contact):''}${!x.name&&!x.contact?'anonymous':''}${x.user_id?' · signed in':''}</span></div>
     <div style="white-space:pre-wrap;margin:8px 0 10px;font-size:15px">“${esc(x.message)}”</div>
+    ${x.card_id&&CB[x.card_id]&&fbOpen(x)?`<p class="tag" style="margin:-4px 0 8px">Now: ${esc(lst(CB[x.card_id].printings).join(', ')||'no printings')} · ${esc(lst(CB[x.card_id].editions).join(', ')||'no editions')} · ${esc(CB[x.card_id].rarity||'')}</p>`:''}
     ${x.user_id||x.credit_user||x.contact?`<p style="margin:-4px 0 10px"><button class="ghost" data-fbdm="${x.id}">💬 ${MSGN[x.id]?'Conversation ('+MSGN[x.id]+')':'Message sender'}</button></p>`:''}
-    ${x.review==='drafting'?`<p class="tag">Claude is drafting a fix (checked every hour).</p>`:''}
-    ${x.review==='alter'?`<p class="tag"><b style="color:var(--ink)">Your change:</b> ${esc(x.alter_note)}<br>Claude is redrafting (checked every hour).</p>`:''}
-    ${x.proposal&&x.review!=='drafting'?`<div class="fbp"><div class="tag" style="letter-spacing:1px;font-weight:700">PROPOSED FIX</div><div style="margin:4px 0 6px">${esc(x.proposal)}</div>${changeHtml(x)}${x.proposal_question&&x.review!=='accepted'?`<p class="tag" style="margin-top:8px">❓ ${esc(x.proposal_question)}</p>`:''}</div>`:''}
-    ${x.review==='awaiting'?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button data-fbr="accept" data-id="${x.id}">✓ Accept${x.proposal_change?' & apply':''} (+📜)</button><button class="ghost" data-fbr="alter" data-id="${x.id}">✎ Alter</button><button class="ghost" data-fbr="skip" data-id="${x.id}">Skip</button></div>
-      <form class="fbalt" data-id="${x.id}" hidden style="margin-top:8px;display:grid;gap:6px"><textarea name="t" rows="2" placeholder="What should change? e.g. apply to all rares in this set" style="width:100%;box-sizing:border-box"></textarea><div><button type="submit">Send to Claude</button></div></form>`:''}
+    ${x.review==='drafting'&&!x.proposal?`<p class="tag">No fix drafted yet. Use a quick fix, write your own, or ⚡ start it in Claude.</p>`:''}
+    ${x.review==='alter'?`<p class="tag"><b style="color:var(--ink)">Your note:</b> ${esc(x.alter_note)}</p>`:''}
+    ${x.proposal&&x.review!=='drafting'?`<div class="fbp"><div class="tag" style="letter-spacing:1px;font-weight:700">${x.proposal_by==='david'?'YOUR FIX':'PROPOSED FIX'}</div><div style="margin:4px 0 6px">${esc(x.proposal)}</div>${changeHtml(x)}${x.proposal_question&&x.review!=='accepted'?`<p class="tag" style="margin-top:8px">❓ ${esc(x.proposal_question)}</p>`:''}</div>`:''}
+    ${fbOpen(x)?panel(x):''}
     ${x.review==='accepted'?`<p class="tag" style="margin-top:8px">✓ Accepted ${day(x.reviewed_at)}${x.applied?` · ${x.applied.length} card${x.applied.length>1?'s':''} updated (on the site within ~15 min)`:''} · ${x.credit_user?'Scrolls given':'Scrolls waiting (no account with that email yet; it\'s given if they sign up with it)'} <button class="ghost" data-fbundo="${x.id}">Undo</button></p>`:''}
     ${x.review==='skipped'?`<p class="tag">Skipped ${day(x.reviewed_at)}</p>`:''}
   </div>`;
   el.innerHTML=`<h2>Feedback</h2><p class="mt" style="margin-bottom:10px">${[['review','To review'],['accepted','Accepted'],['skipped','Skipped'],['all','All']].map(([k,l])=>`<button class="ghost" data-fbs="${k}" style="${FBSHOW===k?'color:var(--ink);border-color:var(--acc)':''}">${l}${k!=='all'?' ('+cnt(k)+')':''}</button>`).join(' ')}</p>
-  ${rows.length?rows.map(card).join(''):'<p class="tag">Nothing here.</p>'}`;
-  el.querySelectorAll('[data-fbs]').forEach(b=>b.onclick=()=>{FBSHOW=b.dataset.fbs;loadFb()});
-  el.querySelectorAll('[data-fbdm]').forEach(b=>b.onclick=()=>openThread({feedback:+b.dataset.fbdm}));
-  const act=async(id,a,note)=>{const r=await sb.rpc('admin_feedback_review',{p_id:id,p_action:a,p_note:note||null});if(r.error){alert(r.error.message);return}loadFb()};
-  el.querySelectorAll('[data-fbr]').forEach(b=>b.onclick=()=>{const id=+b.dataset.id;if(b.dataset.fbr==='alter'){const f=el.querySelector(`.fbalt[data-id="${id}"]`);f.hidden=!f.hidden;if(!f.hidden)f.t.focus();return}
-    b.disabled=true;act(id,b.dataset.fbr)});
-  el.querySelectorAll('.fbalt').forEach(f=>f.onsubmit=e=>{e.preventDefault();const t=f.t.value.trim();if(!t){f.t.focus();return}act(+f.dataset.id,'alter',t)});
-  el.querySelectorAll('[data-fbundo]').forEach(b=>b.onclick=async()=>{if(!confirm('Undo this? The cards go back to how they were and the scrolls are taken away.'))return;const r=await sb.rpc('admin_feedback_undo',{p_id:+b.dataset.fbundo});if(r.error)alert(r.error.message);loadFb()});
+  ${rows.length?rows.map(card).join(''):'<p class="tag">Nothing here.</p>'}<datalist id="fbcl"></datalist>`;
+  if(Object.keys(FBED).length)cardsList().then(cs=>{const dl=$('#fbcl');if(dl)dl.innerHTML=cs.map(c=>`<option value="${esc(c.label)}">`).join('')});
+  const byId=id=>all.find(x=>x.id===+id),act=async(id,a,note)=>{const r=await sb.rpc('admin_feedback_review',{p_id:+id,p_action:a,p_note:note||null});if(r.error){alert(r.error.message);return false}return true};
+  const edOf=id=>fbEdInit(byId(id)),refocus=sel=>{const e=el.querySelector(sel);if(e){e.focus();e.setSelectionRange&&e.setSelectionRange(e.value.length,e.value.length)}};
+  const touch=ed=>{if(ed.sum!=null&&ed.sumAuto!==false)ed.sum=null};
+  el.oninput=e=>{const t=e.target;if(t.dataset.txt)FBTXT[t.dataset.txt]=t.value;if(t.dataset.sum){const ed=FBED[t.dataset.sum];ed.sum=t.value;ed.sumAuto=false}};
+  el.onchange=async e=>{const t=e.target,box=t.closest('.fbn');const id=box&&+box.dataset.nid;
+    if(t.dataset.rar!=null){const ed=FBED[id];ed.rows[+t.dataset.rar].set.rarity=t.value;touch(ed);renderFb()}
+    if(t.dataset.other!=null&&t.value.trim()){const ed=FBED[id],r=ed.rows[+t.dataset.other];if(!r.set.printings.includes(t.value.trim()))r.set.printings.push(t.value.trim());touch(ed);renderFb()}
+    if(t.dataset.addc){const cs=await cardsList(),c=cs.find(c=>c.label===t.value)||cs.find(c=>c.id.toLowerCase()===t.value.trim().toLowerCase());if(!c)return;const ed=FBED[t.dataset.addc];
+      if(!ed.rows.some(r=>r.id===c.id)){await fbCards([c.id]);const b=FBD.CB[c.id]||{};ed.rows.push({id:c.id,set:{printings:lst(b.printings).slice(),editions:lst(b.editions).slice(),rarity:b.rarity||''}})}touch(ed);renderFb();refocus(`[data-addc="${t.dataset.addc}"]`)}};
+  el.onclick=async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+    if(d.fbs){FBSHOW=d.fbs;renderFb();return}
+    if(d.fbdm){openThread({feedback:+d.fbdm});return}
+    if(d.fbundo){if(!confirm('Undo this? The cards go back to how they were and the scrolls are taken away.'))return;const r=await sb.rpc('admin_feedback_undo',{p_id:+d.fbundo});if(r.error)alert(r.error.message);loadFb();return}
+    if(d.fbr){b.disabled=true;if(await act(d.id,d.fbr)){delete FBED[d.id];loadFb()}else b.disabled=false;return}
+    if(d.q){const [id,i]=d.q.split(':'),x=byId(id),c=fbQuick(x)[+i];if(!c)return;
+      if(c.a==='ask'){openThread({feedback:+id});return}
+      const ed=fbEdInit(x);if(c.a==='edit'){renderFb();return}
+      let r=ed.rows.find(r=>r.id===x.card_id);if(!r&&FBD.CB[x.card_id]){const cb=FBD.CB[x.card_id];r={id:cb.id,set:{printings:lst(cb.printings).slice(),editions:lst(cb.editions).slice(),rarity:cb.rarity||''}};ed.rows.unshift(r)}
+      if(c.a==='add'||c.a==='rem'){const k=c.ed?'editions':'printings',L=r.set[k];if(c.a==='add'&&!L.includes(c.v))L.push(c.v);if(c.a==='rem')r.set[k]=L.filter(v=>v!==c.v)}
+      if(c.a==='wide'){const cb=FBD.CB[x.card_id],t=fbDelta(r);if(!t.add.length&&!t.rem.length&&!t.eadd.length&&!t.erem.length){alert('First pick the change on this card (e.g. a ＋ foil chip), then tap this to copy it to the rest of the set.');renderFb();return}
+        b.disabled=true;const q=await sb.from('cards').select('id,name,number,set_id,printings,editions,rarity').eq('set_id',cb.set_id).eq('rarity',cb.rarity).limit(400);
+        (q.data||[]).forEach(o=>{FBD.CB[o.id]=FBD.CB[o.id]||o;if(ed.rows.some(z=>z.id===o.id))return;let p=lst(o.printings).filter(v=>!t.rem.includes(v)),en=lst(o.editions).filter(v=>!t.erem.includes(v));
+          t.add.forEach(v=>{if(!p.includes(v))p.push(v)});t.eadd.forEach(v=>{if(!en.includes(v))en.push(v)});ed.rows.push({id:o.id,set:{printings:p,editions:en,rarity:o.rarity||''}})})}
+      touch(ed);renderFb();return}
+    if(d.tg!=null){const id=+b.closest('.fbn').dataset.nid,ed=FBED[id],r=ed.rows[+d.tg],L=r.set[d.k];r.set[d.k]=L.includes(d.v)?L.filter(v=>v!==d.v):L.concat(d.v);touch(ed);renderFb();return}
+    if(d.rmrow!=null){const id=+b.closest('.fbn').dataset.nid,ed=FBED[id];ed.rows.splice(+d.rmrow,1);touch(ed);renderFb();return}
+    if(d.fbcancel){delete FBED[d.fbcancel];renderFb();return}
+    if(d.fbapply||d.fbprop){const id=d.fbapply||d.fbprop,ed=FBED[id],ch=ed.rows.map(r=>({card_id:r.id,set:fbDelta(r).d})).filter(c=>Object.keys(c.set).length),sum=(ed.sum??fbAutoSum(ed)).trim();
+      if(!sum){alert('Say what the fix is (or toggle a change on a card).');return}
+      if(d.fbapply&&!ch.length&&!confirm('No card data changes. Accept this note anyway (marks it done and gives the scrolls)?'))return;
+      b.disabled=true;const r=await sb.rpc('admin_feedback_set_fix',{p_id:+id,p_proposal:sum,p_change:ch.length?ch:null,p_accept:!!d.fbapply});
+      if(r.error){alert(r.error.message);b.disabled=false;return}delete FBED[id];delete FBTXT[id];loadFb();return}
+    if(d.fbgo||d.fbnote){const id=d.fbgo||d.fbnote,x=byId(id),t=(FBTXT[id]||'').trim();
+      if(d.fbgo){window.open(fbClaudeUrl(x,t),'_blank','noopener');if(t&&await act(id,'alter',t)){delete FBTXT[id];loadFb()}return}
+      if(!t){refocus(`[data-txt="${id}"]`);return}b.disabled=true;if(await act(id,'alter',t)){delete FBTXT[id];loadFb()}else b.disabled=false}};
 }
 load();
 }
