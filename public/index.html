@@ -736,6 +736,7 @@ function collClick(t,e){
     else{const k=ck(cid(c),p,ed,'want');setItem(c,p,ed,'want',COLL.has(k)?0:1)}}
   else if(t.dataset.mtab){MTAB=t.dataset.mtab;MISS='';LAST?listView(...LAST):renderMine()}
   else if(t.dataset.miss!=null){MISS=MISS===t.dataset.miss?'':t.dataset.miss;listView(...LAST)}
+  else if(t.dataset.redosetup!=null)redoSetup();
   else if(t.dataset.share!=null)toggleShare();
   else if(t.dataset.nmsave!=null){const i=$('#nmin');saveName(i?i.value:'')}
   else if(t.dataset.nmedit!=null){NMEDIT=true;renderMine();const i=$('#nmin');if(i){i.focus();i.select()}}
@@ -804,7 +805,11 @@ function renderMine(){const el=$('#v-mine');if(!ME){const n=gCount();if(!n){el.i
   listView(el,`<h1 class="ph">${MYP?avImg(MYP.fav_character,MYP.avatar,48):''}<span>${esc(MYP&&MYP.handle?MYP.handle+"'s collection":'My collection')}</span>${badgeHtml(MYBADGE)}</h1>
   ${nameRow()}${rankRow()}
   <div class="share exrow"><span>Spreadsheet:</span>${MEMBER?'<button type="button" class="clear" data-export>Download my collection (CSV)</button><span class="mt">Haves, wants and slabs with versions, grades and estimated values. Opens in Excel or Google Sheets.</span>':'<a class="clear" href="/premium/">⭐ Export your collection with Premium</a>'}</div>
-  ${MYP?`<div class="share"><span>Share link${MYP.sharing?'':' (off)'}:</span>${MYP.sharing?`<code>${esc(link)}</code><button class="clear" data-copy="${esc(link)}">Copy</button>`:''}<button class="clear" data-share>${MYP.sharing?'Turn off sharing':'Turn on sharing'}</button></div>${igRow()}${favRow()}${avRow()}`:''}${sellBox()}`,COLL,false)}
+  ${MYP?`<div class="share"><span>Share link${MYP.sharing?'':' (off)'}:</span>${MYP.sharing?`<code>${esc(link)}</code><button class="clear" data-copy="${esc(link)}">Copy</button>`:''}<button class="clear" data-share>${MYP.sharing?'Turn off sharing':'Turn on sharing'}</button></div>${igRow()}${favRow()}${avRow()}${setupRow()}`:''}${sellBox()}`,COLL,false)}
+// Redo setup (2026-11-26): reopens /welcome/ with their saved answers filled in, then comes back here. Skipping setup left nothing filled, so that case says "Finish setup".
+function setupRow(){if(!MYP)return '';const any=(MYP.fav_characters&&MYP.fav_characters.length)||MYP.found_via||(MYP.collector_types&&MYP.collector_types.length);
+  return `<div class="share setuprow"><span>Setup:</span><button type="button" class="clear" data-redosetup>${any?'Redo setup':'Finish setup'}</button><span class="mt">${any?'Change your favorite characters, answers or theme.':'Pick your favorite characters, answer a few questions and choose a theme.'}</span></div>`}
+function redoSetup(){try{sessionStorage.setItem('jret',location.pathname+location.hash)}catch(_){}location.href='/welcome/'}
 // Favorite character on the profile: picked from the site's 40 characters, shown on their shared collection with a link to that character's page.
 let FAVEDIT=false;const chSlug=l=>l.toLowerCase().replace(/[^a-z0-9]+/g,'-');
 const FAVS=()=>QUICK.filter(([l,q])=>q.startsWith('char:')).map(([l])=>[chSlug(l),l]);
