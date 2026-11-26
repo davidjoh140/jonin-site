@@ -29,7 +29,7 @@
   }
   function avatar(s,sz){
     var src=avSrc(s.fav,s.avatar);
-    return src?'<img src="'+esc(src)+'" alt="" width="'+sz+'" height="'+sz+'" decoding="async">':'<span class="jini">'+esc((s.handle||'?').charAt(0).toUpperCase())+'</span>';
+    return src?'<img src="'+esc(src)+'" alt="" width="'+sz+'" height="'+sz+'" decoding="async">':'<span class="jini">'+esc((s.handle||'').charAt(0).toUpperCase())+'</span>';
   }
 
   // s = {home, user, handle, fav, avatar, badge:'founding'|'premium'|null, pts:{xp,rank,next,next_at,prev_at}|null (from my_xp), guest}
@@ -49,13 +49,13 @@
     var st=s.badge==='founding'?'founding':s.badge==='premium'?'premium':'free';
     var p=s.pts,rank=p&&p.rank?p.rank:'',pts=p?(p.xp!=null?p.xp:(p.points||0)):0,lo=p&&p.prev_at||0;
     var pct=p&&p.next_at?Math.min(100,Math.round((pts-lo)/(p.next_at-lo)*100)):100;
-    var name=s.handle||'My profile';
+    var name=s.handle||'',ld=!name; // no name yet: profile still loading, show a quiet placeholder
     return '<div class="jac">'+
-      '<a class="jab jpf st-'+st+'" '+mine+' aria-haspopup="menu" title="'+esc(name+' · '+LABEL[st]+(rank?' · '+rank:''))+'">'+
+      '<a class="jab jpf st-'+st+'" '+mine+' aria-haspopup="menu" title="'+esc((name||'Profile')+' · '+LABEL[st]+(rank?' · '+rank:''))+'">'+
         '<span class="jav">'+avatar(s,30)+'<i class="jbg">'+ICON[st]+'</i></span>'+
-        '<span class="jat"><b>'+esc(name)+'</b>'+(rank?'<small>'+esc(rank)+'</small>':'')+'</span>'+CARET+'</a>'+
+        '<span class="jat">'+(ld?'<i class="jld"></i>':'<b>'+esc(name)+'</b>')+(rank?'<small>'+esc(rank)+'</small>':'')+'</span>'+CARET+'</a>'+
       '<div class="jam" role="menu">'+
-        '<div class="jah"><span class="jav big">'+avatar(s,48)+'</span><div><b>'+esc(name)+'</b><span class="jst st-'+st+'">'+ICON[st]+LABEL[st]+'</span></div></div>'+
+        '<div class="jah"><span class="jav big">'+avatar(s,48)+'</span><div><b>'+esc(name||'Loading…')+'</b><span class="jst st-'+st+'">'+ICON[st]+LABEL[st]+'</span></div></div>'+
         (p?'<a class="jrk" href="/missions/" role="menuitem" style="display:block;text-decoration:none" title="See your missions"><div><span>Rank</span> <b>'+esc(rank)+'</b><span class="jpt">'+pts+' XP</span></div><span class="jbar"><i style="width:'+pct+'%"></i></span>'+
           (p.next?'<small>'+(p.next_at-pts)+' XP to '+esc(p.next)+'</small>':'<small>Top rank</small>')+'</a>':'')+
         '<a class="jmi" role="menuitem" '+mine+'>My collection<small>Haves, wants, slabs and profile</small></a>'+
@@ -103,7 +103,7 @@
     var key=s?s.user.id:'out:'+guestCount();if(key===LAST)return;LAST=key;
     if(!s){paint({user:false,guest:guestCount()});return}
     var c=ls(CK);if(!c||c.uid!==s.user.id)c={uid:s.user.id};
-    var base={user:true,uid:s.user.id,handle:c.handle||(s.user.email||'').split('@')[0],fav:c.fav,avatar:c.avatar,badge:c.badge,pts:c.pts};
+    var base={user:true,uid:s.user.id,handle:c.handle||'',fav:c.fav,avatar:c.avatar,badge:c.badge,pts:c.pts};
     paint(base);
     if(s.expires_at&&s.expires_at*1000<Date.now()+5000)return; // stale token: keep showing the remembered profile
     var tok=s.access_token,uid=encodeURIComponent(s.user.id);

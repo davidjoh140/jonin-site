@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+.nmrow .nmin{all:unset;box-sizing:border-box;background:var(--bg);border:1px solid var(--edge);border-radius:8px;padding:7px 10px;color:var(--ink);min-width:160px}.nmrow .nmin:focus{border-color:var(--acc)}.nmrow .nmtip{flex-basis:100%;font-size:12px}.nmrow b{font-weight:600}
 :root{--bg:#1B1622;--panel:#241E2D;--line:#352C40;--ink:#FFF4E6;--mute:#B8AEA6;--acc:#F57C00;--acc2:#FF9A3D;--red:#B5121B;--red2:#8E0E15;--line2:#2E2638;--edge:#3A3046;--edge2:#30283A;--hov:#4A3E57;--art:#221C2A;--deep:#17121D;--deeper:#0F0B13;--ib:#2A2333;--accdim:#6B3F10;--buybg:#2A1418;--buyline:#5A1C22;--ont:#fff}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
@@ -309,7 +310,7 @@ header .pn>.pnb{height:30px;padding:0 12px 0 10px;font-size:14px}
 }
 .fbrank{align-items:center;flex-wrap:wrap;gap:8px}.fbrank b{font:800 18px "Baloo 2",sans-serif;color:#F2C14E}.fbbar{display:inline-block;width:120px;height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}.fbbar i{display:block;height:100%;background:#F2C14E}
 </style>
-<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=9528b338"><script src="/theme.js?v=5"></script><script src="/acct.js?v=3"></script>
+<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=972db725"><script src="/theme.js?v=5"></script><script src="/acct.js?v=5"></script>
 </head>
 <body>
 <header><div class="hw">
@@ -647,7 +648,7 @@ async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{ite
   paintAcct();favFirst();refreshMarks();if(sel>=0&&list[sel])renderMyColl(list[sel]);if(VIEW==='mine'){if(ME||gCount())renderMine();else{history.replaceState(null,'',location.pathname);view('cards')}}}
 let AUTHREADY=false;
 function hasSession(){if(ME)return true;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^sb-.*-auth-token$/.test(k)&&(!AUTHREADY||!sb))return true}}catch(_){}return false}
-function paintAcct(){const n=ME?0:gCount(),el=$('#acct');if(el&&window.JoninAcct){const st={home:1,user:!!ME,uid:ME&&ME.id,handle:(MYP&&MYP.handle)||(ME&&ME.email?ME.email.split('@')[0]:''),fav:MYP&&MYP.fav_character&&favName(MYP.fav_character)?MYP.fav_character:null,avatar:MYP&&MYP.avatar,badge:MYBADGE,pts:FBPTS,guest:n};const c=!ME&&!AUTHREADY&&hasSession()&&JoninAcct.cached();if(c)Object.assign(st,c,{user:true});el.innerHTML=JoninAcct.html(st);if(AUTHREADY)JoninAcct.cache(ME?st:null);}
+function paintAcct(){const n=ME?0:gCount(),el=$('#acct');if(el&&window.JoninAcct){const st={home:1,user:!!ME,uid:ME&&ME.id,handle:(MYP&&MYP.handle)||'',fav:MYP&&MYP.fav_character&&favName(MYP.fav_character)?MYP.fav_character:null,avatar:MYP&&MYP.avatar,badge:MYBADGE,pts:FBPTS,guest:n};const cc=JoninAcct.cached();const c=cc&&(ME?(!MYP&&cc.uid===ME.id):(!AUTHREADY&&hasSession()))?cc:null;if(c)Object.assign(st,c,{user:true,pts:FBPTS||c.pts,badge:MYBADGE||c.badge});el.innerHTML=JoninAcct.html(st);if(AUTHREADY&&(!ME||MYP))JoninAcct.cache(ME?st:null);}
   const b=$('#ctaband');if(!b)return;let off=false;try{off=Date.now()-(+localStorage.getItem('jcta')||0)<864e5}catch(_){} // closed banner comes back after a day
   // wait until we know whether they're signed in, so signed-in people never see a sign-up banner flash
   b.hidden=!!ME||off||hasSession();if(b.hidden)return;
@@ -735,6 +736,9 @@ function collClick(t,e){
   else if(t.dataset.mtab){MTAB=t.dataset.mtab;MISS='';LAST?listView(...LAST):renderMine()}
   else if(t.dataset.miss!=null){MISS=MISS===t.dataset.miss?'':t.dataset.miss;listView(...LAST)}
   else if(t.dataset.share!=null)toggleShare();
+  else if(t.dataset.nmsave!=null){const i=$('#nmin');saveName(i?i.value:'')}
+  else if(t.dataset.nmedit!=null){NMEDIT=true;renderMine();const i=$('#nmin');if(i){i.focus();i.select()}}
+  else if(t.dataset.nmcancel!=null){NMEDIT=false;renderMine()}
   else if(t.dataset.igsave!=null){const i=$('#igin');saveIg(i?i.value:'')}
   else if(t.dataset.igedit!=null){IGEDIT=true;renderMine();const i=$('#igin');if(i)i.focus()}
   else if(t.dataset.igcancel!=null){IGEDIT=false;renderMine()}
@@ -797,7 +801,7 @@ function renderMine(){const el=$('#v-mine');if(!ME){const n=gCount();if(!n){el.i
     listView(el,`<h1>My collection</h1><div class="gsave"><span><b>Saved on this device only.</b> If you clear your browser or switch phones, it’s gone. Make a free account to keep it and share it.</span><button type="button" class="pill" data-auth="up">Sign up so you don’t lose it</button><button type="button" class="clear" data-auth="in">I have an account</button></div>${sellBox()}`,COLL,false);return}
   const link=MYP?location.origin+'/#u='+MYP.share_slug:'';
   listView(el,`<h1 class="ph">${MYP?avImg(MYP.fav_character,MYP.avatar,48):''}<span>${esc(MYP&&MYP.handle?MYP.handle+"'s collection":'My collection')}</span>${badgeHtml(MYBADGE)}</h1>
-  ${rankRow()}
+  ${nameRow()}${rankRow()}
   <div class="share exrow"><span>Spreadsheet:</span>${MEMBER?'<button type="button" class="clear" data-export>Download my collection (CSV)</button><span class="mt">Haves, wants and slabs with versions, grades and estimated values. Opens in Excel or Google Sheets.</span>':'<a class="clear" href="/premium/">⭐ Export your collection with Premium</a>'}</div>
   ${MYP?`<div class="share"><span>Share link${MYP.sharing?'':' (off)'}:</span>${MYP.sharing?`<code>${esc(link)}</code><button class="clear" data-copy="${esc(link)}">Copy</button>`:''}<button class="clear" data-share>${MYP.sharing?'Turn off sharing':'Turn on sharing'}</button></div>${igRow()}${favRow()}${avRow()}`:''}${sellBox()}`,COLL,false)}
 // Favorite character on the profile: picked from the site's 40 characters, shown on their shared collection with a link to that character's page.
@@ -824,6 +828,19 @@ function favFirst(){const cl=$('#clist');if(!cl||!cl.children.length)return;
   ks.slice().reverse().forEach(k=>{const b=[...cl.children].find(x=>x.dataset.q===k);if(b)cl.prepend(b)});if(D&&D.byId)paintChars()}
 async function saveFav(sl){const v=sl||null;const rest=((MYP&&MYP.fav_characters)||[]).filter(x=>x!==v&&x!==(MYP&&MYP.fav_character));const r=await sb.from('profiles').update({fav_character:v,fav_characters:v?[v,...rest].slice(0,3):rest}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data){MYP=r.data;FAVEDIT=false}favFirst();renderMine();paintAcct()}
 // Instagram handle on the profile: shown on their shared collection page with a link to their IG.
+// Profile name (2026-11-26): members can change their name any time. Rules come from the database: 3-24 letters, numbers or _, unique.
+let NMEDIT=false;
+function nameRow(){if(!MYP)return '';const h=MYP.handle||'';
+  if(h&&!NMEDIT)return `<div class="share nmrow"><span>Profile name:</span><b>${esc(h)}</b><button class="clear" data-nmedit>Change</button></div>`;
+  return `<div class="share nmrow"><label for="nmin">Profile name</label><input id="nmin" class="nmin" maxlength="24" placeholder="yourname" value="${esc(h)}" autocomplete="off" spellcheck="false"><button class="pill" data-nmsave>Save</button>${h?'<button class="clear" data-nmcancel>Cancel</button>':''}<span class="mt nmtip" id="nmmsg">3–24 letters, numbers or _. Shows in the header, on your collection and on your share link.</span></div>`}
+async function saveName(v){const m=$('#nmmsg');const h=String(v||'').trim().replace(/^@/,'').replace(/\s+/g,'_');
+  if(!/^[A-Za-z0-9_]{3,24}$/.test(h)){if(m)m.textContent='Use 3–24 letters, numbers or _ (no spaces or symbols).';return}
+  if(h===MYP.handle){NMEDIT=false;renderMine();return}
+  if(m)m.textContent='Saving…';
+  const r=await sb.from('profiles').update({handle:h}).eq('id',ME.id).select().maybeSingle();
+  if(r.error){if(m)m.textContent=r.error.code==='23505'?'That name is taken. Try another.':'Could not save. Try again.';return}
+  if(r.data)MYP=r.data;NMEDIT=false;renderMine();paintAcct()}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='nmin'){e.preventDefault();saveName(e.target.value)}else if(e.key==='Escape'&&e.target&&e.target.id==='nmin'&&MYP&&MYP.handle){NMEDIT=false;renderMine()}});
 let IGEDIT=false;const igUrl=h=>'https://www.instagram.com/'+encodeURIComponent(h)+'/';
 function igRow(){const h=MYP&&MYP.instagram;
   if(h&&!IGEDIT)return `<div class="share igrow"><span>Instagram:</span><a href="${igUrl(h)}" target="_blank" rel="noopener">@${esc(h)}</a><button class="clear" data-igedit>Change</button><button class="clear" data-igdel>Remove</button><span class="mt igtip">${MYP.sharing?'Shows on your shared collection. Put your share link in your Instagram bio so people can see it.':'Turn on sharing so people can see your collection and your Instagram.'}</span></div>`;
