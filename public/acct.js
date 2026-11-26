@@ -78,6 +78,7 @@
         '<a class="jmi" role="menuitem" '+mine+'>'+lb('shelf','My collection<small>Haves, wants, slabs and profile</small>')+'</a>'+
         '<a class="jmi" role="menuitem" '+(s.home?'href="#lists" data-v="mine" data-lmine':'href="/#lists"')+'>'+lb('scrollOpen','My lists<small>Your own card lists</small>')+'</a>'+
         '<a class="jmi" role="menuitem" href="/missions/">'+lb('scrollClosed','Missions<small>Earn scrolls and rank up</small>')+'</a>'+
+        '<a class="jmi" role="menuitem" href="/missions/#m-inv">'+lb('join','Invite friends<small>Earn scrolls for each friend who joins</small>')+'</a>'+
         (st==='free'?'<a class="jmi jprem" role="menuitem" href="/premium/">'+lb('lock','Unlock Premium')+'</a>':'')+
         fb+themeRow()+
         '<button type="button" class="jmi jout" role="menuitem" '+(s.home?'data-signout':'data-jsignout')+'>'+lb('door','Sign out')+'</button>'+
@@ -150,6 +151,25 @@
     document.addEventListener('visibilitychange',function(){if(!document.hidden)load()});
     setInterval(load,4000);
   }
+
+  // ---- invites: jonin.cards/?invite=<code> ----
+  // Remember the code for 30 days; once the visitor is signed in, claim it once (Supabase claim_invite only accepts
+  // accounts made in the last 3 days, never your own code, one inviter per account).
+  var IK='jonin_invite';
+  (function(){try{var m=/[?&]invite=([a-z0-9]{4,12})/i.exec(location.search);if(!m)return;
+    var cur=ls(IK);if(!cur||cur.c!==m[1].toLowerCase())localStorage.setItem(IK,JSON.stringify({c:m[1].toLowerCase(),t:Date.now()}));
+    var q=location.search.replace(/([?&])invite=[^&]*&?/i,'$1').replace(/[?&]$/,'');history.replaceState(null,'',location.pathname+q+location.hash)}catch(_){}})();
+  var claiming=false;
+  function claimInvite(){
+    var iv=ls(IK);if(!iv||claiming)return;
+    if(!iv.c||Date.now()-iv.t>30*864e5){try{localStorage.removeItem(IK)}catch(_){}return}
+    var s=session();if(!s||(s.expires_at&&s.expires_at*1000<Date.now()+5000))return;
+    claiming=true;
+    rest('/rest/v1/rpc/claim_invite',s.access_token,{p_code:iv.c}).then(function(){try{localStorage.removeItem(IK)}catch(_){}})
+      .catch(function(st){if(typeof st==='number'&&st!==401){try{localStorage.removeItem(IK)}catch(_){}}}).then(function(){claiming=false});
+  }
+  claimInvite();setInterval(claimInvite,5000);
+  window.addEventListener('storage',function(e){if(e.key===TK)claimInvite()});
 
   window.JoninAcct={html:html,cache:cache,cached:function(){return ls(CK)},icon:ICON,label:LABEL,refresh:function(){LAST='';load()}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',auto);else auto();
