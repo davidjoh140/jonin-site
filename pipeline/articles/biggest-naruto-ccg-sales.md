@@ -5,7 +5,7 @@ date: 2026-11-26
 cover: 20:N-1096
 draft: false
 ---
-The original Bandai Naruto CCG (2006 to 2013) is having its biggest run since the game ended. Jonin has checked 334 sales by hand so far. Sixteen of them went for $10,000 or more, spread across seven different cards, and every one of those happened since late August 2026.
+The original Bandai Naruto CCG (2006 to 2013) is having its biggest run since the game ended. Jonin has checked 335 sales by hand so far. Seventeen of them went for $10,000 or more, spread across eight different cards, and every one of those happened since late August 2026.
 
 Below are the 10 biggest sales in the Jonin database, one spot per card, so a card can't take two places. Each one links to the sale itself.
 
@@ -45,38 +45,36 @@ From Ultimate Ninja Storm 3, the last set Bandai made. It's the top Naruto card 
 
 {{sale 131}}
 
-## 7. Sai, Shattered Truths: $10,000
+## 7. Naruto Uzumaki (Sage Mode): $12,500
+
+A 1st Edition Super Rare from Sage's Legacy (set 24), in a PSA 10. It's one of three solo Naruto cards on the list.
+
+{{sale 639}}
+
+## 8. Sai, Shattered Truths: $10,000
 
 A 1st Edition full art in a PSA 10. Sai is the only character on this list who isn't Naruto, Sasuke, Itachi or Pain.
 
 {{sale 160}}
 
-## 8. Naruto Uzumaki N-001: $9,999.99
+## 9. Naruto Uzumaki N-001: $9,999.99
 
 Card number one from the very first set, The Path to Hokage (2006), in diamond foil. It's the only PSA 9 on the list. Even a grade down, the first Naruto card is close to five figures.
 
 {{sale 161}}
 
-## 9. Sasuke Uchiha, Shattered Truths: $9,800
+## 10. Sasuke Uchiha, Shattered Truths: $9,800
 
 Another 1st Edition full art from set 21, sold at auction.
 
 {{sale 135}}
 
-## 10 (tie). Itachi Uchiha: $9,000, twice
-
-Two different Itachi cards are tied at $9,000. One is a 1st Edition diamond foil from Eternal Rivalry in a BGS 9.5. The other is a PSA 10 promo from the Ultimate Battle tin.
-
-{{sale 172}}
-
-{{sale 173}}
-
 ## What the list tells us
 
-- **Grade is everything.** Nine of the 11 sales are PSA 10s.
-- **Late sets lead.** Four spots go to 1st Edition full arts from sets 20 to 22 (Tales of the Gallant Sage, Shattered Truths and Weapons of War).
+- **Grade is everything.** Nine of the 10 sales are PSA 10s.
+- **Late sets lead.** Five spots go to 1st Edition full arts from sets 20 to 24 (Tales of the Gallant Sage, Shattered Truths, Weapons of War and Sage's Legacy).
 - **Sasuke owns the top end.** Sasuke shows up four times, five if you count Susano'o.
-- **Promos matter.** Two promos made the top 10.
+- **Naruto is climbing.** Naruto has three cards of his own on the list, from the very first card in the game to the last set.
 
 Prices on the list are final sale prices. For Best Offer sales, we use the accepted offer, not the asking price.
 
