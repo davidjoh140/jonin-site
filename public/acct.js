@@ -276,10 +276,10 @@
   // Look (David, 2026-11-26): an unrolled ninja scroll (wooden rods top and bottom), a flat headband across the top
   // (steel plate, gold plate for founders), plain black kunai bullets, and a big uneven red PROMOTED ink stamp in the middle.
   var KUNAI='<svg viewBox="0 0 26 10" aria-hidden="true"><path d="M0 5 8.5 1.6 14 5 8.5 8.4Z" fill="#1B1714"/><rect x="14" y="4.1" width="6" height="1.8" fill="#1B1714"/><circle cx="22.4" cy="5" r="2" fill="none" stroke="#1B1714" stroke-width="1.3"/></svg>';
-  function headband(f){var p=f?['#F0D27A','#D9AE3E','#8A6414']:['#DDE2E8','#BCC4CE','#5A6472'];
+  function headband(f){var p=f?['#E6CC86','#C9A552','#7A5B1C']:['#D7DBE0','#B5BCC5','#59626E'];
     return '<svg class="jhbd" viewBox="0 0 360 46" aria-hidden="true">'+
-      '<path d="M0 15h360v16H0z" fill="#2E3D63"/><path d="M0 18.5h360M0 27.5h360" stroke="#22304F" stroke-width="1" stroke-dasharray="3 3"/>'+
-      '<path d="M0 15h360M0 31h360" stroke="#1A243C" stroke-width="1.2"/>'+
+      '<path d="M0 15h360v16H0z" fill="#2C3348"/><path d="M0 18.5h360M0 27.5h360" stroke="#232939" stroke-width="1" stroke-dasharray="3 3"/>'+
+      '<path d="M0 15h360M0 31h360" stroke="#1B2030" stroke-width="1.2"/>'+
       '<rect x="138" y="5" width="84" height="36" rx="4" fill="'+p[1]+'" stroke="'+p[2]+'" stroke-width="1.5"/>'+
       '<path d="M140 7h80v15h-80z" fill="'+p[0]+'" opacity=".55"/>'+
       '<g fill="'+p[2]+'"><circle cx="145" cy="11" r="1.8"/><circle cx="215" cy="11" r="1.8"/><circle cx="145" cy="35" r="1.8"/><circle cx="215" cy="35" r="1.8"/></g>'+
@@ -295,41 +295,47 @@
     '<rect x="8" y="10" width="284" height="100" rx="10" stroke-width="7"/><rect x="20" y="22" width="260" height="76" rx="5" stroke-width="2.4"/>'+
     '<text x="150" y="76" text-anchor="middle" fill="#C3261E" stroke="none" font-family="\'Baloo 2\',Impact,\'Arial Black\',sans-serif" font-weight="800" font-size="50" textLength="226" lengthAdjust="spacingAndGlyphs">PROMOTED</text></g></svg>';
   // Clean J for the logo on light paper: drawn as one SVG so the cards and letter line up exactly (site colors).
-  var JLOGO='<svg class="jj" viewBox="0 0 30 34" aria-hidden="true"><rect x="9" y="2.5" width="18" height="26" rx="3.2" fill="#F57C00" transform="rotate(10 18 15.5)"/>'+
+  var JLOGO='<svg class="jj" viewBox="1 1 27 33" aria-hidden="true"><rect x="9" y="2.5" width="18" height="26" rx="3.2" fill="#F57C00" transform="rotate(10 18 15.5)"/>'+
     '<rect x="3" y="5" width="18" height="26" rx="3.2" fill="#B5121B" transform="rotate(-8 12 18)"/>'+
     '<text x="11.6" y="27.4" text-anchor="middle" transform="rotate(-8 12 18)" fill="#FFF4E6" font-family="\'Baloo 2\',sans-serif" font-weight="800" font-size="29">J</text></svg>';
-  function upgradeCss(){if(upgradeCss.on)return;upgradeCss.on=1;var c=document.createElement('style');c.textContent=
-    // Ninja scroll in the site's own style: Baloo 2 headings, Inter text, rounded corners, pill buttons.
-    '.jup .jmbox{width:min(430px,100%);background:none;border:0;box-shadow:none;padding:0;gap:0;color:#2A1C12;animation:jupIn .22s ease-out both}'+
-    '.jup .jrod{position:relative;z-index:2;height:18px;margin:0 -4px;border-radius:99px;background:linear-gradient(#7A4E2C,#B07A48 35%,#8A5A33 60%,#55331B);box-shadow:0 4px 10px rgba(0,0,0,.35)}'+
-    '.jup .jrod:before,.jup .jrod:after{content:"";position:absolute;top:-5px;width:16px;height:28px;border-radius:99px;background:linear-gradient(#5A1416,#9A2226 40%,#5A1416);box-shadow:0 3px 6px rgba(0,0,0,.4)}'+
-    '.jup .jrod:before{left:-12px}.jup .jrod:after{right:-12px}'+
-    '.jup .jpaper{position:relative;overflow:hidden;margin:-9px 6px;padding:30px 26px 30px;background:#F6EBD3;border-radius:6px;border-left:6px solid #9A2226;border-right:6px solid #9A2226;'+
-      'box-shadow:inset 0 12px 12px -10px rgba(80,50,20,.3),inset 0 -12px 12px -10px rgba(80,50,20,.3)}'+
-    '.jup .jin{position:relative;z-index:1;display:flex;flex-direction:column;gap:12px}'+
-    '.jup .jmx{color:#8A765E;top:14px;right:12px;z-index:3}.jup .jhbd{display:block;width:calc(100% + 52px);margin:-10px -26px 0;height:auto}'+
-    '.jup .jlg{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:2px}.jup .jlw{display:flex;align-items:center;font:800 32px/1 "Baloo 2",sans-serif;color:#231710}'+
-    '.jup .jj{width:.98em;height:1.1em;margin:0 .02em -.04em 0;overflow:visible}.jup .jlw span{line-height:1;transform:translateY(.06em)}'+
-    '.jup .jtag{font:700 13px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#FFF4E6;background:#B5121B;padding:6px 10px;border-radius:99px}.jup.fnd .jtag{background:#C88A12}'+
-    '.jup h2{text-align:center;font:800 26px/1.1 "Baloo 2",sans-serif;color:#231710;margin:0}.jup .jsr{text-align:center;color:#5A4632!important;font:400 15px/1.5 Inter,system-ui,sans-serif}'+
-    '.jup ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}'+
-    '.jup li{display:flex!important;justify-content:flex-start!important;text-align:left;align-items:center;gap:10px;padding:9px 12px!important;background:rgba(255,255,255,.55)!important;border:1px solid #E6D6B3!important;border-radius:10px;font:500 14px/1.35 Inter,system-ui,sans-serif;color:#2E2117}'+
-    '.jup li i{flex:none;width:24px;line-height:0}'+
-    '.jup .jsb{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:4px}'+
-    '.jup .jmgo{min-height:44px;background:#B5121B;color:#FFF4E6;padding:0 22px;text-decoration:none;display:inline-flex;align-items:center;border-radius:99px;font:600 15px Inter,system-ui,sans-serif}'+
-    '.jup .jsl{min-height:44px;padding:0 18px;border-radius:99px;background:none;border:1px solid #D9C7A2;color:#6E5A44;font:500 14px Inter,system-ui,sans-serif;cursor:pointer;margin-left:0}'+
-    '.jup .jstamp{position:absolute;left:50%;top:62%;width:80%;transform:translate(-50%,-50%) rotate(-11deg);opacity:.16;mix-blend-mode:multiply;pointer-events:none;z-index:0}'+
+  function upgradeCss(){if(upgradeCss.on)return;upgradeCss.on=1;var c=document.createElement('style');
+    var grain="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .12 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+    c.textContent=
+    // Hanging scroll (kakejiku) layout in the site's fonts: thin dark rods, dark fabric bands with a gold line,
+    // aged paper with grain, muted crimson/gold accents. PLACEHOLDER colors for David.
+    '.jup .jmbox{width:min(420px,100%);background:none;border:0;box-shadow:0 30px 70px -20px rgba(0,0,0,.7);padding:0;gap:0;color:#2A2118;animation:jupIn .22s ease-out both}'+
+    '.jup .jrod{position:relative;z-index:2;height:12px;margin:0 -10px;border-radius:6px;background:linear-gradient(#4A3526,#6E5240 40%,#3A281C)}'+
+    '.jup .jrod:before,.jup .jrod:after{content:"";position:absolute;top:-2px;width:12px;height:16px;border-radius:4px;background:linear-gradient(#1E1612,#3A2C24 50%,#17110D)}.jup .jrod:before{left:-6px}.jup .jrod:after{right:-6px}'+
+    '.jup .jband{height:20px;background:#26222C;border-left:1px solid #18151C;border-right:1px solid #18151C}'+
+    '.jup .jband.t{border-bottom:2px solid #A88A4A}.jup .jband.b{border-top:2px solid #A88A4A}'+
+    '.jup .jpaper{position:relative;overflow:hidden;padding:24px 30px 26px;background:'+grain+',radial-gradient(130% 90% at 50% 40%,#F1E7D2 55%,#E2D2B2);'+
+      'border-left:10px solid #26222C;border-right:10px solid #26222C;box-shadow:inset 1px 0 0 #A88A4A,inset -1px 0 0 #A88A4A}'+
+    '.jup .jin{position:relative;z-index:1;display:flex;flex-direction:column;gap:14px}'+
+    '.jup .jmx{color:#8A7A66;top:8px;right:10px;z-index:3}.jup .jhbd{display:block;width:calc(100% + 60px);margin:-8px -30px 0;height:auto}'+
+    '.jup .jlg{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:2px}'+
+    '.jup .jlw{display:flex;align-items:flex-end;font:800 34px/.8 "Baloo 2",sans-serif;color:#231A12;letter-spacing:.01em}'+
+    '.jup .jj{width:.86em;height:.98em;margin:0 .03em .02em 0;flex:none}'+
+    '.jup .jtag{display:flex;align-items:center;gap:10px;font:600 11.5px/1 Inter,system-ui,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:#7E2A22;padding-left:.32em}'+
+    '.jup .jtag:before,.jup .jtag:after{content:"";width:26px;height:1px;background:currentColor;opacity:.5}.jup.fnd .jtag{color:#8C6A1E}'+
+    '.jup h2{text-align:center;font:800 25px/1.15 "Baloo 2",sans-serif;color:#231A12;margin:2px 0 0}.jup .jsr{text-align:center;color:#5E4D3B!important;font:400 14.5px/1.55 Inter,system-ui,sans-serif;max-width:330px;margin:0 auto}'+
+    '.jup ul{list-style:none;margin:2px 0 0;padding:14px 4px 0;border-top:1px solid rgba(120,90,50,.25);display:grid;gap:10px}'+
+    '.jup li{display:flex!important;justify-content:flex-start!important;text-align:left;align-items:center;gap:12px;padding:0!important;background:none!important;border:0!important;font:500 14px/1.4 Inter,system-ui,sans-serif;color:#2E241A}'+
+    '.jup li i{flex:none;width:22px;line-height:0;opacity:.85}'+
+    '.jup .jsb{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:6px}'+
+    '.jup .jmgo{min-height:42px;background:#7E2A22;color:#F6EDDC;padding:0 22px;text-decoration:none;display:inline-flex;align-items:center;border-radius:99px;font:600 14.5px Inter,system-ui,sans-serif}'+
+    '.jup .jmgo:hover{background:#6A221B}.jup .jsl{min-height:42px;padding:0 16px;border-radius:99px;background:none;border:0;color:#7A6852;font:500 14px Inter,system-ui,sans-serif;cursor:pointer;margin-left:0}'+
+    '.jup .jstamp{position:absolute;left:50%;top:66%;width:78%;transform:translate(-50%,-50%) rotate(-10deg);opacity:.2;mix-blend-mode:multiply;pointer-events:none;z-index:0}'+
     '@keyframes jupIn{from{opacity:0;transform:translateY(8px)}}@media (prefers-reduced-motion:reduce){.jup .jmbox{animation:none}}';
     document.head.appendChild(c)}
   function upgradeShow(kind,tok){var u=UPG[kind];if(!u||upgradeShow.on||/^\/admin\//.test(location.pathname))return false;upgradeShow.on=1;
     rest('/rest/v1/rpc/dismiss_upgrade_notice',tok,{}).catch(function(){});upgradeCss();
     var f=kind==='founding',d=document.createElement('div');d.className='jmo jsi jup'+(f?' fnd':'');
-    d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph"><div class="jrod"></div><div class="jpaper">'+
+    d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph"><div class="jrod"></div><div class="jband t"></div><div class="jpaper">'+
       '<button class="jmx" type="button" aria-label="Close">×</button>'+STAMP+'<div class="jin">'+headband(f)+
       '<div class="jlg" aria-label="Jonin '+(f?'Founding member':'Club')+'"><span class="jlw" aria-hidden="true">'+JLOGO+'<span>ONIN</span></span><span class="jtag">'+(f?'Founder':'Club')+'</span></div><h2 id="juph">'+u.h+'</h2><p class="jsr">'+u.p+'</p><ul>'+
       ['Exact prices by edition, foil and grade','Every sold listing, linked to the sale','Price estimates and sort by market value','Alerts for the cards you’re hunting','Your collection value, a spreadsheet export and a badge']
         .map(function(t){return '<li><i>'+KUNAI+'</i><span>'+t+'</span></li>'}).join('')+
-      '</ul><div class="jsb"><a class="jmgo" href="/#mine">See my collection</a><button type="button" class="jsl">Close</button></div></div></div><div class="jrod"></div></div>';
+      '</ul><div class="jsb"><a class="jmgo" href="/#mine">See my collection</a><button type="button" class="jsl">Close</button></div></div></div><div class="jband b"></div><div class="jrod"></div></div>';
     var go=function(){if(!document.body)return setTimeout(go,50);document.body.appendChild(d);if(window.jtrack)jtrack('upgrade-popup',{kind:kind})};go();
     var close=function(){d.remove()};d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.jmx,.jsl'))close()});
     document.addEventListener('keydown',function f(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',f)}});
