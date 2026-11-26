@@ -274,7 +274,7 @@ header .pn>.pnb{height:30px;padding:0 12px 0 10px;font-size:14px}
 }
 .fbrank{align-items:center;flex-wrap:wrap;gap:8px}.fbrank b{font:800 18px "Baloo 2",sans-serif;color:#F2C14E}.fbbar{display:inline-block;width:120px;height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}.fbbar i{display:block;height:100%;background:#F2C14E}
 </style>
-<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=5185ea88"><script src="/theme.js?v=2"></script>
+<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=5185ea88"><script src="/theme.js?v=3"></script>
 </head>
 <body>
 <header><div class="hw">
@@ -577,8 +577,17 @@ function marks(c){if(!ME&&!COLL.size&&!SLABS.length)return '<span class="mk"></s
 function refreshMarks(){if(VIEW==='sets'&&D)renderSets();document.querySelectorAll('.card[data-i]').forEach(b=>{const c=list[+b.dataset.i];const m=b.querySelector('.mk');if(c&&m)m.outerHTML=marks(c)})}
 function sbc(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPA,SUPA_KEY);return sb}
 async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;
+<<<<<<< Updated upstream
   if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));loadFbPts();
     if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest)}else gLoad();
+=======
+  if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));
+    if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest);
+    // Theme follows the account across devices.
+    if(MYP&&MYP.theme&&window.joninSetTheme){let cur='';try{cur=localStorage.getItem('jtheme')||''}catch(_){}if(cur!==MYP.theme)joninSetTheme(MYP.theme)}
+    // One-time setup page after sign-up (favorite characters, a few questions, theme). Finishing or skipping sets setup_done_at.
+    if(MYP&&!MYP.setup_done_at){try{sessionStorage.setItem('jret',location.pathname+location.hash)}catch(_){}location.href='/welcome/';return}}else gLoad();
+>>>>>>> Stashed changes
   EST=null;if(MEMBER)await loadEstimates();if(VIEW==='cards'&&D&&D.byId)renderCards(true);
   if(sel>=0&&list[sel]){const px=$('#panel .px');if(px)px.outerHTML=priceBlock(list[sel]);loadExact(list[sel])}
   paintAcct();favFirst();refreshMarks();if(sel>=0&&list[sel])renderMyColl(list[sel]);if(VIEW==='mine'){if(ME||gCount())renderMine();else{history.replaceState(null,'',location.pathname);view('cards')}}}
@@ -731,10 +740,12 @@ function favRow(){const f=MYP&&MYP.fav_character,n=f&&favName(f);
   if(n&&!FAVEDIT)return `<div class="share favrow"><span>Favorite character:</span><a class="favchip" href="/character/${esc(f)}/">${favImg(f)}${esc(n)}</a><button class="clear" data-favedit>Change</button><button class="clear" data-favpick="">Remove</button></div>`;
   return `<div class="share favrow"><span>${n?'Pick a new favorite character:':'Pick your favorite character. It shows on your shared collection.'}</span><div class="favgrid">${FAVS().map(([sl,l])=>`<button type="button" class="favchip${sl===f?' on':''}" data-favpick="${esc(sl)}">${favImg(sl)}${esc(l)}</button>`).join('')}</div>${n?'<button class="clear" data-favcancel>Cancel</button>':''}</div>`}
 // Signed-in favorite goes to the top of the Characters filter; everyone else sees the normal order.
-function favFirst(){const cl=$('#clist');if(!cl||!cl.children.length)return;const f=ME&&MYP&&MYP.fav_character;
-  const fq=f?(QUICK.find(([l,q])=>q.startsWith('char:')&&chSlug(l)===f)||[])[1]:null;const fk=fq?fq.replace(/^char:/,''):null;
-  [...cl.children].forEach(b=>b.classList.toggle('fav',b.dataset.q===fk));if(fk)cl.prepend([...cl.children].find(b=>b.dataset.q===fk));if(D&&D.byId)paintChars()}
-async function saveFav(sl){const v=sl||null;const r=await sb.from('profiles').update({fav_character:v}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data){MYP=r.data;FAVEDIT=false}favFirst();renderMine();paintAcct()}
+function favFirst(){const cl=$('#clist');if(!cl||!cl.children.length)return;
+  const fs=ME&&MYP?[...new Set([MYP.fav_character,...(MYP.fav_characters||[])].filter(Boolean))]:[];
+  const ks=fs.map(f=>((QUICK.find(([l,q])=>q.startsWith('char:')&&chSlug(l)===f)||[])[1]||'').replace(/^char:/,'')).filter(Boolean);
+  [...cl.children].forEach(b=>b.classList.toggle('fav',ks.includes(b.dataset.q)));
+  ks.slice().reverse().forEach(k=>{const b=[...cl.children].find(x=>x.dataset.q===k);if(b)cl.prepend(b)});if(D&&D.byId)paintChars()}
+async function saveFav(sl){const v=sl||null;const rest=((MYP&&MYP.fav_characters)||[]).filter(x=>x!==v&&x!==(MYP&&MYP.fav_character));const r=await sb.from('profiles').update({fav_character:v,fav_characters:v?[v,...rest].slice(0,3):rest}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data){MYP=r.data;FAVEDIT=false}favFirst();renderMine();paintAcct()}
 // Instagram handle on the profile: shown on their shared collection page with a link to their IG.
 let IGEDIT=false;const igUrl=h=>'https://www.instagram.com/'+encodeURIComponent(h)+'/';
 function igRow(){const h=MYP&&MYP.instagram;

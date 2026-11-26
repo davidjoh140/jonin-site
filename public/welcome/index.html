@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Set up your account — Jonin</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#1B1622">
+<link rel="icon" href="/favicon-32.png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/pages.css?v=3"><link rel="stylesheet" href="/themes.css?v=2"><script src="/theme.js?v=3"></script>
+<style>
+/* /welcome/: one-time setup after sign-up (David, 2026-11-26). Favorite characters, a few questions, theme. Skippable. */
+main{max-width:860px}
+.wz{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 26px 22px;margin-top:10px}
+.steps{display:flex;gap:8px;margin:0 0 18px}.steps i{flex:1;height:5px;border-radius:3px;background:var(--line)}.steps i.on{background:var(--acc)}
+.wz h1{font-size:30px;margin:0 0 4px}.wz .mt{margin:0 0 18px}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;max-height:min(52vh,460px);overflow-y:auto;padding:2px}
+.ch{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;font-size:14px;position:relative}
+.ch img{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none}.ch:hover{border-color:var(--acc)}
+.ch[aria-pressed=true]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 16%,transparent)}
+.ch .n{position:absolute;top:-7px;right:-6px;background:var(--acc);color:var(--bg);font:700 11px/18px Inter,sans-serif;min-width:18px;height:18px;border-radius:9px;text-align:center;padding:0 4px}
+.q{margin:0 0 20px}.q h2{font:700 18px "Baloo 2",sans-serif;margin:0 0 8px}.q .mt{margin:-4px 0 8px;font-size:13px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.op{all:unset;box-sizing:border-box;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:99px;font-size:14px}.op:hover{border-color:var(--acc)}
+.op[aria-pressed=true]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 18%,transparent)}
+.chk{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:14px}.chk input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--acc)}
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.th{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:12px}
+.th:hover{border-color:var(--acc)}.th[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.th .sw{width:40px;height:40px;border-radius:10px;flex:none;background:var(--f) center/cover,var(--a);box-shadow:inset 0 -10px 0 var(--b),inset 0 -14px 0 var(--c)}
+.th small{display:block;color:var(--mute);font-size:12px}
+.nav{display:flex;align-items:center;gap:10px;margin-top:22px;flex-wrap:wrap}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 18px;border-radius:10px;background:var(--acc);color:var(--bg);font-weight:600}.btn:hover{background:var(--acc2)}
+.btn[disabled]{opacity:.6;cursor:default}
+.gh{all:unset;cursor:pointer;padding:10px 12px;color:var(--mute);border-radius:10px}.gh:hover{color:var(--ink)}
+.skip{margin-left:auto}
+.msg{color:#ff8a80;font-size:14px;margin:10px 0 0}
+.load{color:var(--mute);padding:30px 0}
+</style>
+</head>
+<body>
+<header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a></div></header>
+<main><div class="wz" id="wz"><p class="load">Loading…</p></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"></script>
+<script>
+{
+const SUPA='https://cfzpayanhvvqtkuqfgof.supabase.co',SUPA_KEY='sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe';
+const $=s=>document.querySelector(s),wz=$('#wz');
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Where to go after setup: the page they signed up on (set by the homepage before sending them here).
+let RET='/';try{RET=sessionStorage.getItem('jret')||'/'}catch(_){}if(!RET.startsWith('/')||RET.startsWith('/welcome'))RET='/';
+const MAXFAV=3;   // PLACEHOLDER: up to 3 favorite characters (first one = main favorite)
+// PLACEHOLDER questions and answers (David to confirm wording/options).
+const FOUND=[['reddit','Reddit'],['instagram','Instagram'],['facebook','Facebook group'],['search','Google / search'],['friend','A friend'],['other','Somewhere else']];
+const TYPES=[['collector','Collector'],['player','Player'],['seller','Seller / vendor'],['investor','Investor'],['new','Just getting into it']];
+let sb,USER,CHARS=[],STEP=0,A={fav:[],found:null,types:[],email:false,theme:null};
+try{A.theme=localStorage.getItem('jtheme')||'jonin'}catch(_){A.theme='jonin'}
+
+async function init(){
+  if(!window.supabase){wz.innerHTML='<p class="msg">Could not load. Refresh the page.</p>';return}
+  sb=window.supabase.createClient(SUPA,SUPA_KEY);
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){location.replace('/');return}
+  USER=session.user;
+  const [p,c]=await Promise.all([sb.from('profiles').select('fav_character,fav_characters,found_via,collector_types,email_updates,theme').eq('id',USER.id).maybeSingle(),fetch('/chars.json').then(r=>r.json()).catch(()=>[])]);
+  CHARS=c;const pr=p.data||{};
+  A.fav=(pr.fav_characters&&pr.fav_characters.length?pr.fav_characters:(pr.fav_character?[pr.fav_character]:[])).slice(0,MAXFAV);
+  A.found=pr.found_via||null;A.types=pr.collector_types||[];A.email=!!pr.email_updates;if(pr.theme)A.theme=pr.theme;
+  render();
+}
+const bar=()=>`<div class="steps" aria-hidden="true">${[0,1,2].map(i=>`<i class="${i<=STEP?'on':''}"></i>`).join('')}</div>`;
+const nav=last=>`<div class="nav">${STEP?'<button class="gh" data-back>← Back</button>':''}<button class="btn" data-next>${last?'Finish':'Next →'}</button><button class="gh skip" data-skip>Skip setup</button></div><p class="msg" id="msg" hidden></p>`;
+function render(){
+  if(STEP===0){
+    wz.innerHTML=bar()+`<h1>Welcome to Jonin!</h1><p class="mt">Pick up to ${MAXFAV} favorite characters. Your first pick is your main favorite: it goes to the top of the character filters and gives you a profile picture.</p>
+    <div class="cg">${CHARS.map(c=>{const i=A.fav.indexOf(c.slug);return `<button type="button" class="ch" data-fav="${esc(c.slug)}" aria-pressed="${i>=0}"><img src="/chars/${esc(c.slug)}.webp" alt="" width="30" height="30" loading="lazy">${esc(c.label)}${i>=0?`<span class="n">${i===0?'★':i+1}</span>`:''}</button>`}).join('')}</div>`+nav(false);
+  }else if(STEP===1){
+    const op=(k,l,on,attr)=>`<button type="button" class="op" ${attr}="${k}" aria-pressed="${on}">${esc(l)}</button>`;
+    wz.innerHTML=bar()+`<h1>A few quick questions</h1><p class="mt">All optional. It helps us build what you actually want.</p>
+    <div class="q"><h2>How did you find Jonin?</h2><div class="opts">${FOUND.map(([k,l])=>op(k,l,A.found===k,'data-found')).join('')}</div></div>
+    <div class="q"><h2>What describes you?</h2><p class="mt">Pick any that fit.</p><div class="opts">${TYPES.map(([k,l])=>op(k,l,A.types.includes(k),'data-type')).join('')}</div></div>
+    <div class="q"><label class="chk"><input type="checkbox" id="em"${A.email?' checked':''}><span><b>Email me Naruto CCG news and top sales.</b><br><span style="color:var(--mute)">Now and then, never spam. Unsubscribe anytime.</span></span></label></div>`+nav(false);
+  }else{
+    const T=window.JONIN_THEMES||[];
+    wz.innerHTML=bar()+`<h1>Pick your theme</h1><p class="mt">Changes the colors of the whole site. You can change it anytime from the theme button at the top.</p>
+    <div class="tg">${T.map(t=>`<button type="button" class="th" data-th="${esc(t.id)}" aria-pressed="${t.id===A.theme}"><span class="sw" style="--a:${t.bg};--b:${t.a};--c:${t.c};--f:url('${t.f}')"></span><span>${esc(t.n)}<small>${esc(t.d)}</small></span></button>`).join('')}</div>`+nav(true);
+  }
+}
+async function save(done){
+  const row={setup_done_at:new Date().toISOString()};
+  if(done)Object.assign(row,{fav_characters:A.fav,fav_character:A.fav[0]||null,found_via:A.found,collector_types:A.types,email_updates:A.email,theme:A.theme});
+  const r=await sb.from('profiles').update(row).eq('id',USER.id);
+  if(r.error){const m=$('#msg');m.hidden=false;m.textContent='Could not save: '+r.error.message;return false}
+  try{sessionStorage.removeItem('jret')}catch(_){}
+  location.replace(RET);return true;
+}
+wz.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.fav){const s=t.dataset.fav,i=A.fav.indexOf(s);if(i>=0)A.fav.splice(i,1);else if(A.fav.length<MAXFAV)A.fav.push(s);else{A.fav[MAXFAV-1]=s}render()}
+  else if(t.dataset.found){A.found=A.found===t.dataset.found?null:t.dataset.found;render()}
+  else if(t.dataset.type){const k=t.dataset.type,i=A.types.indexOf(k);if(i>=0)A.types.splice(i,1);else A.types.push(k);render()}
+  else if(t.dataset.th){A.theme=t.dataset.th;if(window.joninSetTheme)joninSetTheme(A.theme);render()}
+  else if(t.hasAttribute('data-back')){STEP--;render()}
+  else if(t.hasAttribute('data-next')){if(STEP<2){STEP++;render();window.scrollTo(0,0)}else{t.disabled=true;if(!await save(true))t.disabled=false}}
+  else if(t.hasAttribute('data-skip')){t.disabled=true;if(!await save(false))t.disabled=false}
+});
+wz.addEventListener('change',e=>{if(e.target.id==='em')A.email=e.target.checked});
+init();
+}
+</script>
+</body>
+</html>
