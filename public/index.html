@@ -191,6 +191,8 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .mk{position:absolute;left:8px;top:8px;display:flex;gap:4px;z-index:1}
 .mk span{font:700 11px/1 Inter,sans-serif;padding:4px 6px;border-radius:6px;background:color-mix(in srgb,var(--deep) 90%,transparent);border:1px solid var(--line)}
 .mk .h{color:#7ee2a8;border-color:#2f6b4a}.mk .w{color:#ff9db0;border-color:#6b2f3c}.mk .sl{color:#ffd38a;border-color:#7a5a1f}
+.sellbox{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:color-mix(in srgb,#E53935 10%,var(--panel));border:1px solid color-mix(in srgb,#E53935 45%,transparent);border-radius:10px;padding:10px 12px;font-size:13px;margin:10px 0}.sellbox span{flex:1 1 220px}.sellbox .pill,.sellask .pill{text-decoration:none}
+.sellask{border-color:#E53935}.sellask .st{flex:1 1 220px}
 .gsave{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:color-mix(in srgb,var(--acc) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);border-radius:10px;padding:10px 12px;font-size:13px}
 .gsave .pill{min-height:34px}
 .igrow label{color:var(--mute)}.igat{display:inline-flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--edge);border-radius:8px;padding:0 4px 0 10px;color:var(--mute)}.igat input{all:unset;padding:7px 6px;color:var(--ink);min-width:140px}.igrow .igtip{flex-basis:100%;font-size:12px}
@@ -564,6 +566,29 @@ function progToast(c){const p=setProg(c);if(!p)return;const pct=p.total?Math.rou
 // Third card marked while signed out: ask them to sign up once (per device).
 function askAtThird(c){if(ME||gCount()<3)return false;let done=null;try{done=localStorage.getItem('j3ask')}catch(_){}if(done)return false;try{localStorage.setItem('j3ask','1')}catch(_){}
   document.querySelectorAll('.ptoast').forEach(x=>x.remove());const p=setProg(c);openAuth('up','',p?`You’re at ${p.have} of ${p.total} cards in ${p.name}.`:'');return true}
+// Sell prompts (2026-11-26, David's settings): a "Get an offer" box always on My collection, plus a one-time popup
+// once someone has 25+ different cards or any slab. "Not now" (or ×) waits 30 days; tapping Get an offer stops it for good.
+const SELL_URL='https://sell.jonin.cards',SELL_MIN=25,SELL_WAIT=30*864e5,SKEY='jsell';
+function sellCount(){const ids=new Set(SLABS.map(s=>s.card_id));for(const [k,v] of COLL){const a=k.split('|');if(a[3]==='have'&&v>0)ids.add(a[0])}return ids.size}
+// Plain-text card list for the offer form: one line per card, haves by version plus slabs (counted slabs aren't listed twice).
+function sellList(){if(!D)return'';const by={},rows={},sl={};D.cards.forEach(c=>by[cid(c)]=c);
+  SLABS.forEach(s=>{if(s.counted){const k=s.card_id+'|'+s.printing+'|'+(s.edition||'');sl[k]=(sl[k]||0)+1}});
+  for(const [k,v] of COLL){const a=k.split('|');if(a[3]!=='have'||!(v>0))continue;const q=v-(sl[a[0]+'|'+a[1]+'|'+a[2]]||0);if(q>0)(rows[a[0]]=rows[a[0]]||[]).push(a[1]+(a[2]?' '+a[2]:'')+' x'+q)}
+  SLABS.forEach(s=>(rows[s.card_id]=rows[s.card_id]||[]).push(s.grader+' '+s.grade+' slab ('+s.printing+(s.edition?' '+s.edition:'')+')'+(s.cert?' cert '+s.cert:'')));
+  return Object.keys(rows).map(id=>{const c=by[id],st=c&&D.byId[c.s];return (c?c.name:id)+' - '+(st?setLabel(st)+' ':'')+'#'+(c?c.n:id)+': '+rows[id].join(', ')}).join('\n')}
+function sellState(){try{return localStorage.getItem(SKEY)}catch(_){return null}}
+function sellSet(v){try{localStorage.setItem(SKEY,v)}catch(_){}}
+const sellBox=()=>{const n=sellCount();return `<div class="sellbox"><span><b>Selling?</b> ${n?'Get an offer on your collection. Your card list gets copied so you can paste it in.':'Get an offer on your cards.'}</span><a class="pill" href="${SELL_URL}" target="_blank" rel="noopener" data-sellgo>Get an offer</a></div>`};
+function sellAsk(){if(sellCount()<SELL_MIN&&!SLABS.length)return;const st=sellState();if(st==='done'||(st&&Date.now()-(+st||0)<SELL_WAIT))return;
+  let seen=null;try{seen=sessionStorage.getItem('jsellv')}catch(_){}if(seen||document.querySelector('.sellask'))return;
+  const ao=$('#authov');if(ao&&!ao.hidden)return;try{sessionStorage.setItem('jsellv','1')}catch(_){}
+  document.querySelectorAll('.gtoast').forEach(x=>x.remove());
+  const t=document.createElement('div');t.className='gtoast sellask';t.setAttribute('role','dialog');t.setAttribute('aria-label','Get an offer');
+  t.innerHTML=`<span class="st"><b>${sellCount()<SELL_MIN?'Nice slab.':'That’s a real collection.'}</b> Want an offer on your cards?</span><a class="pill" href="${SELL_URL}" target="_blank" rel="noopener" data-sellgo>Get an offer</a><button type="button" class="clear" data-sellno>Not now</button><button class="x" aria-label="Not now">×</button>`;
+  t.addEventListener('click',e=>{if(e.target.closest('[data-sellno]')||e.target.closest('.x')){sellSet(String(Date.now()));t.remove()}else if(e.target.closest('[data-sellgo]'))setTimeout(()=>t.remove(),0)});
+  document.body.appendChild(t)}
+document.addEventListener('click',e=>{if(!e.target.closest('[data-sellgo]'))return;sellSet('done');const l=sellList();
+  if(l&&navigator.clipboard)navigator.clipboard.writeText('My Jonin collection ('+plural(sellCount(),'card')+'):\n'+l).catch(()=>{})});
 function toast(msg){const t=document.createElement('div');t.className='gtoast';t.setAttribute('role','status');t.innerHTML='<span>'+esc(msg)+'</span><button class="x" aria-label="Dismiss">×</button>';t.querySelector('.x').onclick=()=>t.remove();document.body.appendChild(t);setTimeout(()=>t.remove(),6000)}
 async function mergeGuest(g){const rows=[];
   g.items.forEach(([k,q])=>{const a=k.split('|');const cur=COLL.get(k)||0;const n=Math.max(cur,q);if(n!==cur){COLL.set(k,n);rows.push({user_id:ME.id,card_id:a[0],printing:a[1],edition:a[2],kind:a[3],qty:n,updated_at:new Date().toISOString()})}});
@@ -631,7 +656,7 @@ $('#authform').addEventListener('submit',async e=>{e.preventDefault();const f=e.
   catch(x){err(x.message||'Something went wrong.')}btn.disabled=false});
 async function setItem(c,p,ed,kind,qty){const id=cid(c),k=ck(id,p,ed,kind),before=COLL.get(k);
   if(qty>0)COLL.set(k,qty);else COLL.delete(k);renderMyColl(c);refreshMarks();
-  if(qty>0&&kind==='have'&&!askAtThird(c))progToast(c);
+  if(qty>0&&kind==='have'){if(!askAtThird(c))progToast(c);setTimeout(sellAsk,2500)}
   if(!ME){gSave();paintAcct();return}
   const r=qty>0?await sb.from('collection_items').upsert({user_id:ME.id,card_id:id,printing:p,edition:ed,kind,qty,updated_at:new Date().toISOString()}):await sb.from('collection_items').delete().match({user_id:ME.id,card_id:id,printing:p,edition:ed,kind});
   if(r.error){if(before)COLL.set(k,before);else COLL.delete(k);renderMyColl(c);refreshMarks();const b=$('#mycoll');if(b)b.insertAdjacentHTML('beforeend','<p class="mt" style="color:#ff8b8b;margin:0">Could not save. Check your connection and try again.</p>')}}
@@ -657,7 +682,7 @@ async function saveSlab(c){const f=$('#slabf');if(!f)return;const msg=$('#slabms
   const row={card_id:cid(c),printing:p,edition:e||'',grader,grade:grade.slice(0,12),cert:cert.slice(0,30)||null,counted:slabsHave()};
   if(ME){msg.textContent='Saving…';const r=await sb.from('collection_slabs').insert(row).select('id,card_id,printing,edition,grader,grade,cert,counted').single();if(r.error){msg.textContent='Could not save. Try again.';return}SLABS.push(r.data)}
   else{SLABS.push(Object.assign({id:'g'+Date.now()},row));gSave();paintAcct();nudge()}
-  SLABFORM='';if(row.counted){const k=ck(row.card_id,row.printing,row.edition,'have');await setItem(c,row.printing,row.edition,'have',(COLL.get(k)||0)+1)}renderMyColl(c);refreshMarks()}
+  SLABFORM='';setTimeout(sellAsk,2500);if(row.counted){const k=ck(row.card_id,row.printing,row.edition,'have');await setItem(c,row.printing,row.edition,'have',(COLL.get(k)||0)+1)}renderMyColl(c);refreshMarks()}
 async function delSlab(c,id){const i=SLABS.findIndex(s=>String(s.id)===id);if(i<0)return;const [old]=SLABS.splice(i,1);renderMyColl(c);refreshMarks();
   const unhave=()=>{if(!old.counted)return;const k=ck(old.card_id,old.printing,old.edition,'have');return setItem(c,old.printing,old.edition,'have',Math.max(0,(COLL.get(k)||0)-1))};
   if(!ME){gSave();await unhave();paintAcct();return}const r=await sb.from('collection_slabs').delete().eq('id',old.id);if(r.error){SLABS.splice(i,0,old);renderMyColl(c);refreshMarks();return}await unhave()}
@@ -735,13 +760,13 @@ let FBPTS=null;
 function loadFbPts(){if(!ME||!sbc())return;sb.rpc('my_feedback_points').then(r=>{if(!r.error&&r.data){FBPTS=r.data;const el=$('#v-mine');if(el&&el.innerHTML)renderMine()}}).catch(()=>{})}
 function rankRow(){if(!FBPTS)return '';const p=FBPTS.points||0;const pct=FBPTS.next_at?Math.min(100,Math.round(p/FBPTS.next_at*100)):100;
   return `<div class="share fbrank"><span>Rank:</span><b>${esc(FBPTS.rank)}</b><span class="mt">${p} point${p===1?'':'s'} from accepted feedback${FBPTS.next?` · ${FBPTS.next_at-p} more to ${esc(FBPTS.next)}`:''}</span><span class="fbbar" aria-hidden="true"><i style="width:${pct}%"></i></span><button type="button" class="clear" data-fb>Send feedback</button></div>`}
-function renderMine(){const el=$('#v-mine');if(!ME){const n=gCount();if(!n){el.innerHTML='<h1>My collection</h1><p class="mt">Sign up or sign in to track your haves, wants and slabs.</p><div class="row"><button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button></div>';return}
-    listView(el,`<h1>My collection</h1><div class="gsave"><span><b>Saved on this device only.</b> If you clear your browser or switch phones, it’s gone. Make a free account to keep it and share it.</span><button type="button" class="pill" data-auth="up">Sign up so you don’t lose it</button><button type="button" class="clear" data-auth="in">I have an account</button></div>`,COLL,false);return}
+function renderMine(){const el=$('#v-mine');if(!ME){const n=gCount();if(!n){el.innerHTML='<h1>My collection</h1><p class="mt">Sign up or sign in to track your haves, wants and slabs.</p><div class="row"><button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button></div>'+sellBox();return}
+    listView(el,`<h1>My collection</h1><div class="gsave"><span><b>Saved on this device only.</b> If you clear your browser or switch phones, it’s gone. Make a free account to keep it and share it.</span><button type="button" class="pill" data-auth="up">Sign up so you don’t lose it</button><button type="button" class="clear" data-auth="in">I have an account</button></div>${sellBox()}`,COLL,false);return}
   const link=MYP?location.origin+'/#u='+MYP.share_slug:'';
   listView(el,`<h1 class="ph">${MYP?avImg(MYP.fav_character,MYP.avatar,48):''}<span>${esc(MYP&&MYP.handle?MYP.handle+"'s collection":'My collection')}</span>${badgeHtml(MYBADGE)}</h1>
   ${rankRow()}
   <div class="share exrow"><span>Spreadsheet:</span>${MEMBER?'<button type="button" class="clear" data-export>Download my collection (CSV)</button><span class="mt">Haves, wants and slabs with versions, grades and estimated values. Opens in Excel or Google Sheets.</span>':'<a class="clear" href="/premium/">⭐ Export your collection with Premium</a>'}</div>
-  ${MYP?`<div class="share"><span>Share link${MYP.sharing?'':' (off)'}:</span>${MYP.sharing?`<code>${esc(link)}</code><button class="clear" data-copy="${esc(link)}">Copy</button>`:''}<button class="clear" data-share>${MYP.sharing?'Turn off sharing':'Turn on sharing'}</button></div>${igRow()}${favRow()}${avRow()}`:''}`,COLL,false)}
+  ${MYP?`<div class="share"><span>Share link${MYP.sharing?'':' (off)'}:</span>${MYP.sharing?`<code>${esc(link)}</code><button class="clear" data-copy="${esc(link)}">Copy</button>`:''}<button class="clear" data-share>${MYP.sharing?'Turn off sharing':'Turn on sharing'}</button></div>${igRow()}${favRow()}${avRow()}`:''}${sellBox()}`,COLL,false)}
 // Favorite character on the profile: picked from the site's 40 characters, shown on their shared collection with a link to that character's page.
 let FAVEDIT=false;const chSlug=l=>l.toLowerCase().replace(/[^a-z0-9]+/g,'-');
 const FAVS=()=>QUICK.filter(([l,q])=>q.startsWith('char:')).map(([l])=>[chSlug(l),l]);
