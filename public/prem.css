@@ -111,10 +111,6 @@ header .acct{display:flex;align-items:center;margin:0!important}
 .jmi.jprem{color:#F2C14E!important;font-weight:600}
 .jmi.jout{margin-top:4px;border-top:1px solid var(--line);border-radius:0 0 9px 9px;color:var(--mute)!important}
 .jth{display:flex;flex-direction:column;gap:7px;margin-top:4px;padding:9px 10px 6px;border-top:1px solid var(--line);font:500 12px Inter,sans-serif;color:var(--mute)}
-.jsw{display:flex;flex-wrap:wrap;gap:6px}
-.jsw button{all:unset;box-sizing:border-box;width:22px;height:22px;border-radius:50%;cursor:pointer;background:linear-gradient(135deg,var(--b) 0 50%,var(--c) 50% 100%);border:2px solid var(--a);box-shadow:0 0 0 1px var(--edge)}
-.jsw button:hover{box-shadow:0 0 0 1px var(--mute)}
-.jsw button[aria-checked=true]{box-shadow:0 0 0 2px var(--ink)}
 .jmp{padding:6px 10px 8px;font:400 12.5px/1.4 Inter,sans-serif;color:var(--mute)}
 .jmp b{display:block;margin-bottom:2px;font-size:14px;color:var(--ink)}
 @media (max-width:600px){
@@ -129,3 +125,9 @@ header .acct{display:flex;align-items:center;margin:0!important}
 header .hw>.sell{display:inline-flex;align-items:center;box-sizing:border-box;height:36px;padding:0 16px;border-radius:999px;border:1px solid var(--red);background:var(--red);color:var(--ont,#fff)!important;text-decoration:none!important;font:700 14px Inter,sans-serif;white-space:nowrap;flex:none}
 header .hw>.sell:hover{background:var(--red2,#8E0E15);border-color:var(--red2,#8E0E15)}
 @media (max-width:600px){header nav{order:9;flex-basis:100%}}
+
+/* Theme swatches: the theme's character face inside a ring in its two colors */
+.jsw{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
+.jsw button{all:unset;box-sizing:border-box;width:100%;aspect-ratio:1;border-radius:50%;cursor:pointer;border:2.5px solid transparent;background:var(--f) center/cover no-repeat padding-box,linear-gradient(135deg,var(--b) 0 50%,var(--c) 50% 100%) border-box;background-color:var(--a);transition:transform .15s}
+.jsw button:hover{transform:scale(1.12)}
+.jsw button[aria-checked=true]{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--ink)}

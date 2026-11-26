@@ -25,7 +25,7 @@
     var T=window.JONIN_THEMES||[];if(!T.length)return '';
     var cur;try{cur=localStorage.getItem('jtheme')||'jonin'}catch(_){cur='jonin'}
     return '<div class="jth"><span>Theme</span><div class="jsw">'+T.map(function(t){
-      return '<button type="button" data-jt="'+t.id+'" aria-checked="'+(t.id===cur)+'" role="menuitemradio" title="'+esc(t.n+' · '+t.d)+'" aria-label="Theme: '+esc(t.n)+'" style="--a:'+t.bg+';--b:'+t.a+';--c:'+t.c+'"></button>'}).join('')+'</div></div>';
+      return '<button type="button" data-jt="'+t.id+'" aria-checked="'+(t.id===cur)+'" role="menuitemradio" title="'+esc(t.n+' · '+t.d)+'" aria-label="Theme: '+esc(t.n)+'" style="--a:'+t.bg+';--b:'+t.a+';--c:'+t.c+";--f:url('"+t.f+"')"+'"></button>'}).join('')+'</div></div>';
   }
   function avatar(s,sz){
     var src=avSrc(s.fav,s.avatar);
