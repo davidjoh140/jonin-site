@@ -275,10 +275,27 @@ def most_valuable(cs, top=MOST_VALUABLE_TOP):
     return sorted([c for c in cs if c.get('top')], key=lambda c: c['top'][0])[:top]
 
 
+_SLAB_TILES = None
+
+
+def slab_tiles():
+    """pipeline/slab_tiles.json: which sale photos were flattened (slab_tiles.py)."""
+    global _SLAB_TILES
+    if _SLAB_TILES is None:
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'slab_tiles.json')
+        _SLAB_TILES = json.load(open(p)) if os.path.isfile(p) else {}
+    return _SLAB_TILES
+
+
 def sale_photo(c):
-    """Photo of the copy that set the card's top sale (its slab), when we have one."""
+    """Photo of the copy that set the card's top sale (its slab), when we have one. Slab photos where no
+    slab could be cleanly cropped and flattened ('noslab'), or that David hasn't OK'd yet ('check'), aren't used,
+    so lists stay uniform: the card scan shows instead."""
     t = c.get('top') or []
-    return t[7] if len(t) > 7 and re.match(r'^https://', t[7] or '') else ''
+    ph = t[7] if len(t) > 7 and re.match(r'^https://', t[7] or '') else ''
+    if ph and slab_tiles().get(ph.rsplit('/', 1)[-1], {}).get('status') in ('noslab', 'check'):
+        return ''
+    return ph
 
 
 def mv_art(c, eager=False):

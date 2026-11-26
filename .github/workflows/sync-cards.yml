@@ -33,11 +33,24 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python pipeline/export_cards.py
+      - name: Count new slab photos to crop and flatten
+        id: slabs
+        run: echo "n=$(python pipeline/slab_tiles.py --pending)" >> "$GITHUB_OUTPUT"
+      - name: Cache the background-removal model
+        if: steps.slabs.outputs.n != '0'
+        uses: actions/cache@v4
+        with: { path: ~/.u2net, key: rembg-isnet-general-use }
+      - name: Crop, flatten and blur certs on new slab photos
+        if: steps.slabs.outputs.n != '0'
+        run: |
+          sudo apt-get install -y -qq tesseract-ocr >/dev/null
+          pip install -q "rembg[cpu]" opencv-python-headless pytesseract
+          python pipeline/slab_tiles.py
       - name: Build card and set pages
         run: python pipeline/build_pages.py
       - name: Commit if changed
         run: |
-          OUT="public/cards.json public/card public/set public/sitemap.xml public/robots.txt public/img public/index.html pipeline/lastmod.json public/character public/characters public/news public/privacy public/terms public/articles pipeline/article_sales.json public/most-valuable public/lists public/most-popular pipeline/votes.json"
+          OUT="public/cards.json public/card public/set public/sitemap.xml public/robots.txt public/img public/index.html pipeline/lastmod.json public/character public/characters public/news public/privacy public/terms public/articles pipeline/article_sales.json public/most-valuable public/lists public/most-popular pipeline/votes.json pipeline/slab_tiles.json pipeline/sale_photos_raw"
           if [ -z "$(git status --porcelain $OUT)" ]; then echo "No change"; exit 0; fi
           git config user.name "jonin-bot"
           git config user.email "jonin-bot@users.noreply.github.com"
