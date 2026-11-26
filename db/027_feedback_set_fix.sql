@@ -1,0 +1,5 @@
+-- Applied to Supabase on 2026-11-26 (migration feedback_set_fix). Kept here as the record.
+-- feedback.proposal_by: 'david' when David wrote or edited the fix himself on /admin (null = Claude's draft).
+-- admin_feedback_set_fix(id, proposal, change jsonb, accept bool): admin only. Saves David's own fix on a note
+--   (same change format and field whitelist as admin_feedback_review), sets review = 'awaiting', and with accept = true
+--   applies it right away through admin_feedback_review(id, 'accept') (cards updated, sender gets scrolls, Undo works).
