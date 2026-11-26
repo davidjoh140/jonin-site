@@ -56,3 +56,8 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - Prompts: a dismissible band above the homepage grid, a "Saved on this device only" note in each card's collection box and on My collection, a one-time toast after their first mark, and "Sign up to save" in the header.
 - Slabs: `collection_slabs` (`db/009_collection_slabs.sql`) — grader, grade, optional cert, per printing/edition. Private to the owner; not part of shared lists yet.
 - Votes: tapping Vote while signed out opens signup and casts that vote once they're in (stored in `jonin_pending_vote` for 24h, so it also survives the email-confirm link).
+
+## Cards tracked ticker
+
+- Small pill under the homepage title: "N cards tracked by N collectors". Every have, want and slab saved to an account adds 1.
+- Reads `cards_tracked()` (`db/017_cards_tracked.sql`) with the publishable key; rolls the digits up on first load and re-checks every 30s while the tab is open.

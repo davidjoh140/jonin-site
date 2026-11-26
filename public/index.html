@@ -222,6 +222,14 @@ h1.ph{display:flex;align-items:center;gap:12px}h1.ph img.avatar{border:2px solid
 .pbar{display:block;height:6px;border-radius:3px;background:color-mix(in srgb,var(--acc) 18%,transparent);overflow:hidden}.pbar i{display:block;height:100%;background:var(--acc);border-radius:3px}
 .fnd{margin:10px 0 0;padding:9px 12px;border:1px solid color-mix(in srgb,#F2C14E 55%,transparent);background:color-mix(in srgb,#F2C14E 12%,transparent);border-radius:10px;font-size:13.5px;line-height:1.4}
 .fprog{margin:8px 0 0;font-weight:600}
+.tick[hidden]{display:none}.tick{display:flex;width:max-content;max-width:100%;justify-self:start;align-self:flex-start;align-items:center;gap:10px;margin:-6px 0 16px;padding:6px 14px 6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:13px;color:var(--mute)}
+.tick .dot{width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 0 color-mix(in srgb,var(--acc) 60%,transparent);animation:tpulse 2s infinite}
+.tick .tn{font:800 18px/1 "Baloo 2",sans-serif;color:var(--ink);font-variant-numeric:tabular-nums;display:inline-flex}
+.tick .tn span{display:inline-block}.tick .tn .up{animation:tup .45s ease-out}.tick b{color:var(--ink);font-weight:700}
+.tick.bump{border-color:var(--acc)}
+@keyframes tpulse{70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes tup{from{transform:translateY(60%);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.tick .dot,.tick .tn .up{animation:none}}
 .ctaband[hidden]{display:none}.ctaband{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:linear-gradient(90deg,color-mix(in srgb,var(--red) 22%,var(--panel)),var(--panel));border:1px solid color-mix(in srgb,var(--red) 50%,transparent);border-radius:14px;padding:12px 12px 12px 18px;margin:0 0 20px;font-size:14px}
 .ctaband b{font:700 17px "Baloo 2",sans-serif}.ctaband .sp1{flex:1 1 260px;color:var(--mute);line-height:1.45}.ctaband .pill{min-height:36px}
 .ctaband .x{all:unset;cursor:pointer;color:var(--mute);padding:4px 8px;font-size:18px}
@@ -332,6 +340,7 @@ var b=document.getElementById('ctaband'),off=false,ses=false;try{off=Date.now()-
 if(!off&&!ses){var n=0;try{var g=JSON.parse(localStorage.getItem('jonin_guest_v1')||'{}'),ids={};(g.items||[]).forEach(function(it){ids[String(it[0]).split('|')[0]]=1});(g.slabs||[]).forEach(function(x){ids[x.card_id]=1});n=Object.keys(ids).length}catch(_){}
 b.innerHTML=ctaHTML(n,true);b.hidden=false}})();</script>
     <h1>Every card in the original Bandai Naruto CCG</h1>
+    <div class="tick" id="tick" role="status" aria-live="polite" hidden><span class="dot" aria-hidden="true"></span><span class="tn" id="tickn"></span><span>cards tracked by <b id="tickc"></b></span></div>
     <input id="q" type="search" placeholder="Search a card or character — try Kakashi" aria-label="Search cards" autocomplete="off">
     <div class="picks"><div class="setpick"><span id="setlbl">Set</span><div class="sdd" id="sdd"><button type="button" id="setsel" class="sddb" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="setlbl setsel"><span class="sddo"><span class="nosym all">★</span><b>All sets</b></span></button><ul class="sddl" id="sddl" role="listbox" aria-labelledby="setlbl" tabindex="-1" hidden></ul></div></div><label class="setpick sortpick" for="sortsel"><span>Sort</span><select id="sortsel"></select></label></div>
         <div class="bar" id="fbar">
@@ -803,7 +812,22 @@ async function renderUser(slug){const el=$('#v-user');el.innerHTML='<p class="em
   const m=new Map();r.data.forEach(i=>m.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));const who=(r.data[0]&&r.data[0].handle)||(prof&&prof.handle)||'A collector';
   listView(el,`<h1 class="ph">${fav?avImg(fav,prof.avatar,56):''}<span>${esc(who)}'s haves and wants</span>${badgeHtml(prof&&prof.badge)}</h1><div class="pbadges">${fav?`<a class="favchip big" href="/character/${esc(fav)}/">${favImg(fav)}<span><small>Favorite character</small>${esc(favName(fav))}</span></a>`:''}${ig?`<a class="igbadge" href="${igUrl(ig)}" target="_blank" rel="noopener"><span aria-hidden="true">📷</span> @${esc(ig)} on Instagram</a>`:''}</div><p class="mt">Shared from Jonin. ${ME?'':'<button class="clear" data-auth="up">Make your own list</button>'}</p>`,m,true)}
 gLoad();if(sbc()){sb.auth.getSession().then(async({data})=>{await setUser(data.session?data.session.user:null);AUTHREADY=true;paintAcct()}).catch(()=>{AUTHREADY=true;paintAcct()});sb.auth.onAuthStateChange((ev,ses)=>{setUser(ses?ses.user:null);if(ev==='PASSWORD_RECOVERY'){const pw=prompt('Choose a new password (at least 8 characters)');if(pw&&pw.length>=8)sb.auth.updateUser({password:pw})}})}
-if(!sbc())AUTHREADY=true;paintAcct();loadFounding();
+// Cards tracked ticker (homepage): every have, want and slab saved to an account adds 1. Count comes from
+// cards_tracked() in Supabase (db/017_cards_tracked.sql). Rolls up when it changes; re-checks every 30s while the tab is open.
+let TICK=null;
+function paintTick(n,c){const el=$('#tick'),tn=$('#tickn');if(!el||!tn)return;const old=TICK,str=n.toLocaleString('en-US'),prev=old===null?'':old.toLocaleString('en-US');
+  if(old===null||(str.length!==prev.length))tn.innerHTML=[...str].map(d=>'<span'+(old!==null?' class="up"':'')+'>'+d+'</span>').join('');
+  else tn.innerHTML=[...str].map((d,i)=>'<span'+(d!==prev[i]?' class="up"':'')+'>'+d+'</span>').join('');
+  $('#tickc').textContent=plural(c,'collector');el.hidden=false;
+  if(old!==null&&n>old){el.classList.add('bump');setTimeout(()=>el.classList.remove('bump'),900)}TICK=n}
+function loadTick(){if(!sbc()||!$('#tick'))return;sb.rpc('cards_tracked').then(r=>{const d=r&&r.data;if(!r.error&&d&&typeof d.cards==='number'){
+  const to=d.cards,from=TICK===null?Math.max(0,to-Math.min(to,40)):TICK;if(to===TICK)return;
+  // First paint counts up from a little below; later changes roll straight to the new number.
+  if(TICK===null&&to>from&&!matchMedia('(prefers-reduced-motion:reduce)').matches){let i=from;TICK=null;paintTick(i,d.collectors);const st=setInterval(()=>{i+=Math.max(1,Math.ceil((to-i)/8));if(i>=to){i=to;clearInterval(st)}paintTick(i,d.collectors)},45)}
+  else paintTick(to,d.collectors)}}).catch(()=>{})}
+setInterval(()=>{if(!document.hidden)loadTick()},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadTick()});
+if(!sbc())AUTHREADY=true;paintAcct();loadFounding();loadTick();
 if(location.hash==='#signup'||location.hash==='#signin'){const m=location.hash==='#signin'?'in':'up';history.replaceState(null,'',location.pathname);setTimeout(()=>{if(!ME&&!hasSession())openAuth(m)},300)}
 const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url',{headers:{apikey:SUPA_KEY,Range:`${i*1000}-${i*1000+999}`}}).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>a.flat());
 // Live list only fills cards that have no image in cards.json yet (images are served from jonin.cards; see pipeline/mirror_images.py)
