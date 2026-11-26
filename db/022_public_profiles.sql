@@ -5,3 +5,4 @@
 --   shared_profile(slug)    -> now also show_slabs, joined, rank, xp
 --   admin_user_view(email)  -> admin only (is_admin()): profile, xp, haves/wants, slabs with certs, lists. Used by /admin/ → Accounts → View profile.
 -- See the migration in Supabase for the full SQL.
+-- 2026-11-26 (migration sharing_off_by_default): profiles.sharing now defaults to false for new accounts.

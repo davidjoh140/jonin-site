@@ -87,5 +87,5 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - `/#u=<share_slug>` is a member's public profile: avatar, name, badge, favorite character, scroll rank, member since, Instagram, haves and wants.
 - Slabs show there only if the member turns on **Show my slabs** on My collection (`profiles.show_slabs`, off by default). Grader and grade only, never cert numbers (`shared_slabs`, `db/022_public_profiles.sql`).
 - Members get "See my profile as others do" next to their share link.
-- PLACEHOLDER for David: `profiles.sharing` (haves/wants by link) is still ON by default for new accounts.
+- Sharing is OFF by default for new accounts (David, 2026-11-26); members turn it on from My collection. The 19 accounts made before this still have it on.
 - Admin: `/admin/` → Accounts → **View profile** shows any account's slabs (with certs and a PSA link), haves, wants and lists, whether or not they share.
