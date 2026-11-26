@@ -10,6 +10,12 @@
   var THEMEF=['naruto','sasuke','itachi','kakashi','gaara','hinata','sakura','rock-lee'];
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function ls(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}}
+  // Founding spots left (Supabase founding_spots_left), cached 10 minutes so the header can switch its offer text.
+  var FK='jonin_fleft';
+  function fleft(){var f=ls(FK);if(!f||Date.now()-f.t>6e5){fetch(SUPA+'/rest/v1/rpc/founding_spots_left',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:'{}'})
+    .then(function(r){return r.ok?r.json():null}).then(function(n){if(typeof n==='number'){try{localStorage.setItem(FK,JSON.stringify({n:n,t:Date.now()}))}catch(_){}}}).catch(function(){})}
+    return f?f.n:null}
+  function offerLine(){var n=fleft();return n===0?'Founding spots are gone. Premium opens soon: <a href="/premium/#join">join the waitlist</a>.':'The first 20 members get Premium free, forever.'}
   function avSrc(sl,a){if(!sl)return '';if(a==='portrait'&&THEMEF.indexOf(sl)>-1)return '/theme-faces/'+sl+'.webp';if(a==='action')return '/char-art/'+sl+'.webp';return '/chars/'+sl+'.webp'}
 
   // Status symbols (PLACEHOLDER look, David to fine-tune)
@@ -58,7 +64,7 @@
     var fb='<button type="button" class="jmi" role="menuitem" data-fb data-fbname="Header profile menu">'+lb('chat','Send feedback<small>Notes we use earn scrolls</small>')+'</button>';
     if(!s.user){
       return '<div class="jac">'+up+' aria-haspopup="menu">'+'<span>'+(s.guest?'Sign up<span class="jx"> to save</span>':'Sign up')+'</span>'+CARET+upEnd+
-        '<div class="jam" role="menu"><div class="jmp"><b>Free account</b><span>Save your collection and vote for the coolest cards. The first 20 members get Premium free, forever.</span></div>'+
+        '<div class="jam" role="menu"><div class="jmp"><b>Free account</b><span>Save your collection and vote for the coolest cards. '+offerLine()+'</span></div>'+
         (s.home?'<button type="button" class="jmi jgo" role="menuitem" data-auth="up">'+lb('join','Create free account')+'</button>':'<a class="jmi jgo" role="menuitem" href="/#signup">'+lb('join','Create free account')+'</a>')+
         inB+(s.guest?'<a class="jmi" role="menuitem" '+mine+'>'+lb('shelf','My collection<small>'+s.guest+' card'+(s.guest===1?'':'s')+' saved on this device only</small>')+'</a>':'')+
         '<a class="jmi" role="menuitem" href="/missions/">'+lb('scrollClosed','Missions<small>Earn scrolls and rank up</small>')+'</a>'+fb+themeRow()+'</div></div>';

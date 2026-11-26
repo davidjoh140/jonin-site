@@ -587,8 +587,8 @@ function nudge(){if(ME)return;let seen=null;try{seen=sessionStorage.getItem('jnu
   t.addEventListener('click',e=>{if(e.target.closest('.x')||e.target.closest('[data-auth]'))setTimeout(()=>t.remove(),0)});document.body.appendChild(t);setTimeout(()=>t.remove(),12000)}
 // Founding members: spots left from Supabase (null until loaded = treat as open).
 let FLEFT=null;const offerOpen=()=>FLEFT===null||FLEFT>0;
-function loadFounding(){if(!sbc())return;sb.rpc('founding_spots_left').then(r=>{if(!r.error&&typeof r.data==='number'){FLEFT=r.data;paintAcct()}}).catch(()=>{})}
-const foundingLine=()=>offerOpen()?`<p class="fnd">⭐ <b>Founding offer:</b> the first 20 members get Premium free, forever.${FLEFT!==null?` <b>${plural(FLEFT,'spot')} left.</b>`:''}</p>`:'';
+function loadFounding(){if(!sbc())return;sb.rpc('founding_spots_left').then(r=>{if(!r.error&&typeof r.data==='number'){FLEFT=r.data;try{localStorage.setItem('jonin_fleft',JSON.stringify({n:FLEFT,t:Date.now()}))}catch(_){}paintAcct()}}).catch(()=>{})}
+const foundingLine=()=>offerOpen()?`<p class="fnd">⭐ <b>Founding offer:</b> the first 20 members get Premium free, forever.${FLEFT!==null?` <b>${plural(FLEFT,'spot')} left.</b>`:''}</p>`:(ME&&MYBADGE==='founding'?'':`<p class="fnd">⭐ <b>Founding spots are gone.</b> Premium opens soon. <a href="/premium/#join">Join the waitlist</a></p>`);
 // Set progress for the card's set: cards you have any printing/edition of (same rule as the set pages).
 function setProg(c){if(!D)return null;const ids=new Set();for(const [k,v] of COLL){const a=k.split('|');if(a[3]==='have'&&v>0)ids.add(a[0])}
   SLABS.forEach(x=>{if(slabsHave()&&x.counted)ids.add(x.card_id)});const cs=D.cards.filter(x=>x.s===c.s);return {name:(D.byId[c.s]||{}).name||'This set',have:cs.filter(x=>ids.has(cid(x))).length,total:cs.length}}
