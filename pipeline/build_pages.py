@@ -77,7 +77,7 @@ HEAD = '''<!DOCTYPE html>
 <meta name="twitter:card" content="{tw}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/pages.css?v={cssv}"><link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v={premv}"><script src="/theme.js?v=6"></script>
+<link rel="stylesheet" href="/pages.css?v={cssv}"><link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v={premv}"><script src="/theme.js?v=7"></script>
 {ld}
 </head>
 <body>
@@ -315,12 +315,18 @@ def slab_ld(c, name_for):
             'creditText': 'Seller photo from the sold listing'}
 
 
-def mv_badges(c, ranks):
-    """Card page: '#2 most valuable Sasuke card' badges, plus the photo of the copy that set its top sale."""
-    if not ranks:
+def mv_badges(c, ranks, pops=None):
+    """Card page "appears in" badges, each linking to its list: '#2 most valuable Sasuke card', '#1 most popular Gaara card'
+    (collector votes), and articles the card is featured in. Plus the photo of the copy that set its top sale."""
+    arts = AB.FEATURED.get(c['s'] + ':' + c['n']) or []
+    if not ranks and not pops and not arts:
         return ''
     out = ''.join(f'<a class="mvbadge" href="/character/{ch["slug"]}/most-valuable/">🏆 #{r} most valuable {e(ch["label"])} card</a>'
-                  for ch, r in ranks)
+                  for ch, r in ranks or [])
+    out += ''.join((f'<a class="mvbadge" href="/most-popular/">⭐ #{r} most popular Naruto CCG card</a>' if ch is None else
+                    f'<a class="mvbadge" href="/character/{ch["slug"]}/most-popular/">⭐ #{r} most popular {e(ch["label"])} card</a>')
+                   for ch, r in pops or [])
+    out += ''.join(f'<a class="mvbadge art" href="/articles/{sl}/">📰 {e(t)}</a>' for sl, t in arts)
     ph, t = sale_photo(c), c.get('top') or []
     if ph and len(t) > 4 and t[4]:
         out += (f'<figure class="soldslab"><img loading="lazy" src="{e(ph)}" alt="{e(c["name"])} {e(c["n"])} {e(t[2])} Naruto card that sold for {money(t[4])}" width="600" height="1000">'
@@ -529,10 +535,11 @@ def css_version():
     return hashlib.sha1(open(os.path.join(ROOT, 'pages.css'), 'rb').read()).hexdigest()[:8]
 
 
-def related_rows(c, s, set_cards, char_lists, chars_by_name):
+def related_rows(c, s, set_cards, char_lists, chars_by_name, skip=()):
     """'More <character> cards' and 'More from <set>' rows under a card page, so one card leads to the next.
     Best-selling cards first, then rarity; 6 per row."""
-    pick = lambda xs: sorted([x for x in xs if x is not c], key=lambda x: (x['top'][0] if x.get('top') else 10 ** 6, RANK.get(x['r'], 9), x['n']))[:6]
+    skip_ids = {id(x) for x in skip}
+    pick = lambda xs: sorted([x for x in xs if x is not c and id(x) not in skip_ids], key=lambda x: (x['top'][0] if x.get('top') else 10 ** 6, RANK.get(x['r'], 9), x['n']))[:6]
     out, seen = [], set()
     for x in re.split(r'\s*&\s*', c['name']):
         ch = char_of(x, chars_by_name)
@@ -552,7 +559,40 @@ def related_rows(c, s, set_cards, char_lists, chars_by_name):
     return '\n'.join(out)
 
 
-def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None, ranks=None):
+def quick_links(c, s, set_cards, char_lists, chars_by_name):
+    """Right under the card name: one-tap links to the character's and set's pages, so the next click is on the first screen."""
+    out, seen = [], set()
+    for x in re.split(r'\s*&\s*', c['name']):
+        ch = char_of(x, chars_by_name)
+        if ch and ch['slug'] not in seen and char_lists.get(ch['slug']):
+            seen.add(ch['slug'])
+            out.append(f'<a class="qlink" href="/character/{ch["slug"]}/" data-jt="quick-link" data-jt-to="character">'
+                       f'<img src="/chars/{ch["slug"]}.webp" alt="" width="22" height="22">All {len(char_lists[ch["slug"]])} {e(ch["label"])} cards →</a>')
+    out.append(f'<a class="qlink" href="/set/{set_slug(s)}/" data-jt="quick-link" data-jt-to="set">{sym_img(s)}{e(s["name"])}: {len(set_cards)} cards →</a>')
+    return f'<p class="qlinks">{"".join(out)}</p>'
+
+
+def near_top(c, s, set_cards, char_lists, chars_by_name):
+    """A small 4-card row near the top of the card page (the first character's best cards, or the set's for jutsu and other
+    cards with no character). Returns (html, cards shown) so the bottom rows don't repeat them."""
+    for x in re.split(r'\s*&\s*', c['name']):
+        ch = char_of(x, chars_by_name)
+        if ch and char_lists.get(ch['slug']):
+            pool, title, href = char_lists[ch['slug']], f'More {e(ch["label"])} cards', f'/character/{ch["slug"]}/'
+            break
+    else:
+        pool, title, href = set_cards, f'More from {e(s["name"])}', f'/set/{set_slug(s)}/'
+    cs = sorted([x for x in pool if x is not c], key=lambda x: (x['top'][0] if x.get('top') else 10 ** 6, RANK.get(x['r'], 9), x['n']))[:4]
+    if not cs:
+        return '', []
+    return (f'<section class="neartop"><h3><a href="{href}" data-jt="near-top" data-jt-to="all">{title} →</a></h3><div class="ntgrid">'
+            + ''.join(f'<a href="/card/{slug(x)}/" data-jt="near-top" data-jt-to="card">'
+                      + (f'<img loading="lazy" src="{e(x["img"])}" alt="{e(card_alt(x, SETS_BY_ID[x["s"]]))}" width="750" height="1050">'
+                         if re.match(r'^https://', x.get('img') or '') else f'<span class="noimg sm"><b>{e(x["n"])}</b></span>')
+                      + f'<span>{e(x["name"])}</span></a>' for x in cs) + '</div></section>\n'), cs
+
+
+def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None, ranks=None, pops=None):
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
     eds = [x for x in (c.get('ed') or []) if x]
@@ -589,13 +629,15 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
     nav = ''.join([
         f'<a class="pn" href="/card/{slug(prev)}/" rel="prev">‹ {e(prev["n"])} {e(prev["name"])}</a>' if prev else '<span></span>',
         f'<a class="pn" href="/card/{slug(nxt)}/" rel="next">{e(nxt["n"])} {e(nxt["name"])} ›</a>' if nxt else '<span></span>'])
+    nt_html, nt_cards = near_top(c, s, set_cards, char_lists or {}, chars_by_name or {})
     body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/set/{set_slug(s)}/">{e(s["name"])}</a> › {e(c["n"])}</nav>
 <article class="cardpage">
 <div class="art">{art}</div>
 <div class="info">
 <h1>{e(c["name"])}</h1>
 <p class="mt">{e(s["name"])} · {e(c["n"])} · {e(c["r"])}</p>
-{mv_badges(c, ranks)}<dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
+{quick_links(c, s, set_cards, char_lists or {}, chars_by_name or {})}
+{mv_badges(c, ranks, pops)}<dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
 {price_block(c)}{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
 <a class="primary" href="/#card={quote(c['s'] + ':' + c['n'])}" data-jt="track-click">Track it in your collection</a>
@@ -604,11 +646,11 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 {psa}
 <a href="/premium/?card={quote(c['s'] + ':' + c['n'])}&amp;name={quote(c['name'])}" data-jt="alerts-click">🔔 Alerts for this card</a>
 </div>
-{newbie('card')}{featured_in(c)}
+{nt_html}{newbie('card')}
 </div>
 </article>
 <nav class="prevnext">{nav}</nav>
-{related_rows(c, s, set_cards, char_lists or {}, chars_by_name or {})}
+{related_rows(c, s, set_cards, char_lists or {}, chars_by_name or {}, nt_cards)}
 '''
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(img or SITE + '/og.png'),
                        tw='summary_large_image', ld=ld) + body + FOOT
@@ -801,6 +843,13 @@ def main():
     for ch in mv_chars:
         for i, c in enumerate(ranked[ch['slug']]):
             mv_ranks.setdefault(c['s'] + ':' + c['n'], []).append((ch, i + 1))
+    pop_ranks = {}   # card key -> [(character or None for overall, rank)] from collector votes
+    votes = LB.load_votes()
+    for ch in chars:
+        for i, (c, _n) in enumerate(LB.popular_ranked(votes.get(ch['slug']), cards_by_key)):
+            pop_ranks.setdefault(c['s'] + ':' + c['n'], []).append((ch, i + 1))
+    for i, (c, _n) in enumerate(LB.popular_ranked(votes.get('_all'), cards_by_key, 10)):
+        pop_ranks.setdefault(c['s'] + ':' + c['n'], []).insert(0, (None, i + 1))
     changed, keep_c, keep_s = 0, set(), set()
     for s in sets:
         cs = by_set[s['id']]
@@ -808,7 +857,7 @@ def main():
             keep_c.add(slug(c))
             changed += write(os.path.join(ROOT, 'card', slug(c), 'index.html'),
                              card_page(c, s, cs[i - 1] if i else None, cs[i + 1] if i + 1 < len(cs) else None, chars_by_name, cs, char_lists,
-                                       mv_ranks.get(c['s'] + ':' + c['n'])))
+                                       mv_ranks.get(c['s'] + ':' + c['n']), pop_ranks.get(c['s'] + ':' + c['n'])))
         keep_s.add(set_slug(s))
         changed += write(os.path.join(ROOT, 'set', set_slug(s), 'index.html'), set_page(s, cs))
     sets_by_id = {x['id']: x for x in sets}

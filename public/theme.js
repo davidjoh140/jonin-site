@@ -99,4 +99,12 @@
   function newbie(){var signed=!!user();document.querySelectorAll('[data-newbie]').forEach(function(el){el.hidden=signed})}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',newbie);else newbie();
   window.addEventListener('storage',function(ev){if(ev.key===AUTH){newbie();checkSignup()}});
+  /* Reading time: counts seconds the tab is visible and the visitor has scrolled, tapped, moved the mouse or typed in the
+     last 60s. Sends "read-30s" and "read-2m" once per page, so a long read on one page shows as engaged, not as a
+     zero-second bounce. */
+  var active=0,last=Date.now(),sent={};
+  ['scroll','mousemove','keydown','touchstart','click','wheel'].forEach(function(t){window.addEventListener(t,function(){last=Date.now()},{passive:true})});
+  setInterval(function(){if(document.hidden||Date.now()-last>60e3)return;active+=5;
+    if(active>=30&&!sent.a){sent.a=1;jtrack('read-30s',{})}
+    if(active>=120&&!sent.b){sent.b=1;jtrack('read-2m',{})}},5000);
 })();
