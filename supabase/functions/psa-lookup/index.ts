@@ -15,11 +15,13 @@ const words = (s: string) => (String(s || "").toUpperCase().match(/[A-Z0-9']+/g)
 const key = (n: string) => String(n || "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/(?<=[A-Z])0+(?=\d)/g, "").replace(/^0+(?=\d)/, "");
 const digits = (n: string) => (String(n || "").match(/\d+/g) || []).join("").replace(/^0+/, "");
 
-let TOK = Deno.env.get("PSA_TOKEN") || "";
+// Tolerate a pasted "bearer " prefix, quotes or whitespace around the token.
+const clean = (t: string) => String(t || "").trim().replace(/^["']|["']$/g, "").replace(/^bearer\s+/i, "").trim();
+let TOK = clean(Deno.env.get("PSA_TOKEN") || "");
 async function psaToken() {
   if (!TOK) {
     const { data } = await sb.from("app_secrets").select("value").eq("name", "psa_token").maybeSingle();
-    TOK = data?.value || "";
+    TOK = clean(data?.value || "");
   }
   return TOK;
 }
@@ -30,7 +32,7 @@ async function fetchCert(cert: string) {
   const h = { Authorization: `bearer ${tok}` };
   const r = await fetch(`${PSA}/cert/GetByCertNumber/${cert}`, { headers: h });
   if (r.status === 404) return { status: "not_found" };
-  if (!r.ok) throw new Error(`PSA ${r.status}`);
+  if (!r.ok) throw new Error(`PSA ${r.status} (token ${tok.length} chars): ${(await r.text()).slice(0, 200)}`);
   const info = (await r.json())?.PSACert;
   if (!info || !info.CertNumber) return { status: "not_found" };
   const ri = await fetch(`${PSA}/cert/GetImagesByCertNumber/${cert}`, { headers: h });
