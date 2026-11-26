@@ -58,6 +58,7 @@
 
   // s = {home, user, handle, fav, avatar, badge:'founding'|'premium'|null, pts:{xp,rank,next,next_at,prev_at}|null (from my_xp), guest}
   function html(s){
+    if(s&&s.user&&s.pts&&s.home)introMaybe(s);
     try{if(!s||!s.user)premUI(null);else if(s.badge)premUI(s.badge)}catch(_){}
     var mine=s.home?'href="#mine" data-v="mine"':'href="/#mine"';
     var up=s.home?'<button type="button" class="jab jsu" data-auth="up"':'<a class="jab jsu" href="/#signup"';
@@ -83,6 +84,7 @@
         '<div class="jah st-'+st+'"><span class="jav big">'+avatar(s,48)+band(st)+'</span><div><b>'+esc(name||'Loading…')+'</b><span class="jst st-'+st+'">'+ICON[st]+LABEL[st]+'</span></div></div>'+
         (p?'<a class="jrk" href="/missions/" role="menuitem" style="display:block;text-decoration:none" title="See your missions"><div><span>Rank</span> <b>'+esc(rank)+'</b><span class="jpt">📜 '+pts+(pts===1?' scroll':' scrolls')+'</span></div><span class="jbar"><i style="width:'+pct+'%"></i></span>'+
           (p.next?'<small>'+(p.next_at-pts)+((p.next_at-pts)===1?' scroll':' scrolls')+' to '+esc(p.next)+'</small>':'<small>Top rank</small>')+'</a>':'')+
+        nextRow(s)+
         '<a class="jmi" role="menuitem" '+mine+'>'+lb('shelf','My collection<small>Haves, wants, slabs and profile</small>')+'</a>'+
         '<a class="jmi" role="menuitem" '+(s.home?'href="#lists" data-v="mine" data-lmine':'href="/#lists"')+'>'+lb('scrollOpen','My lists<small>Your own card lists</small>')+'</a>'+
         '<button type="button" class="jmi" role="menuitem" data-jmsg>'+lb('mail','Messages<b class="jmn"'+(UNREAD?'':' hidden')+'>'+UNREAD+'</b><small>Questions from Jonin about your notes</small>')+'</button>'+
@@ -193,7 +195,7 @@
       if(p){base.handle=p.handle||base.handle;base.fav=p.fav_character||null;base.avatar=p.avatar||null}
       if(r[1]){var on=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));base.badge=on?(m.founding?'founding':'premium'):null}
       if(r[2])base.pts=r[2];
-      paint(base);cache(base);
+      paint(base);cache(base);introMaybe(base);
     });
   }
   function signOut(){
@@ -235,6 +237,57 @@
     fetch(SUPA+'/rest/v1/rpc/touch_seen',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:'{}'}).catch(function(){})}
   seen();setInterval(seen,6e4);document.addEventListener('visibilitychange',function(){if(!document.hidden)seen()});
   window.addEventListener('storage',function(e){if(e.key===TK)claimInvite()});
+
+
+  // ---- Scroll nudges (2026-11-26) ----
+  // Most members hadn't found voting, so: a "Next mission" line under the rank card in the profile menu, and a one-time
+  // "How scrolls work" popup for members with fewer than INTRO_UNDER characters voted. Amounts come from my_xp.rules (Supabase xp_rules).
+  // PLACEHOLDERS for David: popup shows 4s after a page opens, at most INTRO_MAX times, "Later" waits INTRO_GAP days.
+  var INTRO_UNDER=3,INTRO_MAX=3,INTRO_GAP=7*864e5,CHARS=null;
+  function chars(){if(CHARS)return CHARS;var c=ls('jonin_chars');if(c&&Date.now()-c.t<864e5){CHARS=c.l;return CHARS}
+    fetch('/chars.json').then(function(r){return r.json()}).then(function(l){CHARS=l.map(function(x){return [x.slug,x.label]});try{localStorage.setItem('jonin_chars',JSON.stringify({t:Date.now(),l:CHARS}))}catch(_){}}).catch(function(){});
+    return null}
+  function scr(n){return '+'+n+' 📜'}
+  function nextMission(s){var p=s&&s.pts;if(!p)return null;var R=p.rules||{},v={},i,L=chars()||[];(p.voted||[]).forEach(function(c){v[c]=1});
+    var nm=function(sl){for(var j=0;j<L.length;j++)if(L[j][0]===sl)return L[j][1];return sl.charAt(0).toUpperCase()+sl.slice(1).replace(/-./g,function(m){return ' '+m.charAt(1).toUpperCase()})};
+    var has=function(sl){if(!L.length)return true;for(var j=0;j<L.length;j++)if(L[j][0]===sl)return true;return false};
+    var pick=s.fav&&!v[s.fav]&&has(s.fav)?s.fav:null;
+    if(!pick)for(i=0;i<L.length;i++)if(!v[L[i][0]]){pick=L[i][0];break}
+    if(pick&&R.vote_character)return {href:'/character/'+pick+'/#vote-top',t:'Vote for '+nm(pick)+'’s coolest cards',n:R.vote_character,ch:pick,name:nm(pick)};
+    if(!p.cards_100&&R.cards_100)return {href:'/#mine',t:'Log 100 cards ('+Math.min(100,p.cards||0)+'/100)',n:R.cards_100};
+    if(R.invite_signup)return {href:'/missions/#m-inv',t:'Invite a friend',n:R.invite_signup};
+    return null}
+  function nextRow(s){var m=nextMission(s);if(!m)return '';
+    return '<a class="jnx" role="menuitem" href="'+esc(m.href)+'"><span>🎯 Next mission</span><b>'+esc(m.t)+'</b><i>'+scr(m.n)+'</i></a>'}
+  (function(){var c=document.createElement('style');c.textContent=
+    '.jnx{display:grid;grid-template-columns:1fr auto;gap:0 8px;margin:-2px 8px 6px;padding:8px 10px;border-radius:10px;border:1px dashed #F2C14E;background:rgba(242,193,78,.08);text-decoration:none;color:var(--ink,#FFF4E6)}'+
+    '.jnx:hover{background:rgba(242,193,78,.16)}.jnx span{grid-column:1/-1;font-size:11px;letter-spacing:.5px;color:#F2C14E;font-weight:700}.jnx b{font-size:13.5px;font-weight:600}.jnx i{font-style:normal;font:800 13px "Baloo 2",sans-serif;color:#F2C14E;align-self:center}'+
+    '.jsi .jmbox{width:min(460px,100%)}.jsi ul{list-style:none;margin:2px 0 4px;padding:0;display:grid;gap:6px}.jsi li{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:10px;background:var(--panel,#241E2D);border:1px solid var(--edge,#3A3046)}'+
+    '.jsi li b{font:800 14px "Baloo 2",sans-serif;color:#F2C14E;white-space:nowrap}.jsi li small{display:block;color:var(--mute,#B8AEA6);font-size:12px}.jsi .jsr{font-size:15px}.jsi .jsr b{color:#F2C14E}'+
+    '.jsi .jsb{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.jsi .jsb a{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;padding:0 16px}.jsi .jsl{background:none;border:0;color:var(--mute,#B8AEA6);font:14px Inter,system-ui,sans-serif;cursor:pointer;margin-left:auto}';
+    document.head.appendChild(c)})();
+  function introMaybe(st){
+    if(!st||!st.user||!st.pts||/^\/(missions|admin)\//.test(location.pathname))return;
+    var p=st.pts,R=p.rules||{};if((p.voted||[]).length>=INTRO_UNDER||!R.vote_character)return;
+    var k='jonin_sintro_'+st.uid,r=ls(k)||{n:0,t:0};if(r.n>=INTRO_MAX||Date.now()-r.t<INTRO_GAP)return;
+    if(introMaybe.on)return;introMaybe.on=1;
+    setTimeout(function(){
+      if(document.querySelector('.jmo:not([hidden]),.jfb-ov:not([hidden]),dialog[open]'))return; // never on top of another popup
+      try{localStorage.setItem(k,JSON.stringify({n:r.n+1,t:Date.now()}))}catch(_){}
+      var m=nextMission(st),nC=(CHARS||[]).length||40,xp=p.xp||0,d=document.createElement('div');d.className='jmo jsi';
+      d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="jsih"><button class="jmx" type="button" aria-label="Close">×</button>'+
+        '<h2 id="jsih">📜 Earn scrolls, rank up</h2><p class="jsr">You’re <b>'+esc(p.rank||'')+'</b> with '+xp+(xp===1?' scroll':' scrolls')+(p.next?'. '+(p.next_at-xp)+' more to reach <b>'+esc(p.next)+'</b>.':'.')+'</p>'+
+        '<p>Scrolls show your rank next to your name. Here’s how to earn them:</p><ul>'+
+        '<li><span>Vote for each character’s coolest cards<small>3 votes per character, '+nC+' characters</small></span><b>'+scr(R.vote_character)+' each</b></li>'+
+        (R.cards_100?'<li><span>Log 100 cards in your collection<small>'+Math.min(100,p.cards||0)+' of 100 so far</small></span><b>'+scr(R.cards_100)+'</b></li>':'')+
+        (R.invite_signup?'<li><span>Invite a friend who joins</span><b>'+scr(R.invite_signup)+' each</b></li>':'')+
+        (R.feedback_accepted?'<li><span>Send feedback we use<small>Fixes, missing cards, ideas</small></span><b>'+scr(R.feedback_accepted)+' each</b></li>':'')+
+        '</ul><div class="jsb">'+(m&&m.ch?'<a class="jmgo" href="'+esc(m.href)+'">Vote on '+esc(m.name)+'’s cards</a>':'')+'<a class="jmgo" style="background:var(--panel,#241E2D);border:1px solid var(--edge,#3A3046)" href="/missions/">All missions</a><button type="button" class="jsl">Later</button></div></div>';
+      document.body.appendChild(d);if(window.jtrack)jtrack('scrolls-intro',{});
+      var close=function(){d.remove()};d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.jmx,.jsl'))close();else if(e.target.closest('a')&&window.jtrack)jtrack('scrolls-intro-click',{to:e.target.closest('a').getAttribute('href')})});
+      document.addEventListener('keydown',function f(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',f)}});
+    },4000);
+  }
 
   // ---- Messages (2026-11-26) ----
   // David can message members from /admin/ (mostly follow-up questions about their feedback notes). Members see a red dot

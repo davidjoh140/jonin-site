@@ -108,4 +108,12 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - `/admin/` → **Messages**: every conversation with unread replies. Start one from a feedback note (💬 Message sender, which fills in Claude's drafted question for that note) or from Accounts / View profile (💬 Message). Senders with no account get an "Email them instead" link.
 - A member's reply about a note has **Use in fix**: it sends their answer to Claude as an Alter on that note, and Accept (in the conversation or in Feedback) then applies the fix to the cards.
 - Members: red dot on the profile button, **Messages** in the profile menu (in `acct.js`), reply box once David has written. `jonin.cards/#messages` opens it.
-- PLACEHOLDERS for David: members can't start a conversation themselves, one member message per 10 seconds, 2000 characters max, unread checked every minute.
+- Rules (David approved 2026-11-26): members can't start a conversation themselves, one member message per 10 seconds, 2000 characters max, unread checked every minute.
+
+## Scroll nudges (getting members to vote and earn scrolls)
+
+- Profile menu: a **Next mission** line under the rank card. Order: vote on their favorite character, then the next character they haven't voted on (most cards first), then Log 100 cards, then Invite a friend. Links straight to the character's vote box.
+- One-time **"Earn scrolls, rank up"** popup (in `acct.js`) for members who've voted on fewer than 3 characters: their rank, every way to earn with the amounts from `xp_rules`, and a "Vote on <favorite>'s cards" button.
+- Character pages (`vote.js`): "📜 Your first vote on <character> earns +5 scrolls" in the vote box, and a floating "▲ Vote for <character>'s coolest cards" button while the vote box is off screen, until they've voted there. Signed-out visitors see it too.
+- PLACEHOLDERS for David: popup shows 4 seconds after a page opens, only under 3 characters voted, at most 3 times per member, "Later" waits 7 days.
+- Umami events: scrolls-intro, scrolls-intro-click, vote-pill.

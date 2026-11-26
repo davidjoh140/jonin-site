@@ -2,7 +2,7 @@
 -- Direct messages between David (admin) and members, mainly to ask feedback senders follow-up questions.
 -- One conversation per member. A message can point at the feedback note it is about (feedback_id).
 -- Nobody reads or writes the table directly; everything goes through the functions below.
--- PLACEHOLDER rules for David to revisit: members can only reply once David has messaged them (no cold DMs to him),
+-- Rules (David approved 2026-11-26): members can only reply once David has messaged them (no cold DMs to him),
 -- members can send one message every 10 seconds, messages are capped at 2000 characters.
 
 create table if not exists public.messages (

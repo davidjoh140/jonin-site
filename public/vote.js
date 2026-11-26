@@ -37,7 +37,7 @@
     });
     var bar = $('#vote-bar');
     if (bar) bar.innerHTML = me
-      ? '<b>' + left + ' of ' + limit + '</b> votes left for ' + esc(CNAME) + '. Tap ▲ on a card to vote, tap again to take it back.'
+      ? (!earned && xpEach ? '<span class="vxp">📜 Your first vote on ' + esc(CNAME) + ' earns +' + xpEach + ' scrolls</span> ' : '') + '<b>' + left + ' of ' + limit + '</b> votes left for ' + esc(CNAME) + '. Tap ▲ on a card to vote, tap again to take it back.'
       : 'Vote for the coolest ' + esc(CNAME) + ' cards. Everyone gets ' + limit + ' votes per character. <button type="button" class="vlink" data-vauth="in">Sign in</button> or <button type="button" class="vlink" data-vauth="up">make a free account</button> to vote.';
     if (totals) renderTop(totals);
   }
@@ -82,14 +82,36 @@
   function loadMine() {
     mine.clear();
     if (!me) { paint(); return Promise.resolve(); }
-    sb.from('xp_events').select('ref').eq('kind', 'vote').eq('ref', CHAR).then(function (r) { if (!r.error) earned = (r.data || []).length > 0; });
-    sb.rpc('xp_rules').then(function (r) { if (!r.error && r.data) xpEach = r.data.vote_character || 0; });
+    sb.from('xp_events').select('ref').eq('kind', 'vote').eq('ref', CHAR).then(function (r) { if (!r.error) { earned = (r.data || []).length > 0; paint(); pill(); } });
+    sb.rpc('xp_rules').then(function (r) { if (!r.error && r.data) { xpEach = r.data.vote_character || 0; paint(); pill(); } });
     return sb.from('card_votes').select('card_id').eq('character', CHAR).then(function (r) {
       (r.data || []).forEach(function (x) { mine.add(x.card_id); }); paint();
       var c = takePending();
       if (c && !mine.has(c)) { if (mine.size < limit) { toggle(c); say('Vote cast. You have ' + (limit - mine.size - 1) + ' left for ' + CNAME + '.'); } else say('You already used all ' + limit + ' votes for ' + CNAME + '.'); }
     });
   }
+
+
+  // Vote pill (2026-11-26): a floating "Vote for <character>'s coolest cards" button while the vote box is off screen,
+  // until this member has voted on this character (signed-out visitors see it too). Tapping it scrolls to the vote box.
+  var pillEl = null, boxSeen = false;
+  (function () { var c = document.createElement('style'); c.textContent =
+    '.vpill{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:880;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid #F2C14E;background:var(--deep,#17121D);color:var(--ink,#FFF4E6);font:600 14px Inter,system-ui,sans-serif;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,.8);white-space:nowrap;max-width:calc(100vw - 150px);overflow:hidden;text-overflow:ellipsis}' +
+    '.vpill b{font:800 14px "Baloo 2",sans-serif;color:#F2C14E}.vpill[hidden]{display:none}.vxp{display:inline-block;margin-right:6px;padding:2px 9px;border-radius:999px;background:rgba(242,193,78,.14);color:#F2C14E;font-weight:700}' +
+    '.vps{display:none}@media(max-width:560px){.vpill{left:auto;right:12px;transform:none;max-width:calc(100vw - 160px)}.vpl{display:none}.vps{display:inline}}';
+    document.head.appendChild(c); })();
+  function pill() {
+    var want = !(me && (earned || mine.size)) && !boxSeen;
+    if (!pillEl) {
+      pillEl = document.createElement('button'); pillEl.type = 'button'; pillEl.className = 'vpill'; pillEl.hidden = true;
+      pillEl.onclick = function () { box.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (window.jtrack) jtrack('vote-pill', { character: CHAR }); };
+      document.body.appendChild(pillEl);
+    }
+    pillEl.innerHTML = '<span class="vpl">▲ Vote for ' + esc(CNAME) + '’s coolest cards</span><span class="vps">▲ Vote for top cards</span>' + (xpEach ? '<b>+' + xpEach + ' 📜</b>' : '');
+    pillEl.hidden = !want;
+  }
+  if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { boxSeen = e[0].isIntersecting; if (pillEl) pill(); }, { rootMargin: '0px 0px -30% 0px' }).observe(box);
+  setTimeout(pill, 1500);
 
   function say(msg) {
     var t = $('#vote-toast'); t.textContent = msg; t.hidden = false;
@@ -114,6 +136,7 @@
         if (xpEach) say('📜 +' + xpEach + (xpEach===1?' scroll':' scrolls') + ' for voting on ' + CNAME + '! More missions on the Missions page.');
         if (window.JoninAcct && JoninAcct.refresh) JoninAcct.refresh();
       }
+      pill();
       refresh();
     });
   }
