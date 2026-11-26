@@ -79,11 +79,11 @@ header .acct{display:flex;align-items:center;margin:0!important}
 .jac:hover .jab,.jac:focus-within .jab,.jac.open .jab{border-color:var(--acc)}
 .jav{position:relative;width:30px;height:30px;flex:none;display:block}
 .jav img,.jini{box-sizing:border-box;width:100%;height:100%;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:var(--deep);border:1.5px solid var(--edge);font:800 15px 'Baloo 2',sans-serif;color:var(--acc)}
-.st-founding .jav img,.st-founding .jav .jini,.st-premium .jav img,.st-premium .jav .jini{border-color:#F2C14E}
+.st-founding .jav img,.st-founding .jav .jini{border:2px solid #F2C14E;box-shadow:0 0 0 1px rgba(140,95,20,.9),0 0 7px rgba(242,193,78,.45)}
 .jbg{position:absolute;right:-6px;top:-7px;width:17px;height:15px;transform:rotate(16deg);filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.6))}
 .jhb{position:absolute;left:0;top:0;width:133.4%;height:100%;pointer-events:none;filter:drop-shadow(0 1px 1.2px rgba(0,0,0,.55))}
 .jhb svg{display:block;width:100%;height:100%}
-.st-founding .jst svg,.jst.st-founding svg{width:21px;height:13px}
+.jst.st-premium svg{width:26px;height:12px}
 .st-free .jbg{top:auto;bottom:-4px;right:-5px;width:14px;height:14px;transform:none}
 .jbg svg,.jst svg{display:block;width:100%;height:100%}
 .jat{display:flex;flex-direction:column;line-height:1.12;max-width:130px;min-width:0}
