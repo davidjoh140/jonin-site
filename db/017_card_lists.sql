@@ -1,0 +1,7 @@
+-- Custom card lists (applied 2026-11-26 as Supabase migration "card_lists"). Private to the owner for now.
+-- visibility + share_slug are ready for public/shareable lists later; only 'private' is allowed until then
+-- (to open sharing: widen the visibility check, add a public-read policy or a shared_card_list(slug) RPC).
+-- PLACEHOLDER limits (trigger card_lists_limits): 50 lists per member, 1,000 cards per list.
+-- Tables: card_lists(id, user_id, name, note, visibility, share_slug, created_at, updated_at)
+--         card_list_items(list_id, card_id -> cards.id, user_id, added_at), primary key (list_id, card_id)
+-- Owner-only RLS on both tables. See the migration in Supabase for the full SQL.

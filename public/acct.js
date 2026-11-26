@@ -59,6 +59,7 @@
         (p?'<div class="jrk"><div><span>Rank</span> <b>'+esc(rank)+'</b><span class="jpt">'+pts+' pt'+(pts===1?'':'s')+'</span></div><span class="jbar"><i style="width:'+pct+'%"></i></span>'+
           (p.next?'<small>'+(p.next_at-pts)+' more accepted note'+(p.next_at-pts===1?'':'s')+' to '+esc(p.next)+'</small>':'<small>Top rank</small>')+'</div>':'')+
         '<a class="jmi" role="menuitem" '+mine+'>My collection<small>Haves, wants, slabs and profile</small></a>'+
+        '<a class="jmi" role="menuitem" '+(s.home?'href="#lists" data-v="mine" data-lmine':'href="/#lists"')+'>My lists<small>Your own card lists</small></a>'+
         (st==='free'?'<a class="jmi jprem" role="menuitem" href="/premium/">Unlock Premium</a>':'')+
         fb+themeRow()+
         '<button type="button" class="jmi jout" role="menuitem" '+(s.home?'data-signout':'data-jsignout')+'>Sign out</button>'+

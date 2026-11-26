@@ -61,3 +61,10 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 
 - Small pill under the homepage title: "N cards tracked by N collectors". Every have, want and slab saved to an account adds 1.
 - Reads `cards_tracked()` (`db/017_cards_tracked.sql`) with the publishable key; rolls the digits up on first load and re-checks every 30s while the tab is open.
+## Card lists (My lists)
+
+- Members make their own named card lists (`card_lists`, `card_list_items`; `db/017_card_lists.sql`). Private to the owner (RLS).
+- Card panel: a Lists row under Your collection with one chip per list (tap to add/remove) and + New list (creating from a card adds that card).
+- My collection: a Lists tab (also `/#lists` and "My lists" in the profile menu) with every list, and each list's cards, Rename, Copy list, Delete.
+- PLACEHOLDERS to revisit: lists hold whole cards (no printing/edition), members only, 50 lists / 1,000 cards per list.
+- Sharing later: `visibility` and `share_slug` already exist on `card_lists`.
