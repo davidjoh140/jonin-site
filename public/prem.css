@@ -132,3 +132,4 @@ header .hw>.sell:hover{background:var(--red2,#8E0E15);border-color:var(--red2,#8
 .jsw button:hover{transform:scale(1.12)}
 .jsw button[aria-checked=true]{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--ink)}
 .jld{display:block;width:64px;height:10px;border-radius:5px;background:var(--line);animation:jldp 1.2s ease-in-out infinite alternate}@keyframes jldp{to{opacity:.45}}
+.jmi:has(>.jic){display:flex;align-items:center;gap:11px}.jic{flex:none;width:24px;height:24px;display:grid;place-items:center;font-style:normal}.jic svg{width:22px;height:22px;display:block;overflow:visible}.jmi .jtx{min-width:0;flex:1}

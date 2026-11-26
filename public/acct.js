@@ -18,6 +18,20 @@
     premium:'<svg viewBox="0 0 18 16" aria-hidden="true"><path d="M4.2 1h9.6L17 5.4 9 15 1 5.4z" fill="#F2C14E" stroke="#8C5F14" stroke-width="1" stroke-linejoin="round"/><path d="M1 5.4h16M6 5.4 9 15l3-9.6M4.2 1 6 5.4 9 1l3 4.4L13.8 1" fill="none" stroke="#8C5F14" stroke-width=".7" stroke-linejoin="round"/></svg>',
     free:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.2C12.6 3 14.6 7 13 11.4 11.7 14.6 6.9 15.6 4.3 13 1.8 10.4 2.9 5.4 8 1.2z" fill="#6FB27A" stroke="#2F5E37" stroke-width="1" stroke-linejoin="round"/><path d="M5 12.4C7 9.6 8.6 7.2 9.8 4.2" fill="none" stroke="#2F5E37" stroke-width="1" stroke-linecap="round"/></svg>'
   };
+  // Menu item icons (bookcase, open scroll, closed scroll set by David; the rest are PLACEHOLDERS to fine-tune)
+  var MI={
+    shelf:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="2" width="18" height="20" rx="1.6" fill="#8A5A2B" stroke="#4A2E14" stroke-width="1"/><rect x="5" y="4" width="14" height="16" fill="#3B2412"/><rect x="5.6" y="5" width="2" height="4" fill="#D9534F"/><rect x="7.9" y="5.6" width="1.8" height="3.4" fill="#F0A13A"/><rect x="10" y="4.8" width="2.2" height="4.2" fill="#4F86C6"/><rect x="13.4" y="5.4" width="1.8" height="3.6" fill="#6FB27A"/><rect x="5.6" y="10.8" width="2" height="3.8" fill="#F2C14E"/><rect x="7.9" y="11.2" width="2" height="3.4" fill="#9B6FC6"/><rect x="10.2" y="10.6" width="1.8" height="4" fill="#D9534F"/><path d="M13 14.6l2.6-3.6 1.4 1-2.6 3.6z" fill="#4F86C6"/><rect x="5.6" y="16.4" width="2.2" height="3.6" fill="#4F86C6"/><rect x="8.1" y="16" width="1.8" height="4" fill="#6FB27A"/><rect x="13" y="16.6" width="2" height="3.4" fill="#F0A13A"/><rect x="15.3" y="16.2" width="2" height="3.8" fill="#D9534F"/><rect x="5" y="9" width="14" height="1.4" fill="#8A5A2B"/><rect x="5" y="14.6" width="14" height="1.4" fill="#8A5A2B"/></svg>',
+    scrollOpen:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" fill="#F3E2B8" stroke="#8C5F14" stroke-width="1"/><path d="M8.5 8.2h7M8.5 10.7h7M8.5 13.2h5.5M8.5 15.7h6.4" stroke="#B08A4A" stroke-width="1" stroke-linecap="round"/><rect x="4" y="2.3" width="16" height="3.2" rx="1.6" fill="#E3C17E" stroke="#8C5F14" stroke-width="1"/><rect x="4" y="18.5" width="16" height="3.2" rx="1.6" fill="#E3C17E" stroke="#8C5F14" stroke-width="1"/></svg>',
+    scrollClosed:'<svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(-28 12 12)"><path d="M12 16.4l-2 4.4M12 16.4l2.2 4.2" stroke="#B83A35" stroke-width="1.6" stroke-linecap="round"/><rect x="2.5" y="8" width="18" height="8" rx="4" fill="#F3E2B8" stroke="#8C5F14" stroke-width="1"/><ellipse cx="18.5" cy="12" rx="2" ry="4" fill="#E3C17E" stroke="#8C5F14" stroke-width="1"/><ellipse cx="18.5" cy="12" rx=".8" ry="1.6" fill="none" stroke="#8C5F14" stroke-width=".8"/><rect x="10.4" y="7.5" width="3.2" height="9" rx=".6" fill="#D9534F" stroke="#8C2B28" stroke-width=".7"/></g></svg>',
+    lock:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#8C5F14" stroke-width="2"/><rect x="5" y="10.5" width="14" height="10.5" rx="2.2" fill="#F2C14E" stroke="#8C5F14" stroke-width="1"/><circle cx="12" cy="15.2" r="1.5" fill="#8C5F14"/><path d="M12 15.6v2.6" stroke="#8C5F14" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    chat:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4h0A2.5 2.5 0 0 1 4 13.5z" fill="#7FB3E8" stroke="#2F5A86" stroke-width="1" stroke-linejoin="round"/><circle cx="8.5" cy="9.5" r="1.1" fill="#2F5A86"/><circle cx="12" cy="9.5" r="1.1" fill="#2F5A86"/><circle cx="15.5" cy="9.5" r="1.1" fill="#2F5A86"/></svg>',
+    key:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="4.5" fill="#F2C14E" stroke="#8C5F14" stroke-width="1"/><circle cx="8" cy="12" r="1.6" fill="#8C5F14"/><path d="M12.3 12H21M18 12v3M20.5 12v2.2" stroke="#8C5F14" stroke-width="2" stroke-linecap="round"/></svg>',
+    join:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="4" fill="#F0A13A" stroke="#8C4F14" stroke-width="1"/><path d="M2.5 21a7.5 7.5 0 0 1 15 0z" fill="#F0A13A" stroke="#8C4F14" stroke-width="1" stroke-linejoin="round"/><circle cx="18.5" cy="6.5" r="4" fill="#6FB27A" stroke="#2F5E37" stroke-width="1"/><path d="M18.5 4.6v3.8M16.6 6.5h3.8" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    door:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2.5" width="11" height="19" rx="1.2" fill="#A9784A" stroke="#4A2E14" stroke-width="1"/><circle cx="12.4" cy="12.4" r="1" fill="#F2C14E"/><path d="M14.5 12H21M18.2 9l2.9 3-2.9 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+  function ic(k){return '<i class="jic">'+MI[k]+'</i>'}
+  // Wraps a label (+ optional <small>) so the icon sits in its own column
+  function lb(k,t){return ic(k)+'<span class="jtx">'+t+'</span>'}
   var LABEL={founding:'Founding member',premium:'Premium member',free:'Free member'};
   var CARET='<svg class="jcar" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -37,14 +51,14 @@
     var mine=s.home?'href="#mine" data-v="mine"':'href="/#mine"';
     var up=s.home?'<button type="button" class="jab jsu" data-auth="up"':'<a class="jab jsu" href="/#signup"';
     var upEnd=s.home?'</button>':'</a>';
-    var inB=s.home?'<button type="button" class="jmi" role="menuitem" data-auth="in">Sign in</button>':'<a class="jmi" role="menuitem" href="/#signin">Sign in</a>';
-    var fb='<button type="button" class="jmi" role="menuitem" data-fb data-fbname="Header profile menu">Send feedback<small>Notes we use earn scrolls</small></button>';
+    var inB=s.home?'<button type="button" class="jmi" role="menuitem" data-auth="in">'+lb('key','Sign in')+'</button>':'<a class="jmi" role="menuitem" href="/#signin">'+lb('key','Sign in')+'</a>';
+    var fb='<button type="button" class="jmi" role="menuitem" data-fb data-fbname="Header profile menu">'+lb('chat','Send feedback<small>Notes we use earn scrolls</small>')+'</button>';
     if(!s.user){
       return '<div class="jac">'+up+' aria-haspopup="menu">'+'<span>'+(s.guest?'Sign up<span class="jx"> to save</span>':'Sign up')+'</span>'+CARET+upEnd+
         '<div class="jam" role="menu"><div class="jmp"><b>Free account</b><span>Save your collection and vote for the coolest cards. The first 20 members get Premium free, forever.</span></div>'+
-        (s.home?'<button type="button" class="jmi jgo" role="menuitem" data-auth="up">Create free account</button>':'<a class="jmi jgo" role="menuitem" href="/#signup">Create free account</a>')+
-        inB+(s.guest?'<a class="jmi" role="menuitem" '+mine+'>My collection<small>'+s.guest+' card'+(s.guest===1?'':'s')+' saved on this device only</small></a>':'')+
-        '<a class="jmi" role="menuitem" href="/missions/">Missions<small>Earn scrolls and rank up</small></a>'+fb+themeRow()+'</div></div>';
+        (s.home?'<button type="button" class="jmi jgo" role="menuitem" data-auth="up">'+lb('join','Create free account')+'</button>':'<a class="jmi jgo" role="menuitem" href="/#signup">'+lb('join','Create free account')+'</a>')+
+        inB+(s.guest?'<a class="jmi" role="menuitem" '+mine+'>'+lb('shelf','My collection<small>'+s.guest+' card'+(s.guest===1?'':'s')+' saved on this device only</small>')+'</a>':'')+
+        '<a class="jmi" role="menuitem" href="/missions/">'+lb('scrollClosed','Missions<small>Earn scrolls and rank up</small>')+'</a>'+fb+themeRow()+'</div></div>';
     }
     var st=s.badge==='founding'?'founding':s.badge==='premium'?'premium':'free';
     var p=s.pts,rank=p&&p.rank?p.rank:'',pts=p?(p.xp!=null?p.xp:(p.points||0)):0,lo=p&&p.prev_at||0;
@@ -58,12 +72,12 @@
         '<div class="jah"><span class="jav big">'+avatar(s,48)+'</span><div><b>'+esc(name||'Loading…')+'</b><span class="jst st-'+st+'">'+ICON[st]+LABEL[st]+'</span></div></div>'+
         (p?'<a class="jrk" href="/missions/" role="menuitem" style="display:block;text-decoration:none" title="See your missions"><div><span>Rank</span> <b>'+esc(rank)+'</b><span class="jpt">📜 '+pts+(pts===1?' scroll':' scrolls')+'</span></div><span class="jbar"><i style="width:'+pct+'%"></i></span>'+
           (p.next?'<small>'+(p.next_at-pts)+((p.next_at-pts)===1?' scroll':' scrolls')+' to '+esc(p.next)+'</small>':'<small>Top rank</small>')+'</a>':'')+
-        '<a class="jmi" role="menuitem" '+mine+'>My collection<small>Haves, wants, slabs and profile</small></a>'+
-        '<a class="jmi" role="menuitem" '+(s.home?'href="#lists" data-v="mine" data-lmine':'href="/#lists"')+'>My lists<small>Your own card lists</small></a>'+
-        '<a class="jmi" role="menuitem" href="/missions/">Missions<small>Earn scrolls and rank up</small></a>'+
-        (st==='free'?'<a class="jmi jprem" role="menuitem" href="/premium/">Unlock Premium</a>':'')+
+        '<a class="jmi" role="menuitem" '+mine+'>'+lb('shelf','My collection<small>Haves, wants, slabs and profile</small>')+'</a>'+
+        '<a class="jmi" role="menuitem" '+(s.home?'href="#lists" data-v="mine" data-lmine':'href="/#lists"')+'>'+lb('scrollOpen','My lists<small>Your own card lists</small>')+'</a>'+
+        '<a class="jmi" role="menuitem" href="/missions/">'+lb('scrollClosed','Missions<small>Earn scrolls and rank up</small>')+'</a>'+
+        (st==='free'?'<a class="jmi jprem" role="menuitem" href="/premium/">'+lb('lock','Unlock Premium')+'</a>':'')+
         fb+themeRow()+
-        '<button type="button" class="jmi jout" role="menuitem" '+(s.home?'data-signout':'data-jsignout')+'>Sign out</button>'+
+        '<button type="button" class="jmi jout" role="menuitem" '+(s.home?'data-signout':'data-jsignout')+'>'+lb('door','Sign out')+'</button>'+
       '</div></div>';
   }
 
