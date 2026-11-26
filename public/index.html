@@ -143,7 +143,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 /* rarity symbols */
 .rs{display:inline-flex;align-items:center;justify-content:center;gap:3px;min-width:22px;height:18px;padding:0 5px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font:700 11px/1 Inter,sans-serif;color:var(--ink);vertical-align:middle}.mt .rs{height:16px;min-width:20px;margin-top:-2px}.pill{display:inline-flex;align-items:center;gap:6px}
 .rs i{width:5px;height:5px;border-radius:50%;background:currentColor}
-.rs-C{color:var(--mute)}.rs-SR{color:var(--acc);border-color:var(--accdim)}.rs-UR{color:var(--acc)}.rs-P{color:#7fb6e8}
+.rs-C{color:var(--mute)}.rs-SR{color:var(--acc);border-color:var(--accdim)}.rs-UR{color:var(--acc)}.rs-ALT{color:#1b1406;background:linear-gradient(135deg,#f3d27a,#fff3c4 45%,#d9a83c);border-color:#d9a83c;font-weight:700}.rs-P{color:#7fb6e8}
 .legend .rs{min-width:40px;height:22px;font-size:11px}.legend .rs i{width:6px;height:6px}
 /* foil symbols: icon masks filled with a metal sheen */
 .fx{display:inline-block;width:3em;height:3em;flex:none;font-size:9px;background:linear-gradient(135deg,#a3aab5,#f4f6f9 42%,#bfc5ce 58%,#eef1f5);-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
@@ -355,6 +355,7 @@ header .pn>.pnb{height:30px;padding:0 12px 0 10px;font-size:14px}
         <li><span class="rs rs-U" aria-hidden="true"><i></i></span>Uncommon</li>
         <li><span class="rs rs-R" aria-hidden="true"><i></i><i></i></span>Rare</li>
         <li><span class="rs rs-SR" aria-hidden="true"><i></i><i></i><i></i></span>Super Rare</li>
+        <li><span class="rs rs-ALT" aria-hidden="true">/20</span>Alt Art /20 (limited alternate art, 20 copies)</li>
         <li><span class="rs rs-UR" aria-hidden="true">UR</span>Ultra Rare</li>
         <li><span class="rs rs-P" aria-hidden="true">PR</span>Promo</li>
       </ul>
@@ -425,10 +426,10 @@ b.innerHTML=ctaHTML(n,true);b.hidden=false}})();</script>
 {
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const RNAME={C:'Common',U:'Uncommon',R:'Rare',SR:'Super Rare',UR:'Ultra Rare',P:'Promo',F:'Starter','':'Unknown'};
+const RNAME={C:'Common',U:'Uncommon',R:'Rare',SR:'Super Rare',ALT:'Alt Art /20',UR:'Ultra Rare',P:'Promo',F:'Starter','':'Unknown'};
 // PLACEHOLDER mapping from printing names in the data to David's five foil types; confirm with him
 const FOILS={'Flat foil':['flat','Flat foil'],'Full foil':['flat','Flat foil'],'Diamond foil':['diamond','Diamond'],'Wavy foil':['wavy','Wavy'],'Prism foil':['prism','Prism'],'Spiral foil':['spiral','Spiral'],'Diamond-checkered foil':['prism','Prism'],'Diamond-spiral foil':['spiral','Spiral']};
-const rsym=k=>{const n={U:1,R:2,SR:3}[k];const inner=n?'<i></i>'.repeat(n):({C:'C',UR:'UR',P:'PR',F:'ST','':'?'}[k]??esc(k));return `<span class="rs rs-${esc(k||'X')}" title="${esc(RNAME[k]||k)}">${inner}</span>`};
+const rsym=k=>{const n={U:1,R:2,SR:3}[k];const inner=n?'<i></i>'.repeat(n):({C:'C',ALT:'/20',UR:'UR',P:'PR',F:'ST','':'?'}[k]??esc(k));return `<span class="rs rs-${esc(k||'X')}" title="${esc(RNAME[k]||k)}">${inner}</span>`};
 const foilsOf=c=>{const seen=new Set(),out=[];(c.v||[]).forEach(v=>{const f=FOILS[v];if(f&&!seen.has(f[0])){seen.add(f[0]);out.push(f)}});return out};
 // PSA pop report pages per set (links from David). Promos are split by year on PSA, so promo cards get one link per year.
 const PSA_POP='https://www.psacard.com/pop/tcg-cards/',PSA={"1": "2006/naruto-ccg-series-1-path-hokage/224462", "2": "2006/naruto-ccg-series-2-coils-snake/224780", "3": "2006/naruto-ccg-series-3-curse-sand/224465", "4": "2007/naruto-ccg-series-4-revenge-rebirth/224467", "5": "2007/naruto-ccg-series-5-dream-legacy/224234", "6": "2007/naruto-ccg-series-6-eternal-rivalry/224226", "7": "2007/naruto-ccg-series-7-quest-power/224852", "8": "2008/naruto-ccg-series-8-battle-destiny/224854", "9": "2008/naruto-ccg-series-9-chosen/224464", "10": "2008/naruto-ccg-series-10-lineage-legends/224460", "11": "2008/naruto-ccg-series-11-approaching-wind/224459", "12": "2009/naruto-ccg-series-12-new-chronicle/228769", "13": "2009/naruto-ccg-series-13-fateful-reunion/224856", "14": "2009/naruto-ccg-series-14-emerging-alliance/224858", "15": "2009/naruto-ccg-series-15-foretold-prophecy/224463", "16": "2010/naruto-ccg-series-16-broken-promise/224859", "17": "2010/naruto-ccg-series-17-will-fire/234830", "18": "2010/naruto-ccg-series-18-fangs-snake/224781", "19": "2010/naruto-ccg-series-19-path-pain/224405", "20": "2011/naruto-ccg-series-20-tales-gallant-sage/224328", "21": "2011/naruto-ccg-series-21-shattered-truth/224326", "22": "2011/naruto-ccg-series-22-weapons-war/224457", "23": "2011/naruto-ccg-series-23-invasion/230138", "24": "2012/naruto-ccg-series-24-sages-legacy/225147", "25": "2012/naruto-ccg-series-25-kage-summit/225149", "26": "2012/naruto-ccg-series-26-avengers-wrath/224862", "27": "2012/naruto-ccg-series-27-heros-ascension/224622", "28": "2013/naruto-ccg-series-28-ultimate-ninja-storm-3/224407", "TP1": "2010/naruto-ccg-tournament-pack-1/230139", "TP2": "2010/naruto-ccg-tournament-pack-2/232468", "TP3": "2011/naruto-ccg-tournament-pack-3/235895", "TP4": "2012/naruto-ccg-tournament-pack-4/230143", "T2": "2010/naruto-ccg-untouchable-tins/230974", "T3": "2011/naruto-ccg-ultimate-battle-tins/224461", "T4": "2011/naruto-ccg-rebirth-tins/224867"},PSA_PROMO=[["2007", "2007/naruto-ccg-promo/239407"], ["2008", "2008/naruto-ccg-promo/258492"], ["2009", "2009/naruto-ccg-promo/237155"], ["2010", "2010/naruto-ccg-promo/233876"], ["2011", "2011/naruto-ccg-promo/224868"], ["2012", "2012/naruto-ccg-promo/235909"], ["2013", "2013/naruto-ccg-promo/231188"]];
@@ -436,7 +437,7 @@ const PSA_POP='https://www.psacard.com/pop/tcg-cards/',PSA={"1": "2006/naruto-cc
 // (PSA style, e.g. N259 / NUS017) and the card name. Browsers without text fragments just open the set page.
 const psaFrag=c=>{const num=c.n.replace(/-/g,''),nm=c.name.replace(/\s*[\[(].*?[\])]\s*/g,' ').trim();const f=t=>'text='+encodeURIComponent(t).replace(/-/g,'%2D');return '#:~:'+f(num)+'&'+f(nm)};
 const TYPES=['','Ninja','Jutsu','Mission','Client','Promo'];
-const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['SR','Super Rare'],['P','Promo']];
+const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['SR','Super Rare'],['ALT','Alt Art /20'],['P','Promo']];
 // PLACEHOLDER character list (fan favorites that have cards); David to confirm. 'A|B' = either name, e.g. Minato also printed as The Fourth Hokage
 const S0=()=>({q:'',set:'',type:'',chars:[],rars:[],sort:''});
 let VIEW='cards',D=null,S=S0(),list=[],shown=0,sel=-1;

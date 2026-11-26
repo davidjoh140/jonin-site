@@ -19,7 +19,7 @@ except ImportError:
 OUT = Path(__file__).resolve().parent.parent / "public" / "cards.json"
 QUALITY_RANK = {"clean": 3, "slab": 2, "placeholder": 1}
 # Postgres jsonb doesn't keep key order, so rarity counts come out in one fixed order.
-RARITY_ORDER = ["Common", "Uncommon", "Rare", "Super Rare", "Ultra Rare", "Starter", "Fixed", "Promo", "Unknown"]
+RARITY_ORDER = ["Common", "Uncommon", "Rare", "Super Rare", "Alt Art /20", "Ultra Rare", "Starter", "Fixed", "Promo", "Unknown"]
 
 
 def _rar(d):

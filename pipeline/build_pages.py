@@ -141,7 +141,7 @@ import lists_build as LB
 featured_in = lambda c: AB.featured_in(c)
 
 NOTES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'character_notes.json')
-RANK = {'Super Rare': 0, 'Promo': 1, 'Rare': 2, 'Uncommon': 3, 'Starter': 4, 'Common': 5}
+RANK = {'Alt Art /20': -1, 'Super Rare': 0, 'Promo': 1, 'Rare': 2, 'Uncommon': 3, 'Starter': 4, 'Common': 5}
 
 
 def base_name(n):
@@ -212,7 +212,7 @@ def char_page(ch, cs, sets_by_id, chars, notes):
     rc = {}
     for c in cs:
         rc[c['r']] = rc.get(c['r'], 0) + 1
-    rar = ', '.join(f'{rc[r]} {r}{"s" if rc[r] > 1 and r not in ("Common", "Uncommon") else ""}'
+    rar = ', '.join(f'{rc[r]} {r}{"s" if rc[r] > 1 and r not in ("Common", "Uncommon", "Alt Art /20") else ""}'
                     for r in sorted(rc, key=lambda r: RANK.get(r, 9)) if r != 'Unknown')
     title = f"{ch['name']} Naruto cards: all {n} Bandai Naruto CCG cards | Jonin"
     span = (f" from {first['name']} ({year(first.get('rel'))}) to {last['name']} ({year(last.get('rel'))})"
@@ -229,7 +229,7 @@ def char_page(ch, cs, sets_by_id, chars, notes):
         facts.append(('First card', f'<a href="/card/{slug(fc)}/">{e(fc["name"])} {e(fc["n"])}</a> · {e(first["name"])}'))
     if len(ch['names']) > 1:
         facts.append(('Also printed as', e(', '.join(ch['names'][1:]))))
-    key = sorted([c for c in cs if c['r'] in ('Super Rare', 'Promo')],
+    key = sorted([c for c in cs if c['r'] in ('Alt Art /20', 'Super Rare', 'Promo')],
                  key=lambda c: (-(c.get('pb') if c.get('pb') is not None else -1), RANK.get(c['r'], 9)))[:8] if n >= 15 else []
     groups = ''.join(
         f'<section class="cgroup"><h2><a href="/set/{set_slug(sets_by_id[sid])}/">{sym_img(sets_by_id[sid])}{e(sets_by_id[sid]["name"])}</a>'
