@@ -57,6 +57,7 @@
 
   // s = {home, user, handle, fav, avatar, badge:'founding'|'premium'|null, pts:{xp,rank,next,next_at,prev_at}|null (from my_xp), guest}
   function html(s){
+    try{if(!s||!s.user)premUI(null);else if(s.badge)premUI(s.badge)}catch(_){}
     var mine=s.home?'href="#mine" data-v="mine"':'href="/#mine"';
     var up=s.home?'<button type="button" class="jab jsu" data-auth="up"':'<a class="jab jsu" href="/#signup"';
     var upEnd=s.home?'</button>':'</a>';
@@ -119,6 +120,55 @@
   function paint(st){if(EL)EL.innerHTML=html(st)}
   function rest(path,tok,body){
     return fetch(SUPA+path,{method:body?'POST':'GET',headers:{apikey:KEY,Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined}).then(function(r){if(!r.ok)throw r.status;return r.json()});
+  }
+  // ---- Premium unlock on every page (2026-11-26) ----
+  // Members (founding or premium) never see Premium locks: the header Premium button loses its lock and reads
+  // "⭐ Founder" / "⭐ Premium", static card pages swap the blurred teaser for real price estimates and sold listings,
+  // and the "Every sale of this card" locks on list pages link to the card page instead. Signing out puts it back.
+  // PLACEHOLDER wording ("Founder", "Your Premium includes", "See sales →") for David to fine-tune.
+  var EPN='mkevt=1&mkcid=1&mkrid=711-53200-19255-0&campid=5339262225&toolid=10001&customid=jonin-site';
+  var PREM='';
+  function money(v){v=+v;return '$'+(v>=100?Math.round(v).toLocaleString('en-US'):v.toFixed(2).replace(/\.00$/,''))}
+  function sDate(d){try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch(_){return ''}}
+  function premUI(b){
+    var on=b==='founding'||b==='premium',key=on?b:'';if(key===PREM)return;var was=PREM;PREM=key;
+    if(!on&&was&&document.querySelector('[data-unlocked]')){location.reload();return}
+    document.documentElement.classList.toggle('jmem',on);
+    each('.pn>.pnb',function(a){if(a.dataset.orig==null)a.dataset.orig=a.innerHTML;
+      a.innerHTML=on?'<span aria-hidden="true">⭐</span>'+(b==='founding'?'Founder':'Premium'):a.dataset.orig;a.classList.toggle('mem',on)});
+    each('.pdd h4',function(h){if(h.dataset.orig==null)h.dataset.orig=h.textContent;h.textContent=on?'Your Premium includes':h.dataset.orig});
+    if(!on)return;
+    each('a.pxlock',function(a){var row=a.closest('.mvrow'),art=row&&row.querySelector('.mvart');if(!art)return;
+      a.href=art.getAttribute('href');a.innerHTML='<span>Every sale of this card, by edition, foil and grade</span><b>See sales →</b>';a.setAttribute('data-unlocked','')});
+    each('a.pxt',unlockCard);
+  }
+  function each(sel,f){[].forEach.call(document.querySelectorAll(sel),f)}
+  function unlockCard(a){
+    var m=/[?&]card=([^&]+)/.exec(a.getAttribute('href')||''),s=session();if(!m||!s)return;
+    var id=decodeURIComponent(m[1]),tok=s.access_token,box=document.createElement('div');
+    box.className='pxreal';box.setAttribute('data-unlocked','');box.innerHTML='<p class="none">Loading Premium prices…</p>';
+    a.replaceWith(box);
+    var sec=box.closest('.px'),h=sec&&sec.querySelector('h3');
+    if(h)h.innerHTML='Price estimate<span>⭐ Premium · by version</span>';
+    var band=sec&&sec.querySelector('.band');if(band)band.remove();
+    Promise.all([
+      rest('/rest/v1/price_estimates?card_id=eq.'+encodeURIComponent(id)+'&select=printing,edition,grader,grade,estimate,sales_count,last_sold_at,last_price',tok).catch(function(){return null}),
+      rest('/rest/v1/rpc/member_card_sales',tok,{p_card_id:id}).catch(function(){return []})
+    ]).then(function(r){
+      var rows=r[0],sales=r[1]||[];
+      if(!rows){box.innerHTML='<p class="none">Could not load prices. Refresh to try again.</p>';return}
+      if(!rows.length){box.innerHTML='<p class="none">No approved sales for this card yet.</p>';return}
+      var vk=function(x){return [x.printing||'',x.edition||'',x.grader||'Raw',x.grade||''].join('|')},by={};
+      sales.forEach(function(x){var k=vk(x);(by[k]=by[k]||[]).push(x)});
+      rows.sort(function(a,b){return (a.edition!=='1st Edition')-(b.edition!=='1st Edition')||String(a.printing).localeCompare(String(b.printing))||((a.grader||'Raw')!=='Raw')-((b.grader||'Raw')!=='Raw')||(parseFloat(b.grade)||0)-(parseFloat(a.grade)||0)});
+      box.innerHTML='<table>'+rows.map(function(x){
+        var g=!x.grader||x.grader==='Raw'?'Raw':x.grader+' '+(x.grade||'');
+        var lab=[x.edition==='1st Edition'?'1st Ed':x.edition,x.printing,g].filter(Boolean).map(esc).join(' · ');
+        var sl=(by[vk(x)]||[]).map(function(y){var t=money(y.price)+' · '+esc(sDate(y.sold_at));
+          return /^https:\/\//.test(y.url||'')?'<a href="'+esc(y.url+(y.url.indexOf('?')>-1?'&':'?')+EPN)+'" target="_blank" rel="sponsored noopener">'+t+' ↗</a>':'<a>'+t+'</a>'}).join('');
+        return '<tr><td>'+lab+'</td><td><b>'+money(x.estimate)+'</b><small>'+x.sales_count+' sale'+(x.sales_count>1?'s':'')+' · last '+money(x.last_price)+(x.last_sold_at?' on '+esc(sDate(x.last_sold_at)):'')+'</small></td></tr>'+
+          (sl?'<tr class="sl"><td colspan="2">'+sl+'</td></tr>':'')}).join('')+'</table><p class="none">Estimates lean on the newest sales. Tap a sale to open it on eBay.</p>';
+    });
   }
   var LAST='';
   function load(){
