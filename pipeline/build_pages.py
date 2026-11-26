@@ -529,6 +529,36 @@ def missions_page(chars):
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
 
 
+def giveaway_page():
+    """/giveaway/: the current Instagram giveaway. Static shell; /giveaway.js reads the giveaway (prize, dates) from the
+    Supabase giveaways table and checks the signed-in member's bonus entries (my_giveaway_status).
+    Entry rules (David, 2026-11-26): Instagram entry (follow, like, tag a friend; each tag 1 entry, max 3) plus a
+    site bonus for a free account with a linked Instagram and a card vote. Amounts live in the giveaways row."""
+    url = f'{SITE}/giveaway/'
+    title = 'Giveaway: win a sealed Naruto CCG pack | Jonin'
+    desc = 'Win a sealed Bandai Naruto CCG pack from Jonin. Enter on Instagram, then link your Instagram on a free jonin.cards account and vote for a card for bonus entries.'
+    body = '''<nav class="crumb"><a href="/">All cards</a> › Giveaway</nav>
+<section class="sethead"><h1 id="gtitle">Win a sealed Naruto CCG pack</h1>
+<p class="lede" id="gwhen">Free to enter. US only, 18+.</p></section>
+<section class="mcard ghero" id="gprize"><p class="mt">Loading the giveaway…</p></section>
+<section class="mlist">
+<article class="mcard"><div class="mtop"><h2>1 · Enter on Instagram</h2><span class="mxp">Up to 3 entries</span></div>
+<ol class="gsteps"><li>Follow <a href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener">@jonin.cards</a></li><li>Like the giveaway post</li><li>Tag a friend who collects Naruto cards in the comments. Each friend you tag is 1 entry, up to <b data-g="max_tag_entries">3</b>.</li></ol>
+<p class="btns"><a class="primary" href="https://www.instagram.com/jonin.cards/" target="_blank" rel="noopener">Open @jonin.cards</a></p></article>
+<article class="mcard" id="gbonus"><div class="mtop"><h2>2 · Get bonus entries on jonin.cards</h2><span class="mxp">+<b data-g="bonus_entries">5</b> entries</span></div>
+<p class="mt">Make a free account, add your Instagram handle and vote for your favorite card on any character. That's how we match your bonus to your Instagram entry.</p>
+<div class="gchk" id="gchk"><p class="mt" style="margin:0">Checking your account…</p></div></article>
+</section>
+<section class="mcard grules"><h2>Rules</h2>
+<ul class="mt"><li>Free to enter. No purchase necessary.</li><li>Open to US residents 18 and older.</li><li>Runs <span id="grun">for 7 days</span>. The winner is drawn at random, live on our Instagram stories, and announced on @jonin.cards.</li><li>To win you must follow @jonin.cards and have entered on the giveaway post. Bonus entries only count if the Instagram handle on your jonin.cards account matches your entry.</li><li>The winner is messaged on Instagram and has 72 hours to reply, or a new winner is drawn.</li><li>One prize. Shipped free within the US.</li><li>This giveaway is not sponsored, endorsed or run by Instagram or Meta. Not affiliated with Bandai.</li></ul></section>
+<script src="/giveaway.js?v=''' + file_version('giveaway.js') + '''" defer></script>
+'''
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'WebPage', 'name': title, 'description': desc, 'url': url},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('Giveaway', url))]})
+    return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
+
+
 def file_version(name):
     return hashlib.sha1(open(os.path.join(ROOT, name), 'rb').read()).hexdigest()[:8]
 
@@ -883,6 +913,7 @@ def main():
     chars = [ch for ch in chars if ch['slug'] in keep_ch]
     changed += write(os.path.join(ROOT, 'characters', 'index.html'), chars_index(chars, counts))
     changed += write(os.path.join(ROOT, 'missions', 'index.html'), missions_page(chars))
+    changed += write(os.path.join(ROOT, 'giveaway', 'index.html'), giveaway_page())
     # Character list for the /welcome/ setup page (same order as the homepage sidebar).
     changed += write(os.path.join(ROOT, 'chars.json'), json.dumps([{'slug': ch['slug'], 'label': ch['label'], 'cards': counts[ch['slug']]} for ch in chars], ensure_ascii=False) + '\n')
     mvidx = os.path.join(ROOT, 'most-valuable')
@@ -914,7 +945,7 @@ def main():
     if hs2 == hs and '<!--setlinks-->' not in hs:
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
-    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
+    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/giveaway/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
            list_urls + [SITE + '/price-guide/'] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]

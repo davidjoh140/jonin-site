@@ -54,7 +54,7 @@ select{width:100%;min-height:42px;padding:8px 10px;border-radius:8px;border:1px 
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a><span class="tag">Admin</span></div></header>
 <main>
   <h1>Jonin admin</h1>
-  <nav class="jump" id="jump" hidden><a href="#acc">Accounts</a><a href="#founders">Founding members</a><a href="#prem">Jonin Club members</a><a href="#wl">Waitlist</a><a href="#ps">Add a sale</a><a href="#fb">Feedback</a><a href="#msg">Messages<b id="msgn" class="mn" hidden></b></a></nav>
+  <nav class="jump" id="jump" hidden><a href="#acc">Accounts</a><a href="#founders">Founding members</a><a href="#prem">Jonin Club members</a><a href="#wl">Waitlist</a><a href="#ga">Giveaway</a><a href="#ps">Add a sale</a><a href="#fb">Feedback</a><a href="#msg">Messages<b id="msgn" class="mn" hidden></b></a></nav>
   <section id="acc"></section>
   <h2 id="prem" class="big" hidden>Jonin Club members</h2>
   <p class="mt" id="premnote" hidden>Everyone with Jonin Club, free or paid. Give it to anyone by email; if they don't have an account yet, it turns on when they sign up with that email.</p>
@@ -95,6 +95,7 @@ async function load(){
   app.querySelectorAll('[data-give]').forEach(b=>b.onclick=async()=>{const r=await sb.rpc('admin_grant',{p_email:b.dataset.give,p_until:null,p_note:null});if(r.error)alert(r.error.message);load()});
   $('#out').onclick=async e=>{e.preventDefault();await sb.auth.signOut();load()};
   loadWl();
+  loadGa();
   loadPs();
   loadFb();
   loadMsg();
@@ -126,6 +127,50 @@ async function loadAcc(){const el=$('#acc');const r=await sb.rpc('admin_accounts
   const ac=$('#acopy');if(ac)ac.onclick=async()=>{await navigator.clipboard.writeText(real.map(x=>x.email).join(', '));ac.textContent='Copied ✓'};
 }
 // Jonin Club waitlist: emails from the "Get early access" form on /club/ (and card pages' alert buttons).
+// ---- Giveaway (David, 2026-11-26): settings + draw. Entries = Instagram tags (1 per friend tagged, up to max) + site bonus
+// (linked Instagram + a card vote, from admin_giveaway_bonus). Bonus only counts for people who also entered on Instagram.
+let GA=null,GAROWS=[];
+async function loadGa(){let el=$('#ga');if(!el){app.insertAdjacentHTML('beforeend','<div id="ga"></div>');el=$('#ga')}
+  const g=(await sb.from('giveaways').select('*').order('created_at',{ascending:false}).limit(1)).data?.[0];
+  if(!g){el.innerHTML='<h2>Giveaway</h2><p class="mt">No giveaway set up.</p>';return}GA=g;
+  const b=await sb.rpc('admin_giveaway_bonus',{p_slug:g.slug});const bonus=b.data||[];
+  const dt=v=>v?new Date(v).toISOString().slice(0,10):'';
+  el.innerHTML=`<h2>Giveaway</h2><p class="mt" style="margin-bottom:10px">Public page: <a href="/giveaway/" target="_blank">jonin.cards/giveaway</a>${g.winner_ig?` · <b style="color:var(--ink)">Winner: @${esc(g.winner_ig)}</b> (${day(g.drawn_at)})`:''}</p>
+  <form id="gaf" class="box"><label><span>Prize</span><input name="pr" value="${esc(g.prize)}"></label>
+  <label><span>Prize photo URL (optional)</span><input name="img" value="${esc(g.prize_img||'')}" placeholder="https://…"></label>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><label><span>Starts</span><input name="st" type="date" value="${dt(g.starts_at)}"></label><label><span>Ends</span><input name="en" type="date" value="${dt(g.ends_at)}"></label></div>
+  <p><button>Save</button> <span id="gam" class="msg"></span></p></form>
+  <h2>Site bonus · ${bonus.length}</h2><p class="mt" style="margin-bottom:10px">Members with an Instagram handle and a card vote. Each gets +${g.bonus_entries} if they also entered on Instagram.</p>
+  ${bonus.length?`<p class="tag">${bonus.map(x=>'@'+esc(x.instagram)+(x.handle?' ('+esc(x.handle)+')':'')).join(' · ')}</p>`:''}
+  <h2>Draw</h2><p class="mt" style="margin-bottom:10px">Copy the comments from the giveaway post (Instagram on a computer, select all the comments) and paste them below. Or type one entry per line: <code>handle @friend @friend</code>. Check the table, then draw.</p>
+  <textarea id="gat" rows="8" style="width:100%;font:14px Inter,sans-serif;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)" placeholder="naruto_fan99 @friend1 @friend2"></textarea>
+  <p><button class="ghost" id="gapar">Count entries</button> <button id="gadraw" disabled>🎲 Draw a winner</button></p><div id="gares"></div>`;
+  $('#gaf').onsubmit=async ev=>{ev.preventDefault();const f=ev.target,m=$('#gam');
+    const st=f.st.value?new Date(f.st.value+'T12:00:00').toISOString():null,en=f.en.value?new Date(f.en.value+'T23:59:00').toISOString():null;
+    const r=await sb.rpc('admin_giveaway_set',{p_slug:g.slug,p_prize:f.pr.value,p_prize_img:f.img.value,p_starts:st,p_ends:en});
+    m.className='msg '+(r.error?'err':'ok');m.textContent=r.error?r.error.message:'Saved.'};
+  const bset=new Set(bonus.map(x=>x.instagram));
+  $('#gapar').onclick=()=>{GAROWS=gaParse($('#gat').value,g,bset);const box=$('#gares');
+    const tot=GAROWS.reduce((a,r)=>a+r.total,0);
+    box.innerHTML=GAROWS.length?`<p class="mt"><b style="color:var(--ink)">${GAROWS.length}</b> people · <b style="color:var(--ink)">${tot}</b> entries</p><div class="tw box" style="padding:0;max-height:320px;overflow:auto"><table><thead><tr><th>Instagram</th><th>Friends tagged</th><th>Tag entries</th><th>Site bonus</th><th>Total</th></tr></thead><tbody>${GAROWS.map(r=>`<tr><td>@${esc(r.ig)}</td><td>${r.tags.map(t=>'@'+esc(t)).join(' ')}</td><td>${r.tagE}</td><td>${r.bonus?'+'+r.bonus:''}</td><td><b>${r.total}</b></td></tr>`).join('')}</tbody></table></div>`:'<p class="msg err">No entries found. Each entry needs a handle and at least one tagged friend.</p>';
+    $('#gadraw').disabled=!GAROWS.length};
+  $('#gadraw').onclick=()=>{const tot=GAROWS.reduce((a,r)=>a+r.total,0);const n=crypto.getRandomValues(new Uint32Array(1))[0]%tot;let acc=0,w=null;for(const r of GAROWS){acc+=r.total;if(n<acc){w=r;break}}
+    const box=$('#gawin')||($('#gares').insertAdjacentHTML('beforeend','<div id="gawin"></div>'),$('#gawin'));
+    box.innerHTML=`<div class="box" style="margin-top:12px;border-color:#F2C14E"><p style="font:800 26px 'Baloo 2',sans-serif;margin:0">🎉 @${esc(w.ig)}</p><p class="mt">${w.total} of ${tot} entries. Check they follow @jonin.cards and are in the US before announcing.</p><p><button id="gasave">Save as winner</button> <button class="ghost" id="gare">Draw again</button></p></div>`;
+    $('#gare').onclick=()=>$('#gadraw').click();
+    $('#gasave').onclick=async()=>{const r=await sb.rpc('admin_giveaway_winner',{p_slug:g.slug,p_ig:w.ig});if(r.error)alert(r.error.message);else loadGa()}};
+}
+function gaParse(text,g,bset){const ig=v=>String(v||'').toLowerCase().replace(/^@+/,'').replace(/[^a-z0-9._]/g,'');
+  const skip=/^(reply|replies|like|likes|\d+\s*(likes?|replies)|see translation|view (all )?\d* ?repl(y|ies)|hide replies|\d+[smhdw]|edited|verified|author|pinned|more|·)$/i;
+  const map=new Map();let cur=null;
+  for(let line of text.split(/\r?\n/)){line=line.trim();if(!line||skip.test(line))continue;
+    const ments=[...line.matchAll(/@([A-Za-z0-9._]{1,30})/g)].map(m=>ig(m[1]));
+    const first=line.split(/\s+/)[0];
+    if(!ments.length){if(/^[A-Za-z0-9._]{1,30}$/.test(line))cur=ig(line);continue}
+    let who=cur;if(!first.startsWith('@')&&/^[A-Za-z0-9._]{1,30}$/.test(first))who=ig(first);
+    if(!who)continue;if(!map.has(who))map.set(who,new Set());const s=map.get(who);
+    ments.forEach(t=>{if(t&&t!==who&&t!=='jonin.cards')s.add(t)})}
+  return [...map].filter(([,s])=>s.size).map(([who,s])=>{const tags=[...s],tagE=Math.min(tags.length,g.max_tag_entries),bonus=bset.has(who)?g.bonus_entries:0;return {ig:who,tags,tagE,bonus,total:tagE+bonus}}).sort((a,b)=>b.total-a.total)}
 async function loadWl(){let el=$('#wl');if(!el){app.insertAdjacentHTML('beforeend','<div id="wl"></div>');el=$('#wl')}
   const [cards,r]=await Promise.all([cardsList().catch(()=>[]),sb.rpc('admin_waitlist')]);
   if(r.error){el.innerHTML=`<h2>Jonin Club waitlist</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
