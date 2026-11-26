@@ -272,7 +272,7 @@
   // The next page they open while signed in shows this once; dismiss_upgrade_notice clears it as soon as it shows.
   // PLACEHOLDER wording for David to change.
   var UPG={founding:{h:'Welcome, founder',p:'You’re one of Jonin’s founding members. Jonin Club is yours free, forever, and your profile now wears the gold ring.'},
-           premium:{h:'Welcome to Jonin Club',p:'You’ve been upgraded. Everything below is unlocked on your account now.'}};
+           premium:{h:'Welcome to the Club',p:'You’ve been upgraded. Everything below is unlocked on your account now.'}};
   // Look (David, 2026-11-26): an unrolled ninja scroll (wooden rods top and bottom), a flat headband across the top
   // (steel plate, gold plate for founders), plain black kunai bullets, and a big uneven red PROMOTED ink stamp in the middle.
   var KUNAI='<svg viewBox="0 0 26 10" aria-hidden="true"><path d="M0 5 8.5 1.6 14 5 8.5 8.4Z" fill="#1B1714"/><rect x="14" y="4.1" width="6" height="1.8" fill="#1B1714"/><circle cx="22.4" cy="5" r="2" fill="none" stroke="#1B1714" stroke-width="1.3"/></svg>';
@@ -293,9 +293,10 @@
     '<path d="M258 14l30 4-2 20z" opacity=".55"/><path d="M8 96l40 10-38 6z" opacity=".45"/><rect x="126" y="100" width="60" height="6" opacity=".35"/></g></mask></defs>'+
     '<g filter="url(#jstR)" mask="url(#jstM)" fill="none" stroke="#C3261E">'+
     '<rect x="8" y="10" width="284" height="100" rx="10" stroke-width="7"/><rect x="20" y="22" width="260" height="76" rx="5" stroke-width="2.4"/>'+
-    '<text x="150" y="76" text-anchor="middle" fill="#C3261E" stroke="none" font-family="Shojumaru,\'Baloo 2\',Impact,sans-serif" font-size="46" textLength="226" lengthAdjust="spacingAndGlyphs">PROMOTED</text></g></svg>';
+    '<text x="150" y="76" text-anchor="middle" fill="#C3261E" stroke="none" font-family="\'Baloo 2\',Impact,\'Arial Black\',sans-serif" font-weight="800" font-size="50" textLength="226" lengthAdjust="spacingAndGlyphs">PROMOTED</text></g></svg>';
   function upgradeCss(){if(upgradeCss.on)return;upgradeCss.on=1;var c=document.createElement('style');c.textContent=
-    '@font-face{font-family:Shojumaru;src:url(/fonts/shojumaru.woff2) format("woff2");font-display:swap}'+
+    '@font-face{font-family:"Shippori Mincho";src:url(/fonts/shippori-mincho-500.woff2) format("woff2");font-weight:500;font-display:swap}'+
+    '@font-face{font-family:"Shippori Mincho";src:url(/fonts/shippori-mincho-600.woff2) format("woff2");font-weight:600;font-display:swap}'+
     // Based on the summoning scrolls in Naruto: cream paper in a deep red border with a gold line, the paper rolled up
     // around chunky wooden rods with dark lacquered end caps.
     '.jup .jmbox{width:min(440px,100%);background:none;border:0;box-shadow:none;padding:0;gap:0;color:#2A1C12;animation:jupIn .22s ease-out both}'+
@@ -310,9 +311,14 @@
     '.jup .jin{position:relative;z-index:1;display:flex;flex-direction:column;gap:10px}'+
     '.jup .jmx{color:#7A6650;top:2px;right:14px;z-index:3}.jup .jhbd{display:block;width:calc(100% + 36px);margin:-2px -18px 2px;height:auto}'+
     '.jup .jkick{text-align:center;font:700 12px/1 Inter,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#7E1A1C}'+
-    '.jup h2{text-align:center;font:400 29px/1.15 Shojumaru,"Baloo 2",sans-serif;letter-spacing:.01em;color:#231710;margin:0}.jup .jsr{text-align:center;color:#4A3726!important;font-size:14.5px}'+
+    '.jup h2{text-align:center;font:800 27px/1.1 "Baloo 2",sans-serif;color:#231710;margin:0}.jup .jsr{text-align:center;color:#4A3726!important;font:500 15.5px/1.5 "Shippori Mincho",Georgia,serif}'+
+    '.jup .jlg{display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 0 -2px}.jup .jlw{display:flex;align-items:center;gap:.06em;font:800 34px/1 "Baloo 2",sans-serif;color:#231710}'+
+    '.jup .jlw .jcd{position:relative;height:1.42cap;width:1.02cap;flex:none;margin-right:.06em}.jup .jlw .jcd i{position:absolute;inset:0;border-radius:.1em;box-shadow:.05em .05em 0 #231710}'+
+    '.jup .jlw .jcd i:first-child{background:#F57C00;transform:rotate(10deg) translate(.2em,-.06em)}.jup .jlw .jcd i:last-child{background:#B5121B;transform:rotate(-8deg);display:flex;align-items:center;justify-content:center;font-style:normal;color:#FFF4E6}'+
+    '.jup .jlw .jcd b{text-box:trim-both cap alphabetic;margin-left:-.03em}.jup .jlw>span:last-child{text-box:trim-both cap alphabetic}'+
+    '.jup .jtag{font:800 15px/1 "Baloo 2",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#FFF4E6;background:#7E1A1C;padding:6px 9px 4px;border-radius:5px;box-shadow:2px 2px 0 #231710}.jup.fnd .jtag{background:#B8860B}'+
     '.jup ul{list-style:none;margin:2px 0 4px;padding:12px 0 0;border-top:1px solid #D9C69E;display:grid;gap:8px}'+
-    '.jup li{display:flex!important;justify-content:flex-start!important;text-align:left;align-items:center;gap:10px;padding:0!important;background:none!important;border:0!important;font:500 14px/1.35 Inter,sans-serif;color:#2E2117}.jup li i{flex:none;width:28px;line-height:0}'+
+    '.jup li{display:flex!important;justify-content:flex-start!important;text-align:left;align-items:center;gap:10px;padding:0!important;background:none!important;border:0!important;font:500 15px/1.4 "Shippori Mincho",Georgia,serif;color:#2E2117}.jup li i{flex:none;width:28px;line-height:0}'+
     '.jup .jsb{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:2px}.jup .jmgo{background:#7E1A1C;color:#FFF4E0;padding:0 18px;text-decoration:none;display:inline-flex;align-items:center;border-radius:6px}'+
     '.jup .jsl{background:none;border:0;color:#7A6650;font:14px Inter,system-ui,sans-serif;cursor:pointer;margin-left:0}'+
     '.jup .jstamp{position:absolute;left:50%;top:60%;width:80%;transform:translate(-50%,-50%) rotate(-11deg);opacity:.2;mix-blend-mode:multiply;pointer-events:none;z-index:0}'+
@@ -323,7 +329,7 @@
     var f=kind==='founding',d=document.createElement('div');d.className='jmo jsi jup'+(f?' fnd':'');
     d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph"><div class="jrod"></div><div class="jcurl t"></div><div class="jpaper">'+
       '<button class="jmx" type="button" aria-label="Close">×</button>'+STAMP+'<div class="jin">'+headband(f)+
-      '<div class="jkick">'+(f?'Founding member':'Jonin Club')+'</div><h2 id="juph">'+u.h+'</h2><p class="jsr">'+u.p+'</p><ul>'+
+      '<div class="jlg" aria-label="Jonin '+(f?'Founding member':'Club')+'"><span class="jlw" aria-hidden="true"><span class="jcd"><i></i><i><b>J</b></i></span><span>ONIN</span></span><span class="jtag">'+(f?'Founder':'Club')+'</span></div><h2 id="juph">'+u.h+'</h2><p class="jsr">'+u.p+'</p><ul>'+
       ['Exact prices by edition, foil and grade','Every sold listing, linked to the sale','Price estimates and sort by market value','Alerts for the cards you’re hunting','Your collection value, a spreadsheet export and a badge']
         .map(function(t){return '<li><i>'+KUNAI+'</i><span>'+t+'</span></li>'}).join('')+
       '</ul><div class="jsb"><a class="jmgo" href="/#mine">See my collection</a><button type="button" class="jsl">Close</button></div></div></div><div class="jcurl b"></div><div class="jrod"></div></div>';
