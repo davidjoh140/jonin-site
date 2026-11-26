@@ -20,8 +20,8 @@ PSA_POP = 'https://www.psacard.com/pop/tcg-cards/'
 PSA = json.loads(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'psa_sets.json')).read())
 SOLD = 'https://www.ebay.com/sch/i.html?LH_Sold=1&LH_Complete=1&_sop=13&_nkw='
 NOT_KO = ' -kayou -mythos -proxy -custom -orica -fan'
-# eBay Partner Network tracking (campaign 5339245160); customid tells card-page clicks apart in EPN reports.
-EPN = '&mkevt=1&mkcid=1&mkrid=711-53200-19255-0&campid=5339245160&toolid=10001&customid=jonin-card-page'
+# eBay Partner Network tracking (campaign 5339262225); customid tells card-page clicks apart in EPN reports.
+EPN = '&mkevt=1&mkcid=1&mkrid=711-53200-19255-0&campid=5339262225&toolid=10001&customid=jonin-card-page'
 
 
 def slug(c):
