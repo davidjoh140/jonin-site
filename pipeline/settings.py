@@ -14,6 +14,9 @@ LOT_WORDS = ["lot", "bundle", "collection", "you pick", "you choose", "choose yo
 
 # PSA: free API tier is 100 calls a day; each cert uses 2 (details + images).
 PSA_MAX_CALLS_PER_RUN = 90            # PLACEHOLDER
+# Members come first (David, 2026-11-26): jonin.cards cert lookups share the same daily PSA count (Supabase psa_usage).
+# The scanner leaves this many calls for members each day (20 = 10 member certs).
+PSA_MEMBER_RESERVE = 20               # PLACEHOLDER
 
 # Matching
 MIN_CONFIDENCE = 0.70                 # PLACEHOLDER: below this, a listing is ignored
