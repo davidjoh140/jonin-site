@@ -36,6 +36,13 @@ Repo secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `EBAY_CLIENT_ID`, `EBAY_CL
 - jonin.cards reads images live from the `site_card_images` view (one best public image per card) with the publishable key, so a new scan shows within a minute or two. `cards.json` still carries `img` as the fallback.
 - Older scans (the first 255) live in `public/scans/<set>/<number>.webp`.
 
+## Scans from sold listings
+
+- `db/026_sale_scan_queue.sql`: every approved sale for a printing with no public scan goes into `sale_scan_queue`. pg_cron (`sale-photos`, every 2 min) runs `kick_sale_photos()`, which queues new ones and calls the `fetch-sale-photos` Edge Function (`supabase/functions/`) to download each photo as base64.
+- David cuts each photo in the Buying Desk (Scans → From sold listings): auto-found corners, drag to fix, **Use as scan** stages it in `scan_uploads` (`doc_id` `sale:<sale id>`, source `eBay listing`) for `drain-scan-uploads`. A later Card Index scan replaces it.
+- Printings with sales but no usable photo (none, skipped, or failed to download) show in the `scans_wanted` view ("Needs a scan" list).
+- Card pages load the newest image live from `site_card_images` (`public/card-art.js`), so a new scan shows within a minute or two instead of waiting for the next page rebuild.
+
 ## Rarity from the dots
 
 Main-set rarities follow the dots after the copyright line: none = Common, one = Uncommon, two = Rare, three = Super Rare. The 749 cards changed on 2026-11-25 are kept in `rarity_dot_fix` (with `old_rarity`) so the change can be reviewed or undone.

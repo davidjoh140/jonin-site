@@ -635,7 +635,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
     nt_html, nt_cards = near_top(c, s, set_cards, char_lists or {}, chars_by_name or {})
     body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/set/{set_slug(s)}/">{e(s["name"])}</a> › {e(c["n"])}</nav>
 <article class="cardpage">
-<div class="art">{art}</div>
+<div class="art" data-card="{e(c["s"] + ":" + c["n"])}" data-alt="{e(card_alt(c, s))}">{art}</div><script src="/card-art.js?v={file_version('card-art.js')}" defer></script>
 <div class="info">
 <h1>{e(c["name"])}</h1>
 <p class="mt">{e(s["name"])} · {e(c["n"])} · {e(c["r"])}</p>
