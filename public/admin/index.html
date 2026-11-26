@@ -31,7 +31,7 @@ button.ghost{background:none;color:var(--mute);border-color:var(--line);min-heig
 .st{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;background:#2E2638}.st.active{background:#1F3A1A;color:var(--ok)}.st.invited{background:#3A2A10;color:var(--acc2)}.st.revoked,.st.expired{color:var(--mute)}
 .tag{font-size:12px;color:var(--mute)}
 .fbp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:rgba(242,193,78,.06)}.fbch{padding:6px 0;border-top:1px dashed var(--line)}.fbdel{color:#ff8a80}.fbadd{color:var(--ok)}.fbalt[hidden]{display:none!important}
-.fbfix{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}.fbq{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}.fbc{min-height:30px;padding:3px 11px;font-size:13px;border-radius:99px;background:#3A2A10;border-color:#5A4318;color:var(--ink)}.fbc:hover{border-color:var(--acc)}.fbed{border:1px solid var(--acc);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:rgba(245,124,0,.05)}.fbrow{padding:8px 0;border-bottom:1px dashed var(--line)}.fbtg{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:6px}.fbtg>.tag{width:64px}.fbt{min-height:28px;padding:2px 10px;font-size:12px;font-weight:500;border-radius:99px;background:none;border-color:var(--line);color:var(--mute)}.fbt.on{background:#2E2638;color:var(--ink);border-color:#5b4f6b}.fbt.ch{border-color:var(--ok);color:var(--ok)}.fbt.ch:not(.on){text-decoration:line-through;color:#ff8a80;border-color:#ff8a80}
+.fbfix{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}.fbq{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}.fbc{min-height:30px;padding:3px 11px;font-size:13px;border-radius:99px;background:#3A2A10;border-color:#5A4318;color:var(--ink)}.fbc:hover{border-color:var(--acc)}.fbed{border:1px solid var(--acc);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:rgba(245,124,0,.05)}.fbrow{padding:8px 0;border-bottom:1px dashed var(--line)}.fbtg{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:6px}.fbtg>.tag{width:64px}.fbt{min-height:28px;padding:2px 10px;font-size:12px;font-weight:500;border-radius:99px;background:none;border-color:var(--line);color:var(--mute)}.fbt.on{background:#2E2638;color:var(--ink);border-color:#5b4f6b}.fbt.ch{border-color:var(--ok);color:var(--ok)}.fbfiles{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.fbf{display:flex;gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px;background:var(--bg);max-width:360px}.fbf.done{opacity:.6}.fbf img,.fbfi{width:64px;height:90px;object-fit:cover;border-radius:6px;flex:none;display:grid;place-items:center;background:#2E2638;color:var(--mute);font:700 12px Inter;text-decoration:none}.fbfm{display:grid;gap:4px;min-width:0;flex:1}.fbfm input,.fbfm select{min-height:30px;padding:2px 8px;font-size:13px}.fbfm select{width:auto;max-width:150px}.fbx{min-height:22px!important;padding:0 6px!important;font-size:11px}label.fbattach{display:inline-flex;align-items:center;min-height:34px;padding:4px 14px;border:1px dashed var(--acc);border-radius:99px;color:var(--acc);font-size:13px;font-weight:600;cursor:pointer}label.fbattach:hover{background:rgba(245,124,0,.1)}.fbn.drop{outline:2px dashed var(--acc);outline-offset:-4px}.fbt.ch:not(.on){text-decoration:line-through;color:#ff8a80;border-color:#ff8a80}
 .gate{max-width:440px}
 .mn{display:inline-block;margin-left:6px;min-width:18px;padding:0 5px;border-radius:99px;background:var(--red);color:#fff;font:700 11px/18px Inter,sans-serif;text-align:center}
 .mrow{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}.mrow:hover{background:#2B2435}.mrow:last-child{border-bottom:0}
@@ -296,7 +296,18 @@ async function loadFb(){const [r,mc]=await Promise.all([sb.rpc('admin_feedback')
   const all=r.data||[];
   const ids=[...new Set(all.flatMap(x=>(x.proposal_change||[]).map(c=>c.card_id)).concat(all.map(x=>x.card_id)).filter(Boolean))];
   const cr=ids.length?await sb.from('cards').select('id,name,number,set_id,printings,editions,rarity').in('id',ids):{data:[]};
-  FBD={all,CB:Object.fromEntries((cr.data||[]).map(c=>[c.id,c]))};renderFb()}
+  FBD={all,CB:Object.fromEntries((cr.data||[]).map(c=>[c.id,c])),files:{},urls:{}};await fbLoadFiles();renderFb()}
+// Attachments (2026-11-26 c): scans/photos David adds to a note. Private bucket 'feedback-files' (admins only), rows in
+// feedback_files (card / printing / edition per file). "Start in Claude" lists them so Claude cuts and uploads them as scans.
+async function fbLoadFiles(){const r=await sb.from('feedback_files').select('*').order('created_at');const fs=r.data||[];FBD.files={};
+  fs.forEach(f=>(FBD.files[f.feedback_id]=FBD.files[f.feedback_id]||[]).push(f));await fbCards([...new Set(fs.map(f=>f.card_id).filter(Boolean))]);
+  const need=fs.filter(f=>!FBD.urls[f.path]).map(f=>f.path);if(need.length){const u=await sb.storage.from('feedback-files').createSignedUrls(need,6*3600);(u.data||[]).forEach(x=>{if(x.signedUrl)FBD.urls[x.path]=x.signedUrl})}}
+async function fbUpload(id,files){const x=FBD.all.find(n=>n.id===+id);files=[...files].filter(f=>/^image\/|pdf$/.test(f.type)||/\.(heic|heif)$/i.test(f.name));if(!files.length)return;
+  const box=$(`.fbn[data-nid="${id}"] .fbfiles`);if(box)box.insertAdjacentHTML('beforeend',`<span class="tag fbup">Uploading ${files.length} file${files.length>1?'s':''}…</span>`);
+  for(const f of files){const path=`${id}/${Date.now()}-${Math.random().toString(36).slice(2,6)}-${f.name.replace(/[^\w.\-]+/g,'_').slice(-60)}`;
+    const up=await sb.storage.from('feedback-files').upload(path,f,{contentType:f.type||undefined});if(up.error){alert(f.name+': '+up.error.message);continue}
+    const ins=await sb.from('feedback_files').insert({feedback_id:+id,path,name:f.name,mime:f.type,size:f.size,card_id:x&&x.card_id||null});if(ins.error)alert(ins.error.message)}
+  await fbLoadFiles();renderFb()}
 async function fbCards(ids){ids=ids.filter(i=>!FBD.CB[i]);if(!ids.length)return;const r=await sb.from('cards').select('id,name,number,set_id,printings,editions,rarity').in('id',ids);(r.data||[]).forEach(c=>FBD.CB[c.id]=c)}
 const lst=v=>Array.isArray(v)?v:(v==null||v===''?[]:[String(v)]);
 const fbOpen=x=>['drafting','awaiting','alter'].includes(x.review)&&x.status!=='archived';
@@ -326,10 +337,13 @@ function fbQuick(x){const m=(x.message||'').toLowerCase(),c=FBD.CB[x.card_id],ou
   if(c||x.proposal_change)out.push({l:x.proposal_change?'✎ Edit this fix':'✎ Edit the card myself',a:'edit'});
   if(x.user_id||x.credit_user||x.contact)out.push({l:'💬 Ask the sender',a:'ask'});
   return out}
+function fbFilesTxt(x){const fs=(FBD.files[x.id]||[]).filter(f=>f.status==='new');if(!fs.length)return'';
+  return`\n\nI attached ${fs.length} file${fs.length>1?'s':''} (Supabase storage, private bucket feedback-files; rows in feedback_files):\n`+fs.map(f=>`- id ${f.id}, ${f.path}: card ${f.card_id||'?'}, ${f.printing||'version ?'}${f.edition?', '+f.edition:''}${f.note?' ('+f.note+')':''}`).join('\n')+
+  `\nCut each into a clean card scan the way the jonin-scan-intake skill does and stage it for jonin.cards (scan_uploads), then set feedback_files.status = 'used'. Ask me if the card or version is unclear.`}
 function fbClaudeUrl(x,dir){const CB=FBD.CB,c=CB[x.card_id];
   const t=`Jonin feedback note #${x.id} needs a fix (jonin.cards → /admin Feedback; Supabase project cfzpayanhvvqtkuqfgof, table feedback).\n\nThe note: "${(x.message||'').slice(0,1200)}"`+
   (c?`\nCard: ${c.name} (${c.id}), rarity ${c.rarity}; printings now: ${lst(c.printings).join(', ')||'none'}; editions now: ${lst(c.editions).join(', ')||'none'}.`:'')+
-  (x.page?`\nSent from page: ${x.page}`:'')+(x.proposal?`\nCurrent proposed fix: ${x.proposal}`:'')+(dir?`\n\nMy direction: ${dir}`:'')+
+  (x.page?`\nSent from page: ${x.page}`:'')+(x.proposal?`\nCurrent proposed fix: ${x.proposal}`:'')+fbFilesTxt(x)+(dir?`\n\nMy direction: ${dir}`:'')+
   `\n\nDraft it now. For card data, write the proposal on the note (proposal, proposal_change as [{card_id, set:{printings, editions, rarity}}], proposal_question if something is unsure, review = 'awaiting') so I can Accept it in /admin; don't change the cards table yourself. For a site or code fix, make the change in the jonin-site repo and open a PR.`;
   return 'https://claude.ai/new?q='+encodeURIComponent(t)}
 function renderFb(){const el=$('#fb');if(!el||!FBD)return;const {all,CB}=FBD,K={card:'🃏 Card info',idea:'💡 Idea',bug:'🐞 Bug',other:'💬 Other'};
@@ -354,13 +368,21 @@ function renderFb(){const el=$('#fb');if(!el||!FBD)return;const {all,CB}=FBD,K={
     ${x.proposal&&x.review!=='drafting'?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button data-fbr="accept" data-id="${x.id}">✓ Accept${x.proposal_change?' & apply':''} (+📜)</button><button class="ghost" data-fbr="skip" data-id="${x.id}">Skip</button></div>`:''}
     ${q.length?`<div class="fbq"><span class="tag">Quick fixes:</span>${q.map((c,i)=>`<button type="button" class="fbc" data-q="${x.id}:${i}">${esc(c.l)}</button>`).join('')}</div>`:''}
     ${editor(x)}
-    <textarea data-txt="${x.id}" rows="2" placeholder="Suggest the fix or what to change… e.g. it's Diamond for the GenCon promo, Wavy for E3 · apply to all TP3 rares · ask them for a photo">${esc(FBTXT[x.id]||'')}</textarea>
+    <textarea data-txt="${x.id}" rows="2" placeholder="Suggest the fix or what to change… e.g. it's Diamond for the GenCon promo, Wavy for E3 · apply to all TP3 rares · ask them for a photo · paste or drag scans onto this note">${esc(FBTXT[x.id]||'')}</textarea>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button type="button" data-fbgo="${x.id}">⚡ Start in Claude now</button><button type="button" class="ghost" data-fbnote="${x.id}">Save note</button>${!(x.proposal&&x.review!=='drafting')?`<button type="button" class="ghost" data-fbr="skip" data-id="${x.id}">Skip</button>`:''}</div></div>`};
+  const filesHtml=x=>{const fs=FBD.files[x.id]||[];if(!fs.length&&!fbOpen(x))return'';
+    return`<div class="fbfiles">${fs.map(f=>{const c=CB[f.card_id],u=FBD.urls[f.path],pr=[...new Set(lst(c&&c.printings).concat(f.printing||[],PRINTS))],ed=[...new Set(lst(c&&c.editions).concat(f.edition||[],EDS))];
+      return`<div class="fbf${f.status!=='new'?' done':''}" data-fid="${f.id}">${u&&/^image\/(jpeg|png|webp|gif)/.test(f.mime||'')?`<a href="${esc(u)}" target="_blank"><img src="${esc(u)}" alt=""></a>`:`<a class="fbfi" href="${esc(u||'#')}" target="_blank">${/pdf/.test(f.mime||'')?'PDF':'FILE'}</a>`}
+        <div class="fbfm"><input list="fbcl" data-fcard="${f.id}" value="${esc(c?c.name+' · '+c.number:f.card_id||'')}" placeholder="Which card?">
+        <div style="display:flex;gap:4px"><select data-fpr="${f.id}"><option value="">Version…</option>${pr.map(v=>`<option${v===f.printing?' selected':''}>${esc(v)}</option>`).join('')}</select>${ed.length?`<select data-fed="${f.id}"><option value="">Edition…</option>${ed.map(v=>`<option${v===f.edition?' selected':''}>${esc(v)}</option>`).join('')}</select>`:''}</div>
+        <span class="tag">${f.status==='used'?'✓ uploaded as a scan':f.status==='skipped'?'skipped':'waiting to upload'} <button type="button" class="ghost fbx" data-fdel="${f.id}" title="Remove file">✕</button></span></div></div>`}).join('')}
+      ${fbOpen(x)?`<label class="fbattach" title="Or drag files onto this note, or paste an image">📎 Attach scans<input type="file" data-fup="${x.id}" multiple accept="image/*,.heic,.heif,application/pdf" hidden></label>`:''}</div>`};
   const card=x=>`<div class="box fbn" data-nid="${x.id}" style="margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span class="tag">#${x.id} · ${day(x.created_at)} · ${K[x.kind]||esc(x.kind)}${x.card_id?` · <a href="/#card=${encodeURIComponent(x.card_id)}" target="_blank">${esc((CB[x.card_id]||{}).name||x.card_id)}</a>`:''}${x.page?` · <a href="${esc(x.page.split('#')[0]+(x.selector?(x.page.includes('?')?'&':'?')+'fbspot='+encodeURIComponent(x.selector):''))}" target="_blank">page</a>`:''}</span>
     <span class="tag">${esc(x.name||'')} ${x.contact?esc(x.contact):''}${!x.name&&!x.contact?'anonymous':''}${x.user_id?' · signed in':''}</span></div>
     <div style="white-space:pre-wrap;margin:8px 0 10px;font-size:15px">“${esc(x.message)}”</div>
     ${x.card_id&&CB[x.card_id]&&fbOpen(x)?`<p class="tag" style="margin:-4px 0 8px">Now: ${esc(lst(CB[x.card_id].printings).join(', ')||'no printings')} · ${esc(lst(CB[x.card_id].editions).join(', ')||'no editions')} · ${esc(CB[x.card_id].rarity||'')}</p>`:''}
+    ${filesHtml(x)}
     ${x.user_id||x.credit_user||x.contact?`<p style="margin:-4px 0 10px"><button class="ghost" data-fbdm="${x.id}">💬 ${MSGN[x.id]?'Conversation ('+MSGN[x.id]+')':'Message sender'}</button></p>`:''}
     ${x.review==='drafting'&&!x.proposal?`<p class="tag">No fix drafted yet. Use a quick fix, write your own, or ⚡ start it in Claude.</p>`:''}
     ${x.review==='alter'?`<p class="tag"><b style="color:var(--ink)">Your note:</b> ${esc(x.alter_note)}</p>`:''}
@@ -371,18 +393,28 @@ function renderFb(){const el=$('#fb');if(!el||!FBD)return;const {all,CB}=FBD,K={
   </div>`;
   el.innerHTML=`<h2>Feedback</h2><p class="mt" style="margin-bottom:10px">${[['review','To review'],['accepted','Accepted'],['skipped','Skipped'],['all','All']].map(([k,l])=>`<button class="ghost" data-fbs="${k}" style="${FBSHOW===k?'color:var(--ink);border-color:var(--acc)':''}">${l}${k!=='all'?' ('+cnt(k)+')':''}</button>`).join(' ')}</p>
   ${rows.length?rows.map(card).join(''):'<p class="tag">Nothing here.</p>'}<datalist id="fbcl"></datalist>`;
-  if(Object.keys(FBED).length)cardsList().then(cs=>{const dl=$('#fbcl');if(dl)dl.innerHTML=cs.map(c=>`<option value="${esc(c.label)}">`).join('')});
+  cardsList().then(cs=>{const dl=$('#fbcl');if(dl)dl.innerHTML=cs.map(c=>`<option value="${esc(c.label)}">`).join('')});
   const byId=id=>all.find(x=>x.id===+id),act=async(id,a,note)=>{const r=await sb.rpc('admin_feedback_review',{p_id:+id,p_action:a,p_note:note||null});if(r.error){alert(r.error.message);return false}return true};
   const edOf=id=>fbEdInit(byId(id)),refocus=sel=>{const e=el.querySelector(sel);if(e){e.focus();e.setSelectionRange&&e.setSelectionRange(e.value.length,e.value.length)}};
   const touch=ed=>{if(ed.sum!=null&&ed.sumAuto!==false)ed.sum=null};
+  el.ondragover=e=>{const b=e.target.closest('.fbn');if(b&&fbOpen(byId(b.dataset.nid))){e.preventDefault();b.classList.add('drop')}};
+  el.ondragleave=e=>{const b=e.target.closest('.fbn');if(b&&!b.contains(e.relatedTarget))b.classList.remove('drop')};
+  el.ondrop=e=>{const b=e.target.closest('.fbn');if(!b||!e.dataTransfer.files.length)return;e.preventDefault();b.classList.remove('drop');if(fbOpen(byId(b.dataset.nid)))fbUpload(b.dataset.nid,e.dataTransfer.files)};
+  el.onpaste=e=>{const b=e.target.closest('.fbn'),fs=[...(e.clipboardData||{}).files||[]];if(b&&fs.length&&fbOpen(byId(b.dataset.nid))){e.preventDefault();fbUpload(b.dataset.nid,fs)}};
   el.oninput=e=>{const t=e.target;if(t.dataset.txt)FBTXT[t.dataset.txt]=t.value;if(t.dataset.sum){const ed=FBED[t.dataset.sum];ed.sum=t.value;ed.sumAuto=false}};
+  const fupd=async(fid,v)=>{const r=await sb.from('feedback_files').update(v).eq('id',+fid);if(r.error)alert(r.error.message);await fbLoadFiles();renderFb()};
   el.onchange=async e=>{const t=e.target,box=t.closest('.fbn');const id=box&&+box.dataset.nid;
+    if(t.dataset.fup){fbUpload(t.dataset.fup,t.files);return}
+    if(t.dataset.fpr)return fupd(t.dataset.fpr,{printing:t.value||null});
+    if(t.dataset.fed)return fupd(t.dataset.fed,{edition:t.value||null});
+    if(t.dataset.fcard){const cs=await cardsList(),c=cs.find(c=>c.label===t.value)||cs.find(c=>c.id.toLowerCase()===t.value.trim().toLowerCase());if(!c){t.style.borderColor='#ff8a80';return}await fbCards([c.id]);return fupd(t.dataset.fcard,{card_id:c.id,printing:null,edition:null})}
     if(t.dataset.rar!=null){const ed=FBED[id];ed.rows[+t.dataset.rar].set.rarity=t.value;touch(ed);renderFb()}
     if(t.dataset.other!=null&&t.value.trim()){const ed=FBED[id],r=ed.rows[+t.dataset.other];if(!r.set.printings.includes(t.value.trim()))r.set.printings.push(t.value.trim());touch(ed);renderFb()}
     if(t.dataset.addc){const cs=await cardsList(),c=cs.find(c=>c.label===t.value)||cs.find(c=>c.id.toLowerCase()===t.value.trim().toLowerCase());if(!c)return;const ed=FBED[t.dataset.addc];
       if(!ed.rows.some(r=>r.id===c.id)){await fbCards([c.id]);const b=FBD.CB[c.id]||{};ed.rows.push({id:c.id,set:{printings:lst(b.printings).slice(),editions:lst(b.editions).slice(),rarity:b.rarity||''}})}touch(ed);renderFb();refocus(`[data-addc="${t.dataset.addc}"]`)}};
   el.onclick=async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
     if(d.fbs){FBSHOW=d.fbs;renderFb();return}
+    if(d.fdel){if(!confirm('Remove this file?'))return;const f=Object.values(FBD.files).flat().find(f=>f.id===+d.fdel);await sb.storage.from('feedback-files').remove([f.path]);await sb.from('feedback_files').delete().eq('id',f.id);await fbLoadFiles();renderFb();return}
     if(d.fbdm){openThread({feedback:+d.fbdm});return}
     if(d.fbundo){if(!confirm('Undo this? The cards go back to how they were and the scrolls are taken away.'))return;const r=await sb.rpc('admin_feedback_undo',{p_id:+d.fbundo});if(r.error)alert(r.error.message);loadFb();return}
     if(d.fbr){b.disabled=true;if(await act(d.id,d.fbr)){delete FBED[d.id];loadFb()}else b.disabled=false;return}
