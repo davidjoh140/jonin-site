@@ -131,4 +131,4 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - Only members who turned on profile sharing appear (David, 2026-11-26). Shows name, picture, status badge, rank and scrolls, and links to their public profile. Nothing from collections. Admin accounts (David's) are included.
 - Signed-in members outside the top get their own row pinned at the bottom; members not sharing get a note on how to join the board.
 - Setup (`/welcome/`, step 2) asks "Make your profile public?" — Public or Keep it private (default private). It sets `profiles.sharing`.
-- PLACEHOLDERS for David: top 25, members need 1+ scroll, ties share a place (earlier member listed first).
+- Rules (David approved 2026-11-26): top 25, members need 1+ scroll, ties share a place (earlier member listed first).

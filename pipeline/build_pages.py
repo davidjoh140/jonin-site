@@ -532,7 +532,7 @@ def missions_page(chars):
 
 def leaderboard_page():
     """/leaderboard/: members ranked by scrolls. Static shell; /leaderboard.js reads scroll_leaderboard() from Supabase
-    (db/029_scroll_leaderboard.sql). PLACEHOLDERS for David: top 25, members with 1+ scroll, ties share a place."""
+    (db/029_scroll_leaderboard.sql). Rules (David approved 2026-11-26): top 25, members with 1+ scroll, ties share a place."""
     url = f'{SITE}/leaderboard/'
     title = 'Scrolls leaderboard: top Jonin members | Jonin'
     desc = 'The Jonin members with the most scrolls. Earn scrolls by voting for the coolest Naruto CCG cards, inviting friends and sending feedback, and climb from Academy Student to Kage.'

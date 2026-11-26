@@ -1,7 +1,7 @@
 -- Applied to Supabase on 2026-11-26 (migration scroll_leaderboard). Kept here as the record. /leaderboard/ reads this.
 -- David (2026-11-26): only members who turned on sharing appear (sharing is off by default). Admin accounts included
 -- (David, 2026-11-26; migration scroll_leaderboard_include_admins).
--- Scrolls leaderboard. PLACEHOLDERS, David to set: top 25; only members with at least 1 scroll; ties share a place (the earlier member is listed first).
+-- Scrolls leaderboard. Rules (David approved 2026-11-26): top 25; only members with at least 1 scroll; ties share a place (the earlier member is listed first).
 -- Shows name, picture, status badge, rank and scrolls only. Nothing from collections or slabs.
 -- me_hidden: true when the signed-in member isn't sharing, so the page can tell them how to appear.
 create or replace function public.scroll_leaderboard(p_limit int default 25) returns jsonb

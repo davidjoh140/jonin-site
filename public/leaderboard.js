@@ -1,6 +1,6 @@
 /* jonin.cards /leaderboard/: members ranked by scrolls. Reads scroll_leaderboard() from Supabase
    (db/029_scroll_leaderboard.sql). Only members who turned on sharing appear (David, 2026-11-26). Shows name, picture, status, rank and scrolls only.
-   PLACEHOLDERS (set in Supabase): top 25, members with 1+ scroll, ties share a place. Signed-in members outside the
+   Rules (David approved 2026-11-26): top 25, members with 1+ scroll, ties share a place. Signed-in members outside the
    top 25 get their own row pinned underneath. */
 (function () {
   var SUPA = 'https://cfzpayanhvvqtkuqfgof.supabase.co', KEY = 'sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe';
