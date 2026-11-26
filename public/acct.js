@@ -273,31 +273,52 @@
   // PLACEHOLDER wording for David to change.
   var UPG={founding:{h:'Welcome, founder',p:'You’re one of Jonin’s founding members. Jonin Club is yours free, forever, and your profile now wears the gold ring.'},
            premium:{h:'Welcome to Jonin Club',p:'You’ve been upgraded. Everything below is unlocked on your account now.'}};
-  // Look (David: Naruto-coded, not over the top): the same parchment card as the Jonin Club dropdown (prem.css .pad),
-  // a red ink "Promoted" stamp, the site's headband (gold ring around it for founders) and kunai bullets. One short fade-in.
-  var KUNAI='<svg viewBox="0 0 24 10" aria-hidden="true"><path d="M1 5 9 1.6 15 5 9 8.4z" fill="#C8372D"/><rect x="15" y="4" width="5" height="2" rx=".6" fill="#3B2A1C"/><circle cx="21.6" cy="5" r="1.7" fill="none" stroke="#3B2A1C" stroke-width="1.2"/></svg>';
+  // Look (David, 2026-11-26): an unrolled ninja scroll (wooden rods top and bottom), a flat headband across the top
+  // (steel plate, gold plate for founders), plain black kunai bullets, and a big uneven red PROMOTED ink stamp in the middle.
+  var KUNAI='<svg viewBox="0 0 26 10" aria-hidden="true"><path d="M0 5 8.5 1.6 14 5 8.5 8.4Z" fill="#1B1714"/><rect x="14" y="4.1" width="6" height="1.8" fill="#1B1714"/><circle cx="22.4" cy="5" r="2" fill="none" stroke="#1B1714" stroke-width="1.3"/></svg>';
+  function headband(f){var p=f?['#F0D27A','#D9AE3E','#8A6414']:['#DDE2E8','#BCC4CE','#5A6472'];
+    return '<svg class="jhbd" viewBox="0 0 360 46" aria-hidden="true">'+
+      '<path d="M0 15h360v16H0z" fill="#2E3D63"/><path d="M0 18.5h360M0 27.5h360" stroke="#22304F" stroke-width="1" stroke-dasharray="3 3"/>'+
+      '<path d="M0 15h360M0 31h360" stroke="#1A243C" stroke-width="1.2"/>'+
+      '<rect x="138" y="5" width="84" height="36" rx="4" fill="'+p[1]+'" stroke="'+p[2]+'" stroke-width="1.5"/>'+
+      '<path d="M140 7h80v15h-80z" fill="'+p[0]+'" opacity=".55"/>'+
+      '<g fill="'+p[2]+'"><circle cx="145" cy="11" r="1.8"/><circle cx="215" cy="11" r="1.8"/><circle cx="145" cy="35" r="1.8"/><circle cx="215" cy="35" r="1.8"/></g>'+
+      '<path d="M180 12l2.6 8.4 8.4 2.6-8.4 2.6-2.6 8.4-2.6-8.4-8.4-2.6 8.4-2.6z" fill="none" stroke="'+p[2]+'" stroke-width="1.6" stroke-linejoin="round"/></svg>'}
+  var STAMP='<svg class="jstamp" viewBox="0 0 300 120" aria-hidden="true"><defs>'+
+    '<filter id="jstR" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7" result="n"/>'+
+    '<feDisplacementMap in="SourceGraphic" in2="n" scale="3.2"/></filter>'+
+    '<mask id="jstM"><rect width="300" height="120" fill="#fff"/><g fill="#000">'+
+    '<circle cx="40" cy="30" r="2.5"/><circle cx="92" cy="88" r="3.5"/><circle cx="150" cy="22" r="2"/><circle cx="210" cy="94" r="3"/><circle cx="262" cy="40" r="2.2"/>'+
+    '<circle cx="120" cy="60" r="1.6"/><circle cx="180" cy="66" r="2.4"/><circle cx="70" cy="58" r="1.4"/><circle cx="238" cy="70" r="1.8"/>'+
+    '<path d="M258 14l30 4-2 20z" opacity=".55"/><path d="M8 96l40 10-38 6z" opacity=".45"/><rect x="126" y="100" width="60" height="6" opacity=".35"/></g></mask></defs>'+
+    '<g filter="url(#jstR)" mask="url(#jstM)" fill="none" stroke="#C3261E">'+
+    '<rect x="8" y="10" width="284" height="100" rx="10" stroke-width="7"/><rect x="20" y="22" width="260" height="76" rx="5" stroke-width="2.4"/>'+
+    '<text x="150" y="76" text-anchor="middle" fill="#C3261E" stroke="none" font-family="\'Baloo 2\',Impact,\'Arial Black\',sans-serif" font-weight="800" font-size="50" textLength="226" lengthAdjust="spacingAndGlyphs">PROMOTED</text></g></svg>';
   function upgradeCss(){if(upgradeCss.on)return;upgradeCss.on=1;var c=document.createElement('style');c.textContent=
-    '.jup .jmbox{width:min(440px,100%);background:#F5EAD0;border:0;border-radius:14px;color:#2A1C12;padding:22px 22px 18px;box-shadow:0 12px 40px rgba(0,0,0,.45);animation:jupIn .22s ease-out both}'+
-    '.jup .jmx{color:#7A6650}.jup .jhd{display:flex;align-items:center;gap:14px;padding-right:24px}'+
-    '.jup .jbd{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#EADBB8;border:2px solid #D8C49A}.jup.fnd .jbd{border:3px solid #D9A92E;background:#F1DFAE}'+
-    '.jup .jbd svg{width:42px;height:auto}.jup .jkick{font:700 12px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8A6D4A;margin-bottom:3px}'+
-    '.jup h2{font:800 25px/1.1 "Baloo 2",sans-serif;color:#2A1C12;margin:0}.jup .jsr{color:#4A3726!important;font-size:14.5px}'+
-    '.jup .jst{position:absolute;bottom:22px;right:24px;padding:3px 8px 1px;border:2.5px solid #C8372D;border-radius:5px;color:#C8372D;font:800 15px/1.2 "Baloo 2",sans-serif;letter-spacing:.06em;text-transform:uppercase;transform:rotate(-8deg);opacity:.85;mix-blend-mode:multiply}'+
-    '.jup ul{list-style:none;margin:2px 0 6px;padding:12px 0 0;border-top:1px dashed #CDB88E;display:grid;gap:8px}'+
-    '.jup li{display:flex!important;justify-content:flex-start!important;text-align:left;align-items:center;gap:10px;padding:0!important;background:none!important;border:0!important;font:500 14px/1.35 Inter,sans-serif;color:#3B2A1C}.jup li i{flex:none;width:22px;line-height:0}'+
-    '.jup .jsb{display:flex;gap:10px;align-items:center}.jup .jmgo{background:#C8372D;color:#FFF4E0;padding:0 18px;text-decoration:none;display:inline-flex;align-items:center}'+
+    '.jup .jmbox{width:min(440px,100%);background:none;border:0;box-shadow:none;padding:0;gap:0;color:#2A1C12;animation:jupIn .22s ease-out both}'+
+    '.jup .jrod{position:relative;z-index:2;height:16px;margin:0 -12px;border-radius:3px;background:linear-gradient(#7A4E2C,#A06A3E 35%,#6A4024 70%,#4B2C17);box-shadow:0 3px 6px rgba(0,0,0,.35)}'+
+    '.jup .jrod:before,.jup .jrod:after{content:"";position:absolute;top:-3px;width:14px;height:22px;border-radius:4px;background:linear-gradient(#3B2414,#5A3820 50%,#2E1C10)}.jup .jrod:before{left:-8px}.jup .jrod:after{right:-8px}'+
+    '.jup .jpaper{position:relative;overflow:hidden;background:#F2E3C2;padding:18px 24px 20px;display:flex;flex-direction:column;gap:10px;'+
+      'box-shadow:inset 0 10px 10px -8px rgba(80,50,20,.35),inset 0 -10px 10px -8px rgba(80,50,20,.35),inset 10px 0 14px -12px rgba(80,50,20,.3),inset -10px 0 14px -12px rgba(80,50,20,.3)}'+
+    '.jup .jmx{color:#7A6650;top:4px;right:6px;z-index:3}.jup .jhbd{display:block;width:calc(100% + 48px);margin:-4px -24px 2px;height:auto}'+
+    '.jup .jkick{text-align:center;font:700 12px/1 Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8A6D4A}'+
+    '.jup h2{text-align:center;font:800 26px/1.1 "Baloo 2",sans-serif;color:#2A1C12;margin:0}.jup .jsr{text-align:center;color:#4A3726!important;font-size:14.5px}'+
+    '.jup ul{list-style:none;margin:2px 0 4px;padding:12px 0 0;border-top:1px solid #D9C69E;display:grid;gap:8px}'+
+    '.jup li{display:flex!important;justify-content:flex-start!important;text-align:left;align-items:center;gap:10px;padding:0!important;background:none!important;border:0!important;font:500 14px/1.35 Inter,sans-serif;color:#2E2117}.jup li i{flex:none;width:28px;line-height:0}'+
+    '.jup .jsb{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:2px}.jup .jmgo{background:#B5121B;color:#FFF4E0;padding:0 18px;text-decoration:none;display:inline-flex;align-items:center;border-radius:6px}'+
     '.jup .jsl{background:none;border:0;color:#7A6650;font:14px Inter,system-ui,sans-serif;cursor:pointer;margin-left:0}'+
+    '.jup .jstamp{position:absolute;left:50%;top:56%;width:78%;transform:translate(-50%,-50%) rotate(-11deg);opacity:.82;mix-blend-mode:multiply;pointer-events:none;z-index:1}'+
     '@keyframes jupIn{from{opacity:0;transform:translateY(8px)}}@media (prefers-reduced-motion:reduce){.jup .jmbox{animation:none}}';
     document.head.appendChild(c)}
   function upgradeShow(kind,tok){var u=UPG[kind];if(!u||upgradeShow.on||/^\/admin\//.test(location.pathname))return false;upgradeShow.on=1;
     rest('/rest/v1/rpc/dismiss_upgrade_notice',tok,{}).catch(function(){});upgradeCss();
     var f=kind==='founding',d=document.createElement('div');d.className='jmo jsi jup'+(f?' fnd':'');
-    d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph"><button class="jmx" type="button" aria-label="Close">×</button><span class="jst">Promoted</span>'+
-      '<div class="jhd"><div class="jbd">'+WORN+'</div><div><div class="jkick">'+(f?'Founding member':'Jonin Club')+'</div><h2 id="juph">'+u.h+'</h2></div></div>'+
-      '<p class="jsr">'+u.p+'</p><ul>'+
+    d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph"><div class="jrod"></div><div class="jpaper">'+
+      '<button class="jmx" type="button" aria-label="Close">×</button>'+headband(f)+
+      '<div class="jkick">'+(f?'Founding member':'Jonin Club')+'</div><h2 id="juph">'+u.h+'</h2><p class="jsr">'+u.p+'</p><ul>'+
       ['Exact prices by edition, foil and grade','Every sold listing, linked to the sale','Price estimates and sort by market value','Alerts for the cards you’re hunting','Your collection value, a spreadsheet export and a badge']
         .map(function(t){return '<li><i>'+KUNAI+'</i><span>'+t+'</span></li>'}).join('')+
-      '</ul><div class="jsb"><a class="jmgo" href="/#mine">See my collection</a><button type="button" class="jsl">Close</button></div></div>';
+      '</ul><div class="jsb"><a class="jmgo" href="/#mine">See my collection</a><button type="button" class="jsl">Close</button></div>'+STAMP+'</div><div class="jrod"></div></div>';
     var go=function(){if(!document.body)return setTimeout(go,50);document.body.appendChild(d);if(window.jtrack)jtrack('upgrade-popup',{kind:kind})};go();
     var close=function(){d.remove()};d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.jmx,.jsl'))close()});
     document.addEventListener('keydown',function f(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',f)}});
