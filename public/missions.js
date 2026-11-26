@@ -16,6 +16,8 @@
     '.mch .mok{display:none;font-style:normal;color:#6FB27A;font-weight:700}.mch.done{border-color:#6FB27A}.mch.done .mok{display:inline}' +
     '.mranks ol{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}.mranks li{display:flex;justify-content:space-between;padding:8px 12px;border-radius:10px;border:1px solid var(--line)}' +
     '.mcard button.primary{background:var(--acc);border-color:var(--acc);color:var(--bg);font:600 15px Inter,system-ui,sans-serif;cursor:pointer}' +
+    '.minv .mlink{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 10px}.minv input{flex:1;min-width:220px;font:500 14px Inter,system-ui,sans-serif;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:inherit}' +
+    '.minv button{padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:inherit;font:600 14px Inter,system-ui,sans-serif;cursor:pointer}.minv button.primary{background:var(--acc);border-color:var(--acc);color:var(--bg)}' +
     '.mranks li.cur{border-color:#F2C14E;background:rgba(242,193,78,.08)}.mranks li.got b::after{content:" ✓";color:#6FB27A}';
   document.head.appendChild(css);
 
@@ -31,7 +33,7 @@
   function paint(rules, ranks, me) {
     document.querySelectorAll('[data-xp]').forEach(function (el) {
       var n = rules[el.getAttribute('data-xp')];
-      if (n != null) el.textContent = '+' + n + (n===1?' scroll':' scrolls') + (el.getAttribute('data-xp') === 'vote_character' ? ' each' : ' per note');
+      if (n != null) el.textContent = '+' + n + (n===1?' scroll':' scrolls') + ({ vote_character: ' each', invite_signup: ' per friend' }[el.getAttribute('data-xp')] || ' per note');
     });
     var xp = me ? me.xp || 0 : 0;
     $('#mladder').innerHTML = ranks.map(function (r, i) {
@@ -61,13 +63,34 @@
     $('#m-fb .mfb').textContent = n + ' note' + (n === 1 ? '' : 's') + ' used so far';
   }
 
+  function paintInvite(inv) {
+    var box = $('#m-inv .minv'); if (!box) return;
+    if (!inv || !inv.code) {
+      box.innerHTML = '<p class="btns" style="margin:0"><a class="primary" href="/#signup">Sign up free</a><a class="ghostbtn" href="/#signin">Sign in</a></p>';
+      return;
+    }
+    var url = 'https://jonin.cards/?invite=' + inv.code, wait = (inv.joined || 0) - (inv.counted || 0);
+    box.innerHTML = '<div class="mlink"><input readonly value="' + esc(url) + '" aria-label="Your invite link"><button type="button" class="primary" data-copy>Copy link</button>' +
+      (navigator.share ? '<button type="button" data-share>Share</button>' : '') + '</div>' +
+      '<div class="mprog"><b>' + (inv.counted || 0) + (inv.counted === 1 ? ' friend' : ' friends') + ' joined</b>' +
+      (wait > 0 ? '<span class="mt">' + wait + ' more signed up and will count once they add a card or vote</span>' : '') + '</div>';
+    box.querySelector('[data-copy]').onclick = function () {
+      var b = this, inp = box.querySelector('input');
+      (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).catch(function () { inp.select(); document.execCommand('copy'); })
+        .then(function () { b.textContent = 'Copied ✓'; setTimeout(function () { b.textContent = 'Copy link'; }, 1800); });
+    };
+    var sh = box.querySelector('[data-share]');
+    if (sh) sh.onclick = function () { navigator.share({ title: 'Jonin', text: 'Track your Naruto CCG collection on Jonin', url: url }).catch(function () {}); };
+  }
+
   function load() {
     var s = session();
     Promise.all([
       rpc('xp_rules').catch(function () { return {}; }),
       rpc('xp_ranks').catch(function () { return []; }),
       s ? rpc('my_xp', s.access_token).catch(function () { return null; }) : Promise.resolve(null)
-    ]).then(function (r) { paint(r[0] || {}, r[1] || [], r[2]); });
+      , s ? rpc('my_invite', s.access_token).catch(function () { return null; }) : Promise.resolve(null)
+    ]).then(function (r) { paint(r[0] || {}, r[1] || [], r[2]); paintInvite(r[3]); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load); else load();
   window.addEventListener('storage', function (e) { if (e.key === TK) load(); });

@@ -425,6 +425,9 @@ def missions_page(chars):
 <p class="lede">Earn scrolls and rank up from Academy Student to Kage. Your rank shows on your profile next to your name.</p></section>
 <section class="mhero" id="mhero"><p class="mt">Loading your rank…</p></section>
 <section class="mlist">
+<article class="mcard" id="m-inv"><div class="mtop"><h2>Invite friends</h2><span class="mxp" data-xp="invite_signup">+📜</span></div>
+<p class="mt">Share your invite link. When a friend signs up through it and adds a card to their collection or casts a vote, you earn scrolls.</p>
+<div class="minv"><p class="mt" style="margin:0">Sign in to get your invite link.</p></div></article>
 <article class="mcard" id="m-vote"><div class="mtop"><h2>Vote for every character's coolest cards</h2><span class="mxp" data-xp="vote_character">+📜</span></div>
 <p class="mt">Open a character and vote for up to 3 of their best cards. Your first vote on each character earns scrolls, once per character. Moving a vote later keeps your scrolls.</p>
 <div class="mprog"><span class="mbar"><i style="width:0%"></i></span><b class="mcount">0 / {len(chars)}</b></div>

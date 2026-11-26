@@ -68,3 +68,10 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - My collection: a Lists tab (also `/#lists` and "My lists" in the profile menu) with every list, and each list's cards, Rename, Copy list, Delete.
 - PLACEHOLDERS to revisit: lists hold whole cards (no printing/edition), members only, 50 lists / 1,000 cards per list.
 - Sharing later: `visibility` and `share_slug` already exist on `card_lists`.
+
+## Invites (scrolls for inviting friends)
+
+- Every profile has an `invite_code`; the link is `https://jonin.cards/?invite=<code>` (`db/019_invites.sql`).
+- `acct.js` (on every page) remembers the code for 30 days and calls `claim_invite` once the visitor is signed in. Only accounts made in the last 3 days can claim, never your own code, one inviter per account.
+- Missions page has an Invite friends card (link, copy/share, count); profile menu links to it.
+- PLACEHOLDERS for David: 50 scrolls per friend (`xp_rules()`), a friend counts once they add a card/slab or vote, 3-day claim window.
