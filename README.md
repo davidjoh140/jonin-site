@@ -75,3 +75,9 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - `acct.js` (on every page) remembers the code for 30 days and calls `claim_invite` once the visitor is signed in. Only accounts made in the last 3 days can claim, never your own code, one inviter per account.
 - Missions page has an Invite friends card (link, copy/share, count); profile menu links to it.
 - PLACEHOLDERS for David: 50 scrolls per friend (`xp_rules()`), a friend counts once they add a card/slab or vote, 3-day claim window.
+
+## Card condition in collections
+
+- Every have copy has a condition (NM / LP / MP / HP / DMG). New copies start as NM; the card's collection box shows one picker per copy (`collection_items.conds`, `db/020_collection_condition.sql`; guests keep it in `jonin_guest_v1`).
+- Premium: each condition shows its own RAW estimate (`price_estimates_cond`, built from approved price-check sales with that condition) and links to the matching sold comps (`member_card_comps`). Collection value and the export price each copy by its condition.
+- PLACEHOLDER for David: a condition with no sales uses the version's all-conditions estimate, labelled "no LP sales yet, all-conditions estimate".

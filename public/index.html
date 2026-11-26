@@ -265,6 +265,13 @@ h1.ph{display:flex;align-items:center;gap:12px}h1.ph img.avatar{border:2px solid
 .mycoll h4{margin:0;font:700 16px "Baloo 2",sans-serif}
 .mycoll .mrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;font-size:13px}
 .step{display:inline-flex;align-items:center;border:1px solid var(--edge);border-radius:999px;overflow:hidden}
+.mycoll .cnds{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 0 2px;font-size:12px}
+.mycoll .cnd{background:var(--deep);color:var(--ink);border:1px solid var(--edge);border-radius:8px;padding:3px 6px;font:600 12px inherit;cursor:pointer}
+.mycoll .cpx{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font-size:12.5px;margin:-4px 0 0 2px}
+.mycoll .cpx.lock{color:var(--mute);text-decoration:none;font-size:12px}.mycoll .cpx.lock:hover{color:var(--ink)}
+.mycoll .cb{font:700 10.5px inherit;letter-spacing:.04em;border:1px solid var(--edge);border-radius:6px;padding:1px 6px;color:var(--mute)}
+.mycoll .cmps{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;padding-left:2px}.mycoll .cmps a{font-size:11.5px;color:var(--acc);text-decoration:none;border:1px solid var(--edge);border-radius:999px;padding:2px 8px}
+.mycoll .cmps a:hover{border-color:var(--acc)}
 .step button{all:unset;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;font-size:16px;color:var(--ink)}
 .step button:hover{background:var(--line2)}.step b{min-width:22px;text-align:center;font-size:13px}
 .step.on{border-color:#2f6b4a;background:#15251c}
@@ -447,7 +454,19 @@ function tileEst(c){const rows=(EST&&EST.get(c.s+':'+c.n)||[]).filter(r=>(r.grad
   return rows.slice().sort((a,b)=>b.sales_count-a.sales_count||(a.edition!=='Unlimited')-(b.edition!=='Unlimited')||(a.printing!=='Normal')-(b.printing!=='Normal'))[0]}
 async function loadEstimates(){if(!MEMBER||!sbc()){EST=null;return}
   const r=await sb.from('price_estimates').select('card_id,printing,edition,grader,grade,estimate,sales_count,last_sold_at,last_price').limit(20000);
-  if(r.error||!MEMBER){EST=null;return}EST=new Map();(r.data||[]).forEach(x=>{if(!EST.has(x.card_id))EST.set(x.card_id,[]);EST.get(x.card_id).push(x)})}
+  if(r.error||!MEMBER){EST=null;return}EST=new Map();(r.data||[]).forEach(x=>{if(!EST.has(x.card_id))EST.set(x.card_id,[]);EST.get(x.card_id).push(x)});
+  const rc=await sb.from('price_estimates_cond').select('card_id,printing,edition,condition,estimate,sales_count,last_sold_at,last_price').limit(20000);
+  ESTC=new Map();if(!rc.error)(rc.data||[]).forEach(x=>{if(!ESTC.has(x.card_id))ESTC.set(x.card_id,[]);ESTC.get(x.card_id).push(x)})}
+// Conditional pricing: the RAW estimate of this exact version in this condition, from price-check sales with that condition.
+// PLACEHOLDER (for David): no sales in that condition -> use the version's all-conditions estimate, labelled as such.
+let ESTC=new Map();const COMPS=new Map();
+const edK=x=>x||'Unlimited';
+function estCond(card,printing,edition,cond){const r=(ESTC.get(card)||[]).find(x=>x.printing===printing&&edK(x.edition)===edK(edition)&&x.condition===cond);
+  if(r)return Object.assign({exact:true},r);const e=estFor(card,printing,edition);return e?Object.assign({exact:false},e):null}
+// Approved price-check sales (comps) for a card, with condition. Cached per card while the page is open.
+function cardComps(id){if(!MEMBER||!sbc())return Promise.resolve([]);if(COMPS.has(id))return COMPS.get(id);
+  const p=sb.rpc('member_card_comps',{p_card_id:id}).then(r=>r.error?sb.rpc('member_card_sales',{p_card_id:id}).then(r2=>r2.error?[]:(r2.data||[])):(r.data||[])).catch(()=>[]).then(v=>{p.v=v;return v});COMPS.set(id,p);return p}
+const compsFor=(list,p,e,cond)=>list.filter(x=>(x.grader||'Raw')==='Raw'&&x.printing===p&&edK(x.edition)===edK(e)&&x.condition===cond);
 function tile(c,i){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c);
   return `<button class="card in" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div>${tpx(c)}<div class="nm">${esc(c.name)}</div><div class="mt">${setTag(c.s)}</div><div class="mt">${esc(c.n)} · ${rsym(c.src)}</div></button>`}
 // Sort options. PLACEHOLDER choices for David to confirm: rarity order (UR > SR > R > U > C, then Promo, Starter, unknown),
@@ -499,10 +518,10 @@ const money=v=>'$'+(v>=100?Math.round(v).toLocaleString():(+v).toFixed(2).replac
 const shortDate=d=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
 const pxRows=(c,rows)=>{const eds=(c.ed||[]).filter(Boolean).length>1,prs=(c.v||[]).length>1;return rows.map(r=>`<tr><td>${[eds&&r.edition?(r.edition==='1st Edition'?'1st Ed':r.edition):'',prs?r.printing:'',r.grader==='Raw'||!r.grader?'Raw':r.grader+' '+(r.grade||'')].filter(Boolean).map(esc).join(' · ')}</td><td><b>${money(+r.estimate)}</b><small>${r.sales_count} sale${r.sales_count>1?'s':''} · last ${money(+r.last_price)}${r.last_sold_at?' on '+esc(shortDate(r.last_sold_at)):''}</small></td></tr>`).join('')};
 const vkey=r=>[r.printing||'',r.edition||'',r.grader||'Raw',r.grade||''].join('|');
-const saleLinks=list=>list.length?`<tr class="sl"><td colspan="2">${list.map(x=>{const t=`${money(+x.price)} · ${esc(shortDate(x.sold_at))}`;
+const saleLinks=list=>list.length?`<tr class="sl"><td colspan="2">${list.map(x=>{const t=`${money(+x.price)} · ${esc(shortDate(x.sold_at))}${x.condition?' · '+esc(x.condition):''}`;
   return /^https:\/\//.test(x.url||'')?`<a href="${esc(x.url)}${x.url.includes('?')?'&amp;':'?'}${EPN}" target="_blank" rel="sponsored noopener" title="Open this sale on eBay">${t} ↗</a>`:`<a>${t}</a>`}).join('')}</td></tr>`:'';
 async function loadExact(c){if(!MEMBER)return;const box=$('#pxexact');if(!box)return;const id=c.s+':'+c.n;
-  const salesP=sbc()?sb.rpc('member_card_sales',{p_card_id:id}).then(r=>r.error?[]:(r.data||[])).catch(()=>[]):Promise.resolve([]);
+  const salesP=cardComps(id);
   if(!EST)await loadEstimates();const b=$('#pxexact');if(!b||sel<0||list[sel]!==c)return;
   if(!EST){b.innerHTML='<p class="none">Could not load price estimates.</p>';return}
   const rows=(EST.get(id)||[]).slice().sort((a,b)=>(a.edition!=='1st Edition')-(b.edition!=='1st Edition')||String(a.printing).localeCompare(b.printing)||(a.grader!=='Raw')-(b.grader!=='Raw')||(parseFloat(b.grade)||0)-(parseFloat(a.grade)||0));
@@ -560,6 +579,8 @@ document.addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t
   else if(t.dataset.set){S=Object.assign(S0(),{set:t.dataset.set});view('cards');writeHash();renderCards(true);scrollTo(0,0)}
   else if(t.dataset.v){e.preventDefault();if(t.dataset.v==='sets'){history.replaceState(null,'','#sets');view('sets')}else if(t.dataset.v==='mine'){if(!ME&&!gCount()){openAuth('up');return}history.replaceState(null,'','#mine');view('mine');scrollTo(0,0)}else{writeHash();view('cards')}}
   else collClick(t,e)});
+document.addEventListener('change',e=>{const t=e.target;if(!t.matches||!t.matches('select[data-cond]'))return;const c=list[sel];if(!c)return;
+  const [p,ed]=combos(c)[+t.dataset.cond],k=ck(cid(c),p,ed,'have'),a=condsOf(k);a[+t.dataset.ci]=t.value;setItem(c,p,ed,'have',COLL.get(k)||0,a)});
 document.addEventListener('keydown',e=>{if($('#ov').hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')openCard((sel+1)%list.length);if(e.key==='ArrowLeft')openCard((sel-1+list.length)%list.length)});
 new IntersectionObserver(es=>{if(es[0].isIntersecting&&!$('#more').hidden)renderCards(false)},{rootMargin:'600px'}).observe($('#more'));
 
@@ -573,10 +594,13 @@ function track(kind,o){try{fetch(SUPA+'/rest/v1/site_events',{method:'POST',keep
 let trackT;
 // ---------- accounts: haves & wants (Supabase auth; each person's rows are private to them, RLS) ----------
 let sb=null,ME=null,MYP=null,MEMBER=false,MYBADGE=null;const COLL=new Map();
+// Condition per have copy (David, 2026-11-26): CONDS key = have key, value = one condition per copy. New copies start NM.
+const CONDS=new Map(),CONDL=[['NM','Near Mint'],['LP','Lightly Played'],['MP','Moderately Played'],['HP','Heavily Played'],['DMG','Damaged']],CONDOK=new Set(CONDL.map(x=>x[0]));
+function condsOf(k){const q=COLL.get(k)||0,a=(CONDS.get(k)||[]).filter(x=>CONDOK.has(x)).slice(0,q);while(a.length<q)a.push('NM');return a}
 // Guest collection: signed-out visitors can mark haves, wants and slabs. It lives in this browser until they sign up, then moves into their account.
 let SLABS=[],SLABFORM='',GSH=false;const GKEY='jonin_guest_v1';
-function gLoad(){try{const g=JSON.parse(localStorage.getItem(GKEY)||'{}');(g.items||[]).forEach(([k,q])=>COLL.set(k,q));SLABS=Array.isArray(g.slabs)?g.slabs:[];GSH=!!g.slabsHave}catch(_){}}
-function gSave(){try{if(!COLL.size&&!SLABS.length&&!GSH)localStorage.removeItem(GKEY);else localStorage.setItem(GKEY,JSON.stringify({items:[...COLL],slabs:SLABS,slabsHave:GSH}))}catch(_){}}
+function gLoad(){try{const g=JSON.parse(localStorage.getItem(GKEY)||'{}');(g.items||[]).forEach(([k,q])=>COLL.set(k,q));(g.conds||[]).forEach(([k,a])=>{if(Array.isArray(a))CONDS.set(k,a)});SLABS=Array.isArray(g.slabs)?g.slabs:[];GSH=!!g.slabsHave}catch(_){}}
+function gSave(){try{if(!COLL.size&&!SLABS.length&&!GSH)localStorage.removeItem(GKEY);else localStorage.setItem(GKEY,JSON.stringify({items:[...COLL],conds:[...CONDS].filter(([k])=>COLL.has(k)),slabs:SLABS,slabsHave:GSH}))}catch(_){}}
 // Profile setting: slabs count toward haves. Each slab remembers if it added a have, so removing it takes exactly that one back.
 const slabsHave=()=>ME?!!(MYP&&MYP.slabs_count_as_haves):GSH;
 function gCount(){return new Set([...COLL.keys()].map(k=>k.split('|')[0]).concat(SLABS.map(s=>s.card_id))).size}
@@ -625,7 +649,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('[data-sellgo]'))retu
   if(l&&navigator.clipboard)navigator.clipboard.writeText('My Jonin collection ('+plural(sellCount(),'card')+'):\n'+l).catch(()=>{})});
 function toast(msg){const t=document.createElement('div');t.className='gtoast';t.setAttribute('role','status');t.innerHTML='<span>'+esc(msg)+'</span><button class="x" aria-label="Dismiss">×</button>';t.querySelector('.x').onclick=()=>t.remove();document.body.appendChild(t);setTimeout(()=>t.remove(),6000)}
 async function mergeGuest(g){const rows=[];
-  g.items.forEach(([k,q])=>{const a=k.split('|');const cur=COLL.get(k)||0;const n=Math.max(cur,q);if(n!==cur){COLL.set(k,n);rows.push({user_id:ME.id,card_id:a[0],printing:a[1],edition:a[2],kind:a[3],qty:n,updated_at:new Date().toISOString()})}});
+  g.items.forEach(([k,q])=>{const a=k.split('|');const cur=COLL.get(k)||0;const n=Math.max(cur,q);if(n!==cur){COLL.set(k,n);if(a[3]==='have'&&n>cur&&g.conds&&g.conds.get(k))CONDS.set(k,g.conds.get(k));const row={user_id:ME.id,card_id:a[0],printing:a[1],edition:a[2],kind:a[3],qty:n,updated_at:new Date().toISOString()};if(a[3]==='have')row.conds=condsOf(k);rows.push(row)}});
   let ok=true;if(rows.length){const r=await sb.from('collection_items').upsert(rows);if(r.error)ok=false}
   if(g.slabs.length){const r=await sb.from('collection_slabs').insert(g.slabs.map(s=>({card_id:s.card_id,printing:s.printing,edition:s.edition,grader:s.grader,grade:s.grade,cert:s.cert||null,counted:!!s.counted}))).select('id,card_id,printing,edition,grader,grade,cert,counted');if(r.error)ok=false;else SLABS=SLABS.concat(r.data||[])}
   if(g.slabsHave&&MYP&&!MYP.slabs_count_as_haves){const r=await sb.from('profiles').update({slabs_count_as_haves:true}).eq('id',ME.id).select().maybeSingle();if(!r.error&&r.data)MYP=r.data}
@@ -636,8 +660,8 @@ function qtyOf(c,kind){let n=0;for(const [k,v] of COLL)if(k.startsWith(cid(c)+'|
 function marks(c){if(!ME&&!COLL.size&&!SLABS.length)return '<span class="mk"></span>';const h=qtyOf(c,'have'),w=qtyOf(c,'want');const sl=SLABS.filter(x=>x.card_id===cid(c));return `<span class="mk">${h?`<span class="h" title="You have ${h}">✓ ${h}</span>`:''}${w?'<span class="w" title="On your wants">♡</span>':''}${sl.length?`<span class="sl" title="${esc(sl.map(x=>x.grader+' '+x.grade).join(', '))}">▣ ${esc(sl[0].grader+' '+sl[0].grade)}${sl.length>1?' +'+(sl.length-1):''}</span>`:''}</span>`}
 function refreshMarks(){if(VIEW==='sets'&&D)renderSets();document.querySelectorAll('.card[data-i]').forEach(b=>{const c=list[+b.dataset.i];const m=b.querySelector('.mk');if(c&&m)m.outerHTML=marks(c)})}
 function sbc(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPA,SUPA_KEY);return sb}
-async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;MYBADGE=null;NMNEXT=undefined;NMEDIT=false;LISTS=[];LITEMS=new Map();OPENL='';
-  if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty').limit(20000),sb.from('memberships').select('active,until,founding').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>COLL.set(ck(i.card_id,i.printing,i.edition,i.kind),i.qty));SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));MYBADGE=MEMBER?(m.founding?'founding':'premium'):null;loadFbPts();loadLists();
+async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],conds:new Map(CONDS),slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();CONDS.clear();COMPS.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;MYBADGE=null;NMNEXT=undefined;NMEDIT=false;LISTS=[];LITEMS=new Map();OPENL='';
+  if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty,conds').limit(20000),sb.from('memberships').select('active,until,founding').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>{const k=ck(i.card_id,i.printing,i.edition,i.kind);COLL.set(k,i.qty);if(Array.isArray(i.conds))CONDS.set(k,i.conds)});SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));MYBADGE=MEMBER?(m.founding?'founding':'premium'):null;loadFbPts();loadLists();
     if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest);
     // Theme follows the account across devices.
     if(MYP&&MYP.theme&&window.joninSetTheme){let cur='';try{cur=localStorage.getItem('jtheme')||''}catch(_){}if(cur!==MYP.theme)joninSetTheme(MYP.theme)}
@@ -688,13 +712,14 @@ $('#authform').addEventListener('submit',async e=>{e.preventDefault();const f=e.
     else{r=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/#reset'});if(r.error)throw r.error;m.textContent='If that email has an account, a reset link is on its way.';btn.disabled=false;return}
     $('#authov').hidden=true}
   catch(x){err(x.message||'Something went wrong.')}btn.disabled=false});
-async function setItem(c,p,ed,kind,qty){const id=cid(c),k=ck(id,p,ed,kind),before=COLL.get(k);
+async function setItem(c,p,ed,kind,qty,conds){const id=cid(c),k=ck(id,p,ed,kind),before=COLL.get(k),cbefore=CONDS.get(k);
+  if(kind==='have'){const a=conds||condsOf(k);while(a.length<qty)a.push('NM');a.length=Math.max(0,qty);if(qty>0)CONDS.set(k,a);else CONDS.delete(k)}
   if(qty>0)COLL.set(k,qty);else COLL.delete(k);renderMyColl(c);refreshMarks();
   if(qty>0&&kind==='have'){if(!askAtThird(c))progToast(c);setTimeout(sellAsk,2500)}
   if(qty>0&&!before&&window.jtrack)jtrack('collection-add',{kind,signed_in:!!ME});
   if(!ME){gSave();paintAcct();return}
-  const r=qty>0?await sb.from('collection_items').upsert({user_id:ME.id,card_id:id,printing:p,edition:ed,kind,qty,updated_at:new Date().toISOString()}):await sb.from('collection_items').delete().match({user_id:ME.id,card_id:id,printing:p,edition:ed,kind});
-  if(r.error){if(before)COLL.set(k,before);else COLL.delete(k);renderMyColl(c);refreshMarks();const b=$('#mycoll');if(b)b.insertAdjacentHTML('beforeend','<p class="mt" style="color:#ff8b8b;margin:0">Could not save. Check your connection and try again.</p>')}}
+  const r=qty>0?await sb.from('collection_items').upsert(Object.assign({user_id:ME.id,card_id:id,printing:p,edition:ed,kind,qty,updated_at:new Date().toISOString()},kind==='have'?{conds:condsOf(k)}:{})):await sb.from('collection_items').delete().match({user_id:ME.id,card_id:id,printing:p,edition:ed,kind});
+  if(r.error){if(before)COLL.set(k,before);else COLL.delete(k);if(cbefore)CONDS.set(k,cbefore);else CONDS.delete(k);renderMyColl(c);refreshMarks();const b=$('#mycoll');if(b)b.insertAdjacentHTML('beforeend','<p class="mt" style="color:#ff8b8b;margin:0">Could not save. Check your connection and try again.</p>')}}
 const combos=c=>{const eds=(c.ed||[]).filter(Boolean);const ps=(c.v&&c.v.length?c.v:['Normal']);return (eds.length?eds:['']).flatMap(e=>ps.map(p=>[p,e]))};
 const GRADERS=['PSA','BGS','CGC','SGC','TAG','Other'];
 function slabBlock(c){const id=cid(c),mine=SLABS.filter(s=>s.card_id===id),cs=combos(c);
@@ -710,7 +735,20 @@ function renderMyColl(c){const box=$('#mycoll');if(!box)return;const n=gCount();
   box.innerHTML='<h4>Your collection</h4>'+note+combos(c).map(([p,e],j)=>{const h=COLL.get(ck(cid(c),p,e,'have'))||0,w=COLL.has(ck(cid(c),p,e,'want'));const f=FOILS[p];
     return `<div class="mrow"><span>${f?`<span class="fx f-${f[0]}" style="font-size:5px;vertical-align:middle;margin-right:6px" aria-hidden="true"></span>`:''}${esc(p)}${e?` · <span class="mt">${esc(e)}</span>`:''}</span>
     <span class="step${h?' on':''}" aria-label="How many you have"><button data-have="${j}" data-d="-1" aria-label="One less">−</button><b>${h}</b><button data-have="${j}" data-d="1" aria-label="One more">+</button></span>
-    <button class="wt" data-want="${j}" aria-pressed="${w}">♡ Want</button></div>`}).join('')+slabBlock(c)+listBlock(c)}
+    <button class="wt" data-want="${j}" aria-pressed="${w}">♡ Want</button></div>${h?condBlock(c,p,e,j):''}`}).join('')+slabBlock(c)+listBlock(c);
+  if(MEMBER&&combos(c).some(([p,e])=>COLL.get(ck(cid(c),p,e,'have')))&&!COMPS.has(cid(c)))cardComps(cid(c)).then(()=>{if(sel>=0&&list[sel]===c)renderMyColl(c)})}
+// Condition of each copy (new copies start NM), and for Premium: the price for that condition plus the matching sold comps.
+const CMAX=12;
+function condBlock(c,p,e,j){const k=ck(cid(c),p,e,'have'),cs=condsOf(k),id=cid(c);
+  const pick=(cd,i)=>`<select class="cnd" data-cond="${j}" data-ci="${i}" aria-label="Condition of copy ${i+1}">${CONDL.map(([v,l])=>`<option value="${v}"${v===cd?' selected':''} title="${l}">${v}</option>`).join('')}</select>`;
+  const sel=`<div class="cnds"><span class="mt">${cs.length>1?'Condition of each copy':'Condition'}</span>${cs.slice(0,CMAX).map(pick).join('')}${cs.length>CMAX?`<span class="mt">+${cs.length-CMAX} more (NM)</span>`:''}</div>`;
+  if(!MEMBER)return sel+`<a class="cpx lock" href="/premium/">⭐ Price for this condition and matching sold comps · Premium</a>`;
+  if(!EST)return sel;
+  const done=COMPS.get(id),all=done&&done.v||null,uniq=[...new Set(cs)];
+  return sel+uniq.map(cd=>{const est=estCond(id,p,e,cd),n=cs.filter(x=>x===cd).length;
+    const cm=all?compsFor(all,p,e,cd).slice(0,3):[];
+    const val=est?`<b>≈ ${money(+est.estimate)}</b>${n>1?` <span class="mt">each · ${money(est.estimate*n)} for ${n}</span>`:''}<span class="mt"> · ${est.exact?plural(est.sales_count,cd+' sale'):'no '+cd+' sales yet, all-conditions estimate'}</span>`:`<span class="mt">No sales of this version yet</span>`;
+    return `<div class="cpx"><span class="cb">${cd}</span>${val}${cm.length?`<span class="cmps">${cm.map(x=>{const t=`${money(+x.price)} · ${esc(shortDate(x.sold_at))}`;return /^https:\/\//.test(x.url||'')?`<a href="${esc(x.url)}${x.url.includes('?')?'&amp;':'?'}${EPN}" target="_blank" rel="sponsored noopener" title="Open this ${cd} comp on eBay">${t} ↗</a>`:`<a>${t}</a>`}).join('')}</span>`:''}</div>`}).join('')}
 async function saveSlab(c){const f=$('#slabf');if(!f)return;const msg=$('#slabmsg');const cs=combos(c),j=f.querySelector('[name=v]')?+f.querySelector('[name=v]').value:0;const [p,e]=cs[j]||['Normal',''];
   const grade=f.querySelector('[name=gr]').value.trim(),cert=f.querySelector('[name=ce]').value.trim(),grader=f.querySelector('[name=g]').value;
   if(!grade){msg.textContent='Add the grade.';return}
@@ -765,17 +803,18 @@ function estFor(card,printing,edition,grader,grade){const rows=(EST&&EST.get(car
   const ok=r=>(r.grader||'Raw')===g&&(g==='Raw'||String(r.grade||'')===String(grade||''))&&r.printing===printing;
   const ed=x=>x||'Unlimited';return rows.find(r=>ok(r)&&ed(r.edition)===ed(edition))||rows.filter(ok).sort((a,b)=>b.sales_count-a.sales_count)[0]||null}
 function collValue(src){let raw=0,rawN=0,rawAll=0,sl=0,slN=0;const per=new Map();
-  for(const [k,q] of src){const a=k.split('|');if(a[3]!=='have'||!q)continue;rawAll+=q;const e=estFor(a[0],a[1],a[2]);if(e){const v=+e.estimate*q;raw+=v;rawN+=q;per.set(a[0],(per.get(a[0])||0)+v)}}
+  for(const [k,q] of src){const a=k.split('|');if(a[3]!=='have'||!q)continue;rawAll+=q;const cs=src===COLL?condsOf(k):Array(q).fill('NM');for(const cd of cs){const e=estCond(a[0],a[1],a[2],cd);if(e){raw+=+e.estimate;rawN++;per.set(a[0],(per.get(a[0])||0)+(+e.estimate))}}}
   for(const x of SLABS){const e=estFor(x.card_id,x.printing,x.edition,x.grader,x.grade);if(e){sl+=+e.estimate;slN++;per.set(x.card_id,(per.get(x.card_id)||0)+(+e.estimate))}}
   return {raw,rawN,rawAll,sl,slN,slAll:SLABS.length,per}}
 const lockStat=l=>`<a class="lstat" href="/premium/"><b>⭐</b><span>${l} · Premium</span></a>`;
 const badgeHtml=b=>b==='founding'?'<span class="pbadge fnd2" title="One of the first 20 members">⭐ Founding member</span>':b==='premium'?'<span class="pbadge" title="Jonin Premium member">⭐ Premium</span>':'';
 function csvCell(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
-function exportColl(){if(!MEMBER)return;const byId=new Map(D.cards.map(c=>[cid(c),c])),rows=[['Type','Set','Set name','Number','Name','Rarity','Printing','Edition','Qty','Grader','Grade','Cert','Estimate each','Estimated value']];
+function exportColl(){if(!MEMBER)return;const byId=new Map(D.cards.map(c=>[cid(c),c])),rows=[['Type','Set','Set name','Number','Name','Rarity','Printing','Edition','Condition','Qty','Grader','Grade','Cert','Estimate each','Estimated value']];
   const info=id=>{const c=byId.get(id)||{};return [c.s?setLabel(D.byId[c.s]||{id:c.s,kind:''}):'',c.s?setName(c.s):'',c.n||id,c.name||'',RNAME[c.src]||c.r||'']};
   const num=v=>v==null?'':(+v).toFixed(2);
-  for(const [k,q] of COLL){const a=k.split('|');if(!q&&a[3]==='have')continue;const e=a[3]==='have'?estFor(a[0],a[1],a[2]):null;rows.push([a[3]==='have'?'Have':'Want',...info(a[0]),a[1],a[2],a[3]==='have'?q:'','','','',e?num(e.estimate):'',e?num(e.estimate*q):''])}
-  for(const x of SLABS){const e=estFor(x.card_id,x.printing,x.edition,x.grader,x.grade);rows.push(['Slab',...info(x.card_id),x.printing,x.edition,1,x.grader,x.grade,x.cert||'',e?num(e.estimate):'',e?num(e.estimate):''])}
+  for(const [k,q] of COLL){const a=k.split('|');if(!q&&a[3]==='have')continue;if(a[3]!=='have'){rows.push(['Want',...info(a[0]),a[1],a[2],'','','','','','',''].slice(0,15));continue}
+    const by={};condsOf(k).forEach(cd=>by[cd]=(by[cd]||0)+1);for(const [cd,n] of Object.entries(by)){const e=estCond(a[0],a[1],a[2],cd);rows.push(['Have',...info(a[0]),a[1],a[2],cd,n,'','','',e?num(e.estimate):'',e?num(e.estimate*n):''])}}
+  for(const x of SLABS){const e=estFor(x.card_id,x.printing,x.edition,x.grader,x.grade);rows.push(['Slab',...info(x.card_id),x.printing,x.edition,'',1,x.grader,x.grade,x.cert||'',e?num(e.estimate):'',e?num(e.estimate):''])}
   const blob=new Blob(['﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='jonin-collection-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 function collStats(src){let copies=0,first=0,foil=0;const have=new Set(),want=new Set();
