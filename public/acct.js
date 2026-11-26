@@ -278,7 +278,7 @@
     var d=document.createElement('div');d.className='jmo jsi jup';
     d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph"><button class="jmx" type="button" aria-label="Close">×</button>'+
       '<h2 id="juph">'+u.h+'</h2><p class="jsr">'+u.p+'</p><ul>'+
-      ['Exact prices by edition, foil and grade','Every sold listing, linked to the sale','Price estimates and sort by market value','Alerts for the cards you’re hunting','Your collection value, a spreadsheet export and a badge']
+      ['Exact prices by edition, foil and grade','Every sold listing, linked to the sale','Price estimates and sort by market value','Alerts for the cards you’re hunting','Alt Art /20 sniper alerts','Your collection value, a spreadsheet export and a badge']
         .map(function(t){return '<li><span>'+t+'</span><b>✓</b></li>'}).join('')+
       '</ul><div class="jsb"><a class="jmgo" href="/#mine">See my collection</a><button type="button" class="jsl">Close</button></div></div>';
     var go=function(){if(!document.body)return setTimeout(go,50);document.body.appendChild(d);if(window.jtrack)jtrack('upgrade-popup',{kind:kind})};go();
