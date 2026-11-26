@@ -3,7 +3,7 @@ title: The 10 biggest Naruto CCG sales we've tracked
 description: The highest Bandai Naruto CCG sales checked on Jonin, led by a $30,000 1st Edition Pain & Itachi PSA 10.
 date: 2026-11-26
 cover: 20:N-1096
-draft: true
+draft: false
 ---
 The original Bandai Naruto CCG (2006 to 2013) is having its biggest run since the game ended. Jonin has checked 334 sales by hand so far. Sixteen of them went for $10,000 or more, spread across seven different cards, and every one of those happened since late August 2026.
 
