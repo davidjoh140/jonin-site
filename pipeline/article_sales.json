@@ -47,22 +47,6 @@
   "src": "eBay",
   "url": "https://www.ebay.com/itm/860062174996"
  },
- "172": {
-  "c": "6:N-US-037",
-  "p": 9000,
-  "d": "2026-10-05",
-  "v": "1st Edition \u00b7 Diamond foil \u00b7 BGS 9.5",
-  "src": "eBay",
-  "url": "https://www.ebay.com/itm/206448262240"
- },
- "173": {
-  "c": "T3:PR-073",
-  "p": 9000,
-  "d": "2026-10-15",
-  "v": "Normal \u00b7 PSA 10",
-  "src": "eBay",
-  "url": "https://www.ebay.com/itm/287643990898"
- },
  "182": {
   "c": "P:PR088",
   "p": 18000,
@@ -86,5 +70,13 @@
   "v": "1st Edition \u00b7 Full art \u00b7 PSA 10",
   "src": "eBay",
   "url": "https://www.ebay.com/itm/168782484140"
+ },
+ "639": {
+  "c": "24:N-1395",
+  "p": 12500,
+  "d": "2026-09-16",
+  "v": "1st Edition \u00b7 Full art \u00b7 PSA 10",
+  "src": "eBay",
+  "url": "https://www.ebay.com/itm/287590409325"
  }
 }
