@@ -1,0 +1,1 @@
+-- Applied 2026-11-26 (migration last_seen): profiles.last_seen_at, touch_seen() (authenticated, throttled 5 min), admin_accounts() now returns last_seen_at = greatest(last_seen_at, last_sign_in_at). Back-filled from last sign-in.

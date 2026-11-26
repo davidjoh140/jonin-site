@@ -225,6 +225,12 @@
       .catch(function(st){if(typeof st==='number'&&st!==401){try{localStorage.removeItem(IK)}catch(_){}}}).then(function(){claiming=false});
   }
   claimInvite();setInterval(claimInvite,5000);
+  // ---- last seen (2026-11-26): tells Supabase this member opened a page, at most every 5 minutes (touch_seen). Shown on /admin/ → Accounts.
+  var SK='jonin_seen';
+  function seen(){var s=session();if(!s||(s.expires_at&&s.expires_at*1000<Date.now()+5000))return;var l=ls(SK);
+    if(l&&l.u===s.user.id&&Date.now()-l.t<3e5)return;try{localStorage.setItem(SK,JSON.stringify({u:s.user.id,t:Date.now()}))}catch(_){}
+    fetch(SUPA+'/rest/v1/rpc/touch_seen',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:'{}'}).catch(function(){})}
+  seen();setInterval(seen,6e4);document.addEventListener('visibilitychange',function(){if(!document.hidden)seen()});
   window.addEventListener('storage',function(e){if(e.key===TK)claimInvite()});
 
   window.JoninAcct={html:html,cache:cache,cached:function(){return ls(CK)},icon:ICON,label:LABEL,refresh:function(){LAST='';load()}};
