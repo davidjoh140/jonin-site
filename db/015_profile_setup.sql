@@ -1,7 +1,7 @@
 -- Applied to Supabase on 2026-11-26 (migration profile_setup). Kept here as the record.
 -- Setup page after sign-up (/welcome/, David 2026-11-26): favorite characters, a few questions, theme. Skippable.
 -- fav_characters: up to 3 character slugs, first = main favorite (also written to fav_character, which the site already uses).
--- found_via / collector_types / email_updates: the setup questions (PLACEHOLDER wording, David to confirm).
+-- found_via / collector_types / email_updates: the setup questions (wording confirmed by David, 2026-11-26).
 -- theme: theme id from theme.js, so it follows them to other devices.
 -- setup_done_at: set when they finish OR skip, so the page is only shown once.
 alter table public.profiles

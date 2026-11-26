@@ -51,8 +51,8 @@ const $=s=>document.querySelector(s),wz=$('#wz');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Where to go after setup: the page they signed up on (set by the homepage before sending them here).
 let RET='/';try{RET=sessionStorage.getItem('jret')||'/'}catch(_){}if(!RET.startsWith('/')||RET.startsWith('/welcome'))RET='/';
-const MAXFAV=3;   // PLACEHOLDER: up to 3 favorite characters (first one = main favorite)
-// PLACEHOLDER questions and answers (David to confirm wording/options).
+const MAXFAV=3;   // up to 3 favorite characters, first one = main favorite (David confirmed 2026-11-26)
+// Setup questions and answers (David confirmed 2026-11-26).
 const FOUND=[['reddit','Reddit'],['instagram','Instagram'],['facebook','Facebook group'],['search','Google / search'],['friend','A friend'],['other','Somewhere else']];
 const TYPES=[['collector','Collector'],['player','Player'],['seller','Seller / vendor'],['investor','Investor'],['new','Just getting into it']];
 let sb,USER,CHARS=[],STEP=0,A={fav:[],found:null,types:[],email:false,theme:null};
