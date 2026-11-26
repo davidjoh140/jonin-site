@@ -175,7 +175,7 @@ def reveal_top_prices(data, sales, fetch=None):
     best = best_sales(sales)
     shown = 0
     for ch in bp.load_chars():
-        if ch["slug"] not in MOST_VALUABLE_CHARACTERS:
+        if MOST_VALUABLE_CHARACTERS != "all" and ch["slug"] not in MOST_VALUABLE_CHARACTERS:
             continue
         cs = bp.char_cards(ch, data["cards"])
         if not bp.mv_live(cs):

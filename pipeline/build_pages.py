@@ -834,7 +834,7 @@ def main():
     char_lists = {ch['slug']: char_cards(ch, d['cards']) for ch in chars}
     ranked = {}
     for ch in chars:
-        if ch['slug'] in MOST_VALUABLE_CHARACTERS:
+        if MOST_VALUABLE_CHARACTERS == 'all' or ch['slug'] in MOST_VALUABLE_CHARACTERS:
             cs = char_cards(ch, d['cards'])
             ranked[ch['slug']] = most_valuable(cs)
             ch['mv'] = bool(ranked[ch['slug']]) and mv_live(cs)
