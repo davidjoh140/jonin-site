@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Members, waitlist, sales &amp; feedback — Jonin admin</title>
+<title>Accounts, members, waitlist, sales &amp; feedback — Jonin admin</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -33,14 +33,21 @@ button.ghost{background:none;color:var(--mute);border-color:var(--line);min-heig
 .gate{max-width:440px}
 form.psale{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end}form.psale .wide{grid-column:span 2}
 @media(max-width:760px){form.psale{grid-template-columns:1fr 1fr}form.psale .wide{grid-column:1/-1}}
+.jump{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}.jump a{padding:6px 12px;border:1px solid var(--line);border-radius:99px;color:var(--mute);text-decoration:none;font-size:13px}.jump a:hover{color:var(--ink);border-color:var(--acc)}
+h2.big{font-size:30px;margin-top:40px}#acc h2.big{margin-top:24px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.fs{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}.fs b{font:800 18px "Baloo 2",sans-serif;color:#F2C14E;margin-right:6px}.fs.open{border-style:dashed;color:var(--mute)}.fs .tag{display:block}
+.st.f{background:#3A2E10;color:#F2C14E}
 select{width:100%;min-height:42px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:15px Inter,sans-serif}
 </style>
 </head>
 <body>
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a><span class="tag">Admin</span></div></header>
 <main>
-  <h1>Premium members</h1>
-  <p class="mt">Everyone with Premium, free or paid. Give it to anyone by email; if they don't have an account yet, it turns on when they sign up with that email.</p>
+  <h1>Jonin admin</h1>
+  <nav class="jump" id="jump" hidden><a href="#acc">Accounts</a><a href="#founders">Founding members</a><a href="#prem">Premium members</a><a href="#wl">Waitlist</a><a href="#ps">Add a sale</a><a href="#fb">Feedback</a></nav>
+  <section id="acc"></section>
+  <h2 id="prem" class="big" hidden>Premium members</h2>
+  <p class="mt" id="premnote" hidden>Everyone with Premium, free or paid. Give it to anyone by email; if they don't have an account yet, it turns on when they sign up with that email.</p>
   <div id="app"><p class="mt" style="margin-top:20px">Loading…</p></div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"></script>
@@ -59,6 +66,7 @@ async function load(){
   if(!session)return gate('Sign in with your Jonin account to manage members.');
   const {data:adm}=await sb.rpc('is_admin');
   if(!adm)return gate('This account doesn\'t have admin access. Sign in with the owner account.');
+  loadAcc();$('#jump').hidden=false;$('#prem').hidden=false;$('#premnote').hidden=false;
   const {data,error}=await sb.rpc('admin_members');
   if(error){app.innerHTML=`<p class="msg err">${esc(error.message)}</p>`;return}
   const rows=data||[],n=s=>rows.filter(r=>r.status.startsWith(s)).length;
@@ -79,6 +87,24 @@ async function load(){
   loadWl();
   loadPs();
   loadFb();
+}
+// Accounts: everyone who made an account, plus the founding members (first 20 non-admin sign-ups get Premium free forever).
+const ago=d=>{if(!d)return '';const m=Math.round((Date.now()-new Date(d))/6e4);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'};
+const when=d=>d?new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+async function loadAcc(){const el=$('#acc');const r=await sb.rpc('admin_accounts');
+  if(r.error){el.innerHTML=`<h2 class="big">Accounts</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
+  const rows=r.data||[],real=rows.filter(x=>!x.is_admin),day1=real.filter(x=>new Date(x.created_at)>Date.now()-864e5).length,wk=real.filter(x=>new Date(x.created_at)>Date.now()-7*864e5).length;
+  const fnd=real.filter(x=>x.founding&&x.founder_no).sort((a,b)=>a.founder_no-b.founder_no),TOTAL=20;
+  const who=x=>x.handle?`@${esc(x.handle)}`:esc(x.email);
+  const slots=Array.from({length:TOTAL},(_,i)=>{const x=fnd.find(f=>f.founder_no===i+1);return x?`<div class="fs"><b>#${i+1}</b>${who(x)}<span class="tag">${esc(x.email)}</span><span class="tag">joined ${when(x.created_at)}</span></div>`:`<div class="fs open"><b>#${i+1}</b>open</div>`}).join('');
+  el.innerHTML=`<h2 class="big">Accounts</h2>
+  <div class="stats"><div><b>${real.length}</b><span>Accounts (not counting you)</span></div><div><b>${day1}</b><span>Last 24 hours</span></div><div><b>${wk}</b><span>Last 7 days</span></div><div><b>${fnd.length}/${TOTAL}</b><span>Founding spots taken</span></div></div>
+  <h2 id="founders">Founding members</h2><p class="mt" style="margin-bottom:10px">The first ${TOTAL} people to make an account get Premium free, forever. ${Math.max(0,TOTAL-fnd.length)} spots left. New sign-ups fill the next spot automatically.${fnd.length?' <button class="ghost" id="fcopy">Copy founder emails</button>':''}</p>
+  <div class="fgrid">${slots}</div>
+  <h2>Everyone who made an account</h2><p class="mt" style="margin-bottom:10px">Newest first.${real.length?' <button class="ghost" id="acopy">Copy all emails</button>':''}</p>
+  <div class="tw box" style="padding:0"><table><thead><tr><th>Account</th><th>Joined</th><th>Last signed in</th><th>Signed up with</th><th>Premium</th><th>Collection</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.handle?`@${esc(x.handle)}<div class="tag">${esc(x.email)}</div>`:esc(x.email)}${x.is_admin?'<div class="tag">you (admin)</div>':''}</td><td>${when(x.created_at)}<div class="tag">${ago(x.created_at)}</div></td><td>${x.last_sign_in_at?when(x.last_sign_in_at):'<span class="tag">never</span>'}</td><td>${x.provider==='google'?'Google':x.provider==='discord'?'Discord':x.provider==='email'?'Email':esc(x.provider)}</td><td>${x.founding&&x.founder_no?`<span class="st f">⭐ Founder #${x.founder_no}</span>`:x.premium==='active'?'<span class="st active">active</span>':`<span class="tag">${x.premium==='none'?'—':esc(x.premium)}</span>`}</td><td>${x.cards_have?`${x.cards_have} card${x.cards_have===1?'':'s'}`:'<span class="tag">none yet</span>'}${x.slabs?`<div class="tag">${x.slabs} slab${x.slabs===1?'':'s'}</div>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="tag">No accounts yet.</td></tr>'}</tbody></table></div>`;
+  const fc=$('#fcopy');if(fc)fc.onclick=async()=>{await navigator.clipboard.writeText(fnd.map(x=>x.email).join(', '));fc.textContent='Copied ✓'};
+  const ac=$('#acopy');if(ac)ac.onclick=async()=>{await navigator.clipboard.writeText(real.map(x=>x.email).join(', '));ac.textContent='Copied ✓'};
 }
 // Premium waitlist: emails from the "Get early access" form on /premium/ (and card pages' alert buttons).
 async function loadWl(){let el=$('#wl');if(!el){app.insertAdjacentHTML('beforeend','<div id="wl"></div>');el=$('#wl')}
