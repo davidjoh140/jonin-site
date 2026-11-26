@@ -271,15 +271,44 @@
   // When David gives someone Jonin Club or Founding member from /admin/, Supabase sets memberships.upgrade_notice.
   // The next page they open while signed in shows this once; dismiss_upgrade_notice clears it as soon as it shows.
   // PLACEHOLDER wording for David to change.
-  var UPG={founding:{h:'⭐ You’re a Founding member',p:'You’ve been made one of Jonin’s founding members. Jonin Club is yours free, forever, and your profile now shows the founding ring.'},
-           premium:{h:'You’re in Jonin Club',p:'You’ve been upgraded to Jonin Club. Everything below is unlocked on your account now.'}};
+  var UPG={founding:{h:'You’re a Founding member',p:'You’ve been made one of Jonin’s founding members. Jonin Club is yours free, forever, and your profile now shows the founding ring.'},
+           premium:{h:'Welcome to Jonin Club',p:'You’ve been upgraded to Jonin Club. Everything below is unlocked on your account now.'}};
+  // Look: gold-edged box with a slow shine, a big cut gem badge, twinkling diamonds and diamond bullets.
+  // Founding = gold gem, Jonin Club = violet gem (PLACEHOLDER colors). Motion is off for people who ask for reduced motion.
+  var GEM=function(id,a,b,c){return '<svg viewBox="0 0 64 56" aria-hidden="true"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+a+'"/><stop offset=".55" stop-color="'+b+'"/><stop offset="1" stop-color="'+c+'"/></linearGradient></defs>'+
+    '<path d="M14 2h36l14 16-32 36L0 18z" fill="url(#'+id+')"/><path d="M0 18h64M14 2l8 16 10 36M50 2l-8 16-10 36M22 18 32 2l10 16" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.4" stroke-linejoin="round"/>'+
+    '<path d="M14 2h36l-8 16H22z" fill="rgba(255,255,255,.28)"/></svg>'};
+  var DIA='<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0 10 5 5 10 0 5z"/></svg>';
+  function upgradeCss(){if(upgradeCss.on)return;upgradeCss.on=1;var c=document.createElement('style');c.textContent=
+    '.jup .jmbox{--g1:#FFE7A3;--g2:#F2C14E;--g3:#B8860B;width:min(470px,100%);overflow:hidden;text-align:center;align-items:stretch;border:2px solid transparent;'+
+      'background:linear-gradient(var(--deep,#17121D),var(--deep,#17121D)) padding-box,linear-gradient(135deg,var(--g1),var(--g3) 40%,var(--g1) 60%,var(--g3)) border-box;'+
+      'box-shadow:0 0 0 1px rgba(242,193,78,.15),0 0 60px -10px var(--g2),0 30px 80px -20px rgba(0,0,0,.8);animation:jupIn .5s cubic-bezier(.2,1.4,.4,1) both}'+
+    '.jup.club .jmbox{--g1:#E7D4FF;--g2:#A86BFF;--g3:#5B2BB5}'+
+    '.jup .jmbox:before{content:"";position:absolute;inset:0;background:radial-gradient(120% 60% at 50% 0,color-mix(in srgb,var(--g2) 28%,transparent),transparent 70%);pointer-events:none}'+
+    '.jup .jmbox:after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.13),transparent);transform:skewX(-18deg);animation:jupShine 3.2s 1s ease-in-out infinite;pointer-events:none}'+
+    '.jup .jgem{position:relative;width:92px;height:92px;margin:4px auto 2px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--g2) 40%,transparent),transparent 68%)}'+
+    '.jup .jgem>svg{width:64px;height:56px;filter:drop-shadow(0 4px 14px var(--g2));animation:jupFloat 3s ease-in-out infinite}'+
+    '.jup .jsp{position:absolute;fill:var(--g1);opacity:0;animation:jupTw 2.4s ease-in-out infinite}.jup .jsp svg{display:block;width:100%;height:100%}'+
+    '.jup .jkick{font:800 12px/1 Inter,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--g2)}'+
+    '.jup h2{font-size:28px;line-height:1.1;background:linear-gradient(90deg,var(--g1),var(--g2),var(--g1));-webkit-background-clip:text;background-clip:text;color:transparent}'+
+    '.jup .jsr{max-width:380px;margin:0 auto}.jup ul{text-align:left}.jup li{align-items:center;justify-content:flex-start!important;border-color:color-mix(in srgb,var(--g2) 30%,var(--edge,#3A3046))!important}'+
+    '.jup li i{flex:0 0 12px;width:12px;height:12px;fill:var(--g2);filter:drop-shadow(0 0 4px var(--g2))}.jup li i svg{display:block;width:100%;height:100%}'+
+    '.jup .jsb{justify-content:center}.jup .jsb .jsl{margin-left:0}'+
+    '.jup .jmgo{background:linear-gradient(135deg,var(--g1),var(--g2) 45%,var(--g3));color:#1B1622;font-weight:800;box-shadow:0 6px 20px -6px var(--g2)}'+
+    '@keyframes jupIn{from{opacity:0;transform:scale(.85) translateY(12px)}}@keyframes jupShine{0%{left:-60%}55%,100%{left:130%}}'+
+    '@keyframes jupFloat{50%{transform:translateY(-4px) rotate(-3deg)}}@keyframes jupTw{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1) rotate(45deg)}}'+
+    '@media (prefers-reduced-motion:reduce){.jup .jmbox,.jup .jmbox:after,.jup .jgem>svg,.jup .jsp{animation:none}.jup .jsp{opacity:.8}}';
+    document.head.appendChild(c)}
   function upgradeShow(kind,tok){var u=UPG[kind];if(!u||upgradeShow.on||/^\/admin\//.test(location.pathname))return false;upgradeShow.on=1;
-    rest('/rest/v1/rpc/dismiss_upgrade_notice',tok,{}).catch(function(){});
-    var d=document.createElement('div');d.className='jmo jsi jup';
-    d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph"><button class="jmx" type="button" aria-label="Close">×</button>'+
-      '<h2 id="juph">'+u.h+'</h2><p class="jsr">'+u.p+'</p><ul>'+
+    rest('/rest/v1/rpc/dismiss_upgrade_notice',tok,{}).catch(function(){});upgradeCss();
+    var f=kind==='founding',sp=[[10,6,16,0],[80,9,12,.6],[4,26,10,1.2],[93,24,16,.3],[3,58,12,1.6],[94,62,10,.9],[28,4,9,2],[68,3,10,1.4],[5,88,9,.5],[93,90,12,1.8]].map(function(x){
+      return '<span class="jsp" style="left:'+x[0]+'%;top:'+x[1]+'%;width:'+x[2]+'px;height:'+x[2]+'px;animation-delay:'+x[3]+'s">'+DIA+'</span>'}).join('');
+    var d=document.createElement('div');d.className='jmo jsi jup'+(f?'':' club');
+    d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph">'+sp+'<button class="jmx" type="button" aria-label="Close">×</button>'+
+      '<div class="jgem">'+(f?GEM('jgf','#FFF3C4','#F2C14E','#9A6B00'):GEM('jgc','#F1E6FF','#A86BFF','#4A1F9E'))+'</div>'+
+      '<div class="jkick">'+(f?'Founding member':'Jonin Club')+'</div><h2 id="juph">'+u.h+'</h2><p class="jsr">'+u.p+'</p><ul>'+
       ['Exact prices by edition, foil and grade','Every sold listing, linked to the sale','Price estimates and sort by market value','Alerts for the cards you’re hunting','Your collection value, a spreadsheet export and a badge']
-        .map(function(t){return '<li><span>'+t+'</span><b>✓</b></li>'}).join('')+
+        .map(function(t){return '<li><i>'+DIA+'</i><span>'+t+'</span></li>'}).join('')+
       '</ul><div class="jsb"><a class="jmgo" href="/#mine">See my collection</a><button type="button" class="jsl">Close</button></div></div>';
     var go=function(){if(!document.body)return setTimeout(go,50);document.body.appendChild(d);if(window.jtrack)jtrack('upgrade-popup',{kind:kind})};go();
     var close=function(){d.remove()};d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.jmx,.jsl'))close()});
