@@ -458,11 +458,11 @@ async function loadEstimates(){if(!MEMBER||!sbc()){EST=null;return}
   const rc=await sb.from('price_estimates_cond').select('card_id,printing,edition,condition,estimate,sales_count,last_sold_at,last_price').limit(20000);
   ESTC=new Map();if(!rc.error)(rc.data||[]).forEach(x=>{if(!ESTC.has(x.card_id))ESTC.set(x.card_id,[]);ESTC.get(x.card_id).push(x)})}
 // Conditional pricing: the RAW estimate of this exact version in this condition, from price-check sales with that condition.
-// PLACEHOLDER (for David): no sales in that condition -> use the version's all-conditions estimate, labelled as such.
+// David (2026-11-26): only condition-specific estimates. No sales in that condition = no price (the copy counts as unpriced).
 let ESTC=new Map();const COMPS=new Map();
 const edK=x=>x||'Unlimited';
 function estCond(card,printing,edition,cond){const r=(ESTC.get(card)||[]).find(x=>x.printing===printing&&edK(x.edition)===edK(edition)&&x.condition===cond);
-  if(r)return Object.assign({exact:true},r);const e=estFor(card,printing,edition);return e?Object.assign({exact:false},e):null}
+  return r?Object.assign({exact:true},r):null}
 // Approved price-check sales (comps) for a card, with condition. Cached per card while the page is open.
 function cardComps(id){if(!MEMBER||!sbc())return Promise.resolve([]);if(COMPS.has(id))return COMPS.get(id);
   const p=sb.rpc('member_card_comps',{p_card_id:id}).then(r=>r.error?sb.rpc('member_card_sales',{p_card_id:id}).then(r2=>r2.error?[]:(r2.data||[])):(r.data||[])).catch(()=>[]).then(v=>{p.v=v;return v});COMPS.set(id,p);return p}
@@ -747,7 +747,7 @@ function condBlock(c,p,e,j){const k=ck(cid(c),p,e,'have'),cs=condsOf(k),id=cid(c
   const done=COMPS.get(id),all=done&&done.v||null,uniq=[...new Set(cs)];
   return sel+uniq.map(cd=>{const est=estCond(id,p,e,cd),n=cs.filter(x=>x===cd).length;
     const cm=all?compsFor(all,p,e,cd).slice(0,3):[];
-    const val=est?`<b>≈ ${money(+est.estimate)}</b>${n>1?` <span class="mt">each · ${money(est.estimate*n)} for ${n}</span>`:''}<span class="mt"> · ${est.exact?plural(est.sales_count,cd+' sale'):'no '+cd+' sales yet, all-conditions estimate'}</span>`:`<span class="mt">No sales of this version yet</span>`;
+    const val=est?`<b>≈ ${money(+est.estimate)}</b>${n>1?` <span class="mt">each · ${money(est.estimate*n)} for ${n}</span>`:''}<span class="mt"> · ${est.exact?plural(est.sales_count,cd+' sale'):'no '+cd+' sales yet, all-conditions estimate'}</span>`:`<span class="mt">No ${cd} sales yet</span>`;
     return `<div class="cpx"><span class="cb">${cd}</span>${val}${cm.length?`<span class="cmps">${cm.map(x=>{const t=`${money(+x.price)} · ${esc(shortDate(x.sold_at))}`;return /^https:\/\//.test(x.url||'')?`<a href="${esc(x.url)}${x.url.includes('?')?'&amp;':'?'}${EPN}" target="_blank" rel="sponsored noopener" title="Open this ${cd} comp on eBay">${t} ↗</a>`:`<a>${t}</a>`}).join('')}</span>`:''}</div>`}).join('')}
 async function saveSlab(c){const f=$('#slabf');if(!f)return;const msg=$('#slabmsg');const cs=combos(c),j=f.querySelector('[name=v]')?+f.querySelector('[name=v]').value:0;const [p,e]=cs[j]||['Normal',''];
   const grade=f.querySelector('[name=gr]').value.trim(),cert=f.querySelector('[name=ce]').value.trim(),grader=f.querySelector('[name=g]').value;

@@ -5,7 +5,7 @@
 --   missing entries count as NM. Slabs have no condition (the grade covers it).
 --   price_estimates_cond = Premium RAW estimate per version split by condition, from approved price-check sales whose
 --   condition is known (same newest-weighted rule as price_estimates). refresh_price_ranges() rebuilds it.
---   PLACEHOLDER: a condition with no sales falls back to the version's all-conditions estimate, labelled on the site.
+--   A condition with no sales shows no price (David, 2026-11-26).
 --   member_card_comps(card_id) = member_card_sales plus each sale's condition, so collection copies link to matching comps.
 alter table public.collection_items add column if not exists conds text[];
 alter table public.collection_items add constraint collection_items_conds_check
