@@ -290,7 +290,10 @@ let FBSHOW='review';
 //    (and saves the direction on the note); "Save note" just saves it.
 const PRINTS=['Normal','Flat foil','Diamond foil','Wavy foil','Prism foil','Spiral foil','Super Rare foil','Black & Gold foil','Full art','Promo','Starter (no foil)'];
 const EDS=['1st Edition','Unlimited'],RARS=['Common','Uncommon','Rare','Super Rare','Promo','Starter','Unknown'];
-const FBED={},FBTXT={},FBSAVED={};let FBD=null;
+const FBED={},FBTXT={},FBSAVED={};let FBTOAST='';
+const fbTagged=id=>(FBD.files[id]||[]).some(f=>f.status==='new'&&f.card_id&&f.printing);
+// After Accept: what happened (cards updated by the database; tagged scans queued for the hourly scan job).
+const fbToast=(r)=>{const d=r&&r.data||{};FBTOAST=`✓ Accepted${d.cards_changed?` · ${d.cards_changed} card${d.cards_changed>1?'s':''} updated (live on the site within ~15 min)`:' · no card changes'}${d.files_queued?` · ${d.files_queued} scan${d.files_queued>1?'s':''} queued: cut and published automatically within the hour`:''}${d.credited?' · scrolls given':''}`;setTimeout(()=>{FBTOAST='';const t=$('#fbtoast');if(t)t.remove()},12000)};let FBD=null;
 async function loadFb(){const [r,mc]=await Promise.all([sb.rpc('admin_feedback'),sb.rpc('admin_note_message_counts')]);MSGN=Object.fromEntries((mc.data||[]).map(x=>[x.feedback_id,x.n+(x.unread?', '+x.unread+' new':'')]));let el=$('#fb');if(!el){app.insertAdjacentHTML('beforeend','<div id="fb"></div>');el=$('#fb')}
   if(r.error){el.innerHTML=`<h2>Feedback</h2><p class="msg err">${esc(r.error.message)}</p>`;return}
   const all=r.data||[];
@@ -375,7 +378,7 @@ function renderFb(){const el=$('#fb');if(!el||!FBD)return;const {all,CB}=FBD,K={
       return`<div class="fbf${f.status!=='new'?' done':''}" data-fid="${f.id}">${u&&/^image\/(jpeg|png|webp|gif)/.test(f.mime||'')?`<a href="${esc(u)}" target="_blank"><img src="${esc(u)}" alt=""></a>`:`<a class="fbfi" href="${esc(u||'#')}" target="_blank">${/pdf/.test(f.mime||'')?'PDF':'FILE'}</a>`}
         <div class="fbfm"><input list="fbcl" data-fcard="${f.id}" value="${esc(c?c.name+' · '+c.number:f.card_id||'')}" placeholder="Which card?">
         <div style="display:flex;gap:4px"><select data-fpr="${f.id}"><option value="">Version…</option>${pr.map(v=>`<option${v===f.printing?' selected':''}>${esc(v)}</option>`).join('')}</select>${ed.length?`<select data-fed="${f.id}"><option value="">Edition…</option>${ed.map(v=>`<option${v===f.edition?' selected':''}>${esc(v)}</option>`).join('')}</select>`:''}</div>
-        <span class="tag">${f.status==='used'?'✓ uploaded as a scan':f.status==='skipped'?'skipped':'waiting to upload'} <button type="button" class="ghost fbx" data-fdel="${f.id}" title="Remove file">✕</button></span></div></div>`}).join('')}
+        <span class="tag">${f.status==='used'?'✓ live on the site':f.status==='skipped'?'skipped':x.review==='accepted'?'⏳ being cut and published (within the hour)':'goes live when you Accept'} <button type="button" class="ghost fbx" data-fdel="${f.id}" title="Remove file">✕</button></span></div></div>`}).join('')}
       ${fbOpen(x)?`<label class="fbattach" title="Or drag files onto this note, or paste an image">📎 Attach scans<input type="file" data-fup="${x.id}" multiple accept="image/*,.heic,.heif,application/pdf" hidden></label>`:''}</div>`};
   const card=x=>`<div class="box fbn" data-nid="${x.id}" style="margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span class="tag">#${x.id} · ${day(x.created_at)} · ${K[x.kind]||esc(x.kind)}${x.card_id?` · <a href="/#card=${encodeURIComponent(x.card_id)}" target="_blank">${esc((CB[x.card_id]||{}).name||x.card_id)}</a>`:''}${x.page?` · <a href="${esc(x.page.split('#')[0]+(x.selector?(x.page.includes('?')?'&':'?')+'fbspot='+encodeURIComponent(x.selector):''))}" target="_blank">page</a>`:''}</span>
@@ -391,10 +394,10 @@ function renderFb(){const el=$('#fb');if(!el||!FBD)return;const {all,CB}=FBD,K={
     ${x.review==='accepted'?`<p class="tag" style="margin-top:8px">✓ Accepted ${day(x.reviewed_at)}${x.applied?` · ${x.applied.length} card${x.applied.length>1?'s':''} updated (on the site within ~15 min)`:''} · ${x.credit_user?'Scrolls given':'Scrolls waiting (no account with that email yet; it\'s given if they sign up with it)'} <button class="ghost" data-fbundo="${x.id}">Undo</button></p>`:''}
     ${x.review==='skipped'?`<p class="tag">Skipped ${day(x.reviewed_at)}</p>`:''}
   </div>`;
-  el.innerHTML=`<h2>Feedback</h2><p class="mt" style="margin-bottom:10px">${[['review','To review'],['accepted','Accepted'],['skipped','Skipped'],['all','All']].map(([k,l])=>`<button class="ghost" data-fbs="${k}" style="${FBSHOW===k?'color:var(--ink);border-color:var(--acc)':''}">${l}${k!=='all'?' ('+cnt(k)+')':''}</button>`).join(' ')}</p>
+  el.innerHTML=`<h2>Feedback</h2>${FBTOAST?`<p id="fbtoast" class="msg ok" style="margin:0 0 10px;padding:8px 12px;border:1px solid var(--ok);border-radius:8px">${esc(FBTOAST)}</p>`:''}<p class="mt" style="margin-bottom:10px">${[['review','To review'],['accepted','Accepted'],['skipped','Skipped'],['all','All']].map(([k,l])=>`<button class="ghost" data-fbs="${k}" style="${FBSHOW===k?'color:var(--ink);border-color:var(--acc)':''}">${l}${k!=='all'?' ('+cnt(k)+')':''}</button>`).join(' ')}</p>
   ${rows.length?rows.map(card).join(''):'<p class="tag">Nothing here.</p>'}<datalist id="fbcl"></datalist>`;
   cardsList().then(cs=>{const dl=$('#fbcl');if(dl)dl.innerHTML=cs.map(c=>`<option value="${esc(c.label)}">`).join('')});
-  const byId=id=>all.find(x=>x.id===+id),act=async(id,a,note)=>{const r=await sb.rpc('admin_feedback_review',{p_id:+id,p_action:a,p_note:note||null});if(r.error){alert(r.error.message);return false}return true};
+  const byId=id=>all.find(x=>x.id===+id),act=async(id,a,note)=>{const r=await sb.rpc('admin_feedback_review',{p_id:+id,p_action:a,p_note:note||null});if(r.error){alert(r.error.message);return false}if(a==='accept')fbToast(r);return true};
   const edOf=id=>fbEdInit(byId(id)),refocus=sel=>{const e=el.querySelector(sel);if(e){e.focus();e.setSelectionRange&&e.setSelectionRange(e.value.length,e.value.length)}};
   const touch=ed=>{if(ed.sum!=null&&ed.sumAuto!==false)ed.sum=null};
   el.ondragover=e=>{const b=e.target.closest('.fbn');if(b&&fbOpen(byId(b.dataset.nid))){e.preventDefault();b.classList.add('drop')}};
@@ -433,18 +436,18 @@ function renderFb(){const el=$('#fb');if(!el||!FBD)return;const {all,CB}=FBD,K={
     if(d.fbcancel){delete FBED[d.fbcancel];renderFb();return}
     if(d.fbapply||d.fbprop){const id=d.fbapply||d.fbprop,ed=FBED[id],ch=ed.rows.map(r=>({card_id:r.id,set:fbDelta(r).d})).filter(c=>Object.keys(c.set).length),sum=(ed.sum??fbAutoSum(ed)).trim();
       if(!sum){alert('Say what the fix is (or toggle a change on a card).');return}
-      if(d.fbapply&&!ch.length&&!confirm('No card data changes. Accept this note anyway (marks it done and gives the scrolls)?'))return;
+      if(d.fbapply&&!ch.length&&!fbTagged(id)&&!confirm('No card data changes. Accept this note anyway (marks it done and gives the scrolls)?'))return;
       b.disabled=true;const r=await sb.rpc('admin_feedback_set_fix',{p_id:+id,p_proposal:sum,p_change:ch.length?ch:null,p_accept:!!d.fbapply});
-      if(r.error){alert(r.error.message);b.disabled=false;return}delete FBED[id];delete FBTXT[id];loadFb();return}
+      if(r.error){alert(r.error.message);b.disabled=false;return}if(d.fbapply)fbToast(r);delete FBED[id];delete FBTXT[id];loadFb();return}
     if(d.fbsave||d.fbsacc){fbSaveTxt(d.fbsave||d.fbsacc,!!d.fbsacc,b);return}
     if(d.fbgo){const id=d.fbgo,x=byId(id),t=(FBTXT[id]??'').trim(),dir=t&&t!==(x.proposal||'').trim()?t:'';window.open(fbClaudeUrl(x,dir),'_blank','noopener');return}};
   // Save (2026-11-26 d): the text box holds the fix itself. Save writes it as the note's fix (with any card changes open in
   // the editor, else the fix's existing card changes); Save & accept also applies it. No Claude window needed.
   async function fbSaveTxt(id,accept,b){const x=byId(id),t=(FBTXT[id]??x.proposal??'').trim();if(!t){refocus(`[data-txt="${id}"]`);return}
     const ed=FBED[id],ch=ed?ed.rows.map(r=>({card_id:r.id,set:fbDelta(r).d})).filter(c=>Object.keys(c.set).length):(x.proposal_change||[]);
-    if(accept&&!ch.length&&!confirm('This fix has no card data changes. Accept the note anyway (marks it done and gives the scrolls)?'))return;
+    if(accept&&!ch.length&&!fbTagged(id)&&!confirm('This fix has no card data changes. Accept the note anyway (marks it done and gives the scrolls)?'))return;
     if(b)b.disabled=true;const r=await sb.rpc('admin_feedback_set_fix',{p_id:+id,p_proposal:t,p_change:ch.length?ch:null,p_accept:accept});
-    if(r.error){alert(r.error.message);if(b)b.disabled=false;return}delete FBTXT[id];delete FBED[id];FBSAVED[id]=1;setTimeout(()=>{delete FBSAVED[id];const s=$(`[data-saved="${id}"]`);if(s)s.textContent=''},4000);loadFb()}
+    if(r.error){alert(r.error.message);if(b)b.disabled=false;return}if(accept)fbToast(r);delete FBTXT[id];delete FBED[id];FBSAVED[id]=1;setTimeout(()=>{delete FBSAVED[id];const s=$(`[data-saved="${id}"]`);if(s)s.textContent=''},4000);loadFb()}
   el.onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&e.target.dataset.txt){e.preventDefault();fbSaveTxt(e.target.dataset.txt,false)}};
 }
 load();

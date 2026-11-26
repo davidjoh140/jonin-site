@@ -1,0 +1,13 @@
+-- Applied to Supabase on 2026-11-26 (migrations feedback_files_b64, stage_scans_from_drop, accept_adds_attachment_printings).
+-- Goal (David): Save & accept on a feedback note pushes everything through without asking Claude.
+-- 1. Card data: admin_feedback_review(accept) first runs feedback_merge_file_printings(id): every version David tagged
+--    on an attached scan (feedback_files.card_id + printing/edition) that the card doesn't list yet is merged into
+--    proposal_change, then applied like any other change (backup in feedback.applied, so Undo restores it).
+--    Accept returns {cards_changed, files_queued, credited}; /admin shows it.
+-- 2. Scans: accept calls kick_feedback_files(), which runs the feedback-file-b64 edge function (copies each new
+--    attachment from the private feedback-files bucket into feedback_files.b64 so Claude can read it).
+--    Cutting a photo into a clean scan needs Claude's eyes: the hourly scheduled task "Jonin feedback scans → site"
+--    cuts each file, files it in the Card Index, pushes a 500px webp to the repo's scan-drop branch and calls
+--    stage_scans_from_drop(items) -> stage-scan-from-url edge function -> scan_uploads -> drain-scan-uploads (1 min).
+--    Then sets feedback_files.status = 'used'.
+-- scan_uploads.doc_id made unique (upsert key). Edge functions: supabase/functions/feedback-file-b64, stage-scan-from-url.
