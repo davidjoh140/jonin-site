@@ -38,6 +38,21 @@ class Budget:
         self.left -= 1
 
 
+class PsaBudget(Budget):
+    """PSA calls also come out of the shared daily count in Supabase (psa_take), leaving
+    PSA_MEMBER_RESERVE calls for jonin.cards members' cert lookups."""
+
+    def spend(self):
+        super().spend()
+        try:
+            ok = supa.rpc("psa_take", {"p_calls": 1, "p_reserve": cfg.PSA_MEMBER_RESERVE})
+        except (Exception, SystemExit):
+            ok = True   # counter unreachable: fall back to the per-run cap only
+        if ok is False:
+            self.left = 0
+            raise OutOfCalls
+
+
 def ebay_token():
     r = requests.post(f"{EBAY}/identity/v1/oauth2/token",
                       auth=(os.environ["EBAY_CLIENT_ID"], os.environ["EBAY_CLIENT_SECRET"]),
@@ -149,7 +164,7 @@ def main():
             stats["queued"] += 1
 
         tok = ebay_token()
-        ebay_budget, psa_budget = Budget(cfg.EBAY_MAX_CALLS_PER_RUN), Budget(cfg.PSA_MAX_CALLS_PER_RUN)
+        ebay_budget, psa_budget = Budget(cfg.EBAY_MAX_CALLS_PER_RUN), PsaBudget(cfg.PSA_MAX_CALLS_PER_RUN)
         set_name = next((s["name"] for s in sets if s["id"] == set_filter), "") if set_filter else ""
         try:
             for q in cfg.EBAY_QUERIES:

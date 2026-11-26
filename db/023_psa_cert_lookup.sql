@@ -1,0 +1,10 @@
+-- Applied to Supabase on 2026-11-26 (migrations psa_cert_lookup, psa_trigger_all_updates, psa_member_requests,
+-- admin_user_view_psa). Kept here as the record; see Supabase for the full SQL.
+-- psa_certs            one row per looked-up cert (grade, label, subject, number, PSA photos, matched card_id). Service-only.
+-- psa_usage / psa_take shared PSA call count per UTC day; limit psa_daily_limit() = 100. Members take with no reserve,
+--                      the scanner (find_scans.py) leaves settings.PSA_MEMBER_RESERVE calls.
+-- psa_requests / psa_member_cap()  PLACEHOLDER: 10 new cert lookups per member per day.
+-- collection_slabs.psa_status (pending/verified/mismatch/not_found), psa_front, psa_back: set only by trigger
+--                      slab_apply_psa from psa_certs (PSA's grade wins). psa_cert_refresh updates slabs when a cert arrives.
+-- psa_pending_certs + kick_psa_queue + cron job 'psa-queue' (hourly at :07): looks up queued certs when calls are left.
+-- shared_slabs(slug) now also returns verified + front (PSA photo); never the cert.

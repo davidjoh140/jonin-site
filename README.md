@@ -89,3 +89,11 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - Members get "See my profile as others do" next to their share link.
 - PLACEHOLDER for David: `profiles.sharing` (haves/wants by link) is still ON by default for new accounts.
 - Admin: `/admin/` → Accounts → **View profile** shows any account's slabs (with certs and a PSA link), haves, wants and lists, whether or not they share.
+
+## PSA cert lookup
+
+- Typing a PSA cert in "+ Add a slab" calls the `psa-lookup` Edge Function (`supabase/functions/psa-lookup/index.ts`): it fills in the grade, says whether the cert matches the card, and shows PSA's slab photo. Saved slabs get ✓ PSA verified / ⚠ different card / pending, and the slab photo replaces the card scan on the Slabs tab, public profile and `/admin/`.
+- Verification is done in Supabase (trigger `slab_apply_psa` from the `psa_certs` cache), so members can't fake it. Each cert costs PSA calls once.
+- PSA free limit: 100 calls/day, 2 per cert, shared with the scanner. Members first (David, 2026-11-26): members take calls with no reserve; the scanner leaves `PSA_MEMBER_RESERVE` (20) for them. Over the limit, the cert is queued and the hourly `psa-queue` job looks it up later.
+- Needs the Edge Function secret `PSA_TOKEN` (Supabase → Edge Functions → Secrets). Until it's set, certs just queue.
+- PLACEHOLDERS: 10 new cert lookups per member per day; scanner reserve 20 calls; day resets at UTC midnight.
