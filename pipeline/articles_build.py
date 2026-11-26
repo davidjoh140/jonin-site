@@ -108,10 +108,26 @@ def sale_link(url, src):
             f'See it on {B.e(where)} ↗</a>')
 
 
+def sale_slab(sid):
+    """Site path of the saved listing photo (the sold slab) for sale id sid, or '' (see export_cards.sale_photo)."""
+    d = os.path.join(B.ROOT, 'img', 'sales')
+    if not sid or not os.path.isdir(d):
+        return ''
+    for f in sorted(os.listdir(d)):
+        if f == f'{sid}.jpg' or f.endswith(f'-{sid}.jpg'):
+            return f'/img/sales/{f}'
+    return ''
+
+
 def card_block(c, s, sale=None):
     e = B.e
-    img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
-           if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
+    slab = sale_slab(sale.get('id')) if sale else ''
+    if slab:   # a {{sale}} block shows the actual copy that sold, when we have its photo
+        img = (f'<img class="slab" loading="lazy" src="{e(slab)}" alt="{e(c["name"])} {e(c["n"])} {e(sale["v"])} '
+               f'Naruto card, the copy that sold for {e(B.money(sale["p"]))}" width="600" height="1000">')
+    else:
+        img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
+               if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
     top = c.get('top') or []
     if sale:
         label, price, ver, day, url, src = 'Sold for', sale['p'], sale['v'], sale['d'], sale['url'], sale['src']
@@ -141,7 +157,7 @@ def article_body(a, cards_by_key, sets_by_id):
                 x = SALES.get(k.strip())
                 if x and x['c'] in cards_by_key:
                     c = cards_by_key[x['c']]
-                    out.append(card_block(c, sets_by_id[c['s']], x))
+                    out.append(card_block(c, sets_by_id[c['s']], dict(x, id=k.strip())))
         elif m:
             cs = [cards_by_key[k.strip()] for k in m.group(2).split(',') if k.strip() in cards_by_key]
             if m.group(1) == 'card':
