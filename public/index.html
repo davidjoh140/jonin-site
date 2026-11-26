@@ -459,19 +459,21 @@ function numHit(w,n){if(!/\d/.test(w))return false;const k=numKey(w),cn=numKey(n
   if(/^\d+[A-Z]?$/.test(k))return cn.replace(/^[A-Z]+/,'')===k;return cn===k}
 // Search aliases: squashed or alternate spellings for terms in card notes (add more as they come up).
 const ALIAS={gencon:'gen con',e3expo:'e3',sdcc:'comic con',comiccon:'comic con'};
+// Alt arts: "alt arts", "altart", "alt-art", "alternate/alternative art" all search as "alt art" (the rarity is "Alt Art /20").
+const qNorm=q=>q.replace(/(^|[^a-z0-9])alt(?:ernate|ernative)?[\s-]*arts?(?![a-z0-9])/g,'$1alt art');
 // Short words (3 letters or less, like "e3") must start a word, so they don't hit inside "the 3rd".
 const wordHit=(w,hay)=>w.length<=3?new RegExp('(^|[^a-z0-9])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).test(hay):hay.includes(w);
 // Multi-word search: if any card holds the whole phrase ("gen con", "dream legacy"), only phrase matches show;
 // otherwise each word matches on its own ("kakashi 12"). Checked once per query.
-const flatOf=c=>(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.note||'')+' '+(c.deck||'')).toLowerCase().replace(/[\s'’.-]/g,'');
+const flatOf=c=>(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')).toLowerCase().replace(/[\s'’.-]/g,'');
 let PH={q:null,k:'',on:false};
-const phraseOn=()=>{if(PH.q!==S.q){const k=S.q.toLowerCase().replace(/[\s'’.-]/g,'');PH={q:S.q,k,on:k.length>2&&D.cards.some(c=>flatOf(c).includes(k))}}return PH.on};
+const phraseOn=()=>{if(PH.q!==S.q){const k=qNorm(S.q.toLowerCase()).replace(/[\s'’.-]/g,'');PH={q:S.q,k,on:k.length>2&&D.cards.some(c=>flatOf(c).includes(k))}}return PH.on};
 function match(c){
   if(S.set&&c.s!==S.set)return false;
   if(S.rars.length&&!S.rars.includes(c.src))return false;
   if(S.type&&c.t!==S.type)return false;
   if(S.chars.length){const names=c.name.split(/\s*&\s*/).map(baseName);if(!S.chars.some(v=>v.split('|').some(w=>names.includes(w))))return false}
-  if(S.q){const q0=S.q.toLowerCase().trim(),q=(ALIAS[q0.replace(/[\s'’.-]/g,'')]||q0).split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.note||'')+' '+(c.deck||'')).toLowerCase(),flat=flatOf(c);if(q.length>1&&phraseOn()){if(!flat.includes(PH.k))return false}else if(!q.every(w=>numHit(w,c.n)||(!/^#?\d+$/.test(w)&&wordHit(w,hay))))return false}
+  if(S.q){const q0=qNorm(S.q.toLowerCase().trim()),q=(ALIAS[q0.replace(/[\s'’.-]/g,'')]||q0).split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')).toLowerCase(),flat=flatOf(c);if(q.length>1&&phraseOn()){if(!flat.includes(PH.k))return false}else if(!q.every(w=>numHit(w,c.n)||(!/^#?\d+$/.test(w)&&wordHit(w,hay))))return false}
   return true}
 // Price band on each grid tile (free). Exact prices are Jonin Club only.
 const BANDS0=['Under $10','$10–50','$50–200','$200+'],band=c=>{const b=(D&&D.bands)||BANDS0;return c.pb==null?null:b[c.pb]??null};
