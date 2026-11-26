@@ -69,6 +69,17 @@ Another 1st Edition full art from set 21, sold at auction.
 
 {{sale 135}}
 
+## Some of these have come down
+
+A record is the most someone has paid, not the price you have to pay. Since setting their highs, several of these cards have sold for less in the same grade:
+
+- **Susano'o (Sasuke), PSA 10:** [$14,700](https://www.ebay.com/itm/407365257752) on Nov 22 and [$12,600](https://www.ebay.com/itm/307281755041) on Nov 23, against its $25,000 record. As of Nov 26, one is [listed for $18,000](https://www.ebay.com/itm/900124452350?mkevt=1&mkcid=1&mkrid=711-53200-19255-0&campid=5339262225&toolid=10001&customid=jonin-article).
+- **Sasuke Uchiha PR088, PSA 10:** [$6,050](https://www.ebay.com/itm/900076252397) on Nov 17, against its $18,000 record.
+- **Sasuke Uchiha, Weapons of War, 1st Edition PSA 10:** [$9,800](https://www.ebay.com/itm/900066156598) on Nov 12, against $14,500.
+- **Naruto Uzumaki (9 Tails Cloak), PSA 10:** [$13,000](https://www.ebay.com/itm/307248172791) on Nov 1, against $14,000.
+
+If you're chasing one of these, check the card's page for its recent sales, or set a [Jonin Club](/club/) alert to hear when a copy lists.
+
 ## What the list tells us
 
 - **Grade is everything.** Nine of the 10 sales are PSA 10s.
