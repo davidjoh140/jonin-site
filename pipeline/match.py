@@ -3,7 +3,8 @@ import re
 from collections import defaultdict
 
 NUM_RE = re.compile(r"(?<![A-Z0-9])(?:(PR|PS)\s?-?\s?(US)?\s?-?\s?(\d{1,4})|([NJMC])\s?-?\s?(US|C)?\s?-?\s?(\d{2,4})(B)?)(?![0-9])")
-FOIL_WORDS = [("DIAMOND", "Diamond foil"), ("WAVY", "Wavy foil"), ("PRISM", "Prism foil"), ("FULL ART", "Full foil")]
+FOIL_WORDS = [("DIAMOND", "Diamond foil"), ("WAVY", "Wavy foil"), ("PRISM", "Prism foil"), ("CHECKER", "Prism foil"),
+              ("SPIRAL", "Spiral foil"), ("FLAT", "Flat foil"), ("FULL FOIL", "Flat foil"), ("FULL ART", "Full art")]
 GAME_PHRASES = re.compile(r"\bNARUTO(?=\s+(CCG|TCG|CARD|CARDS|SHIPPUDEN|COLLECTIBLE|TRADING|BANDAI)\b)")
 STOP = {"THE", "OF", "A", "AN", "AND", "TO", "NO", "JUTSU", "STYLE"}
 

@@ -5,8 +5,8 @@ import prices
 from test_match import M
 
 T = datetime(2026, 11, 25, 18, 0, tzinfo=timezone.utc)
-TWO = {"printings": ["Normal", "Full foil"], "editions": ["1st Edition", "Unlimited"]}
-MANY = {"printings": ["Normal", "Full foil", "Diamond foil", "Wavy foil"], "editions": ["1st Edition", "Unlimited"]}
+TWO = {"printings": ["Normal", "Flat foil"], "editions": ["1st Edition", "Unlimited"]}
+MANY = {"printings": ["Normal", "Flat foil", "Diamond foil", "Wavy foil"], "editions": ["1st Edition", "Unlimited"]}
 
 
 def test_grades():
@@ -22,9 +22,14 @@ def test_grades():
 
 def test_printing():
     assert prices.parse_printing("Naruto N-001 non-foil", TWO) == ("Normal", False)
-    assert prices.parse_printing("Naruto N-001 holo foil", TWO) == ("Full foil", False)
+    assert prices.parse_printing("Naruto N-001 holo foil", TWO) == ("Flat foil", False)
     assert prices.parse_printing("Naruto N-001", TWO) == ("Normal", True)            # placeholder assumption
     assert prices.parse_printing("Naruto N-001 wavy foil", MANY) == ("Wavy foil", False)
+    assert prices.parse_printing("Naruto N-001 flat foil", MANY) == ("Flat foil", False)
+    SET9 = {"printings": ["Normal", "Prism foil", "Spiral foil"], "editions": ["1st Edition", "Unlimited"]}
+    assert prices.parse_printing("Gaara N-400 prism foil", SET9) == ("Prism foil", False)
+    assert prices.parse_printing("Gaara N-400 diamond spiral foil", SET9) == ("Spiral foil", False)
+    assert prices.parse_printing("Gaara N-400 checkered foil", SET9) == ("Prism foil", False)
     assert prices.parse_printing("Naruto N-001 foil", MANY) == (prices.UNKNOWN, False)
     assert prices.parse_printing("anything", {"printings": ["Super Rare foil"]}) == ("Super Rare foil", False)
     assert prices.parse_printing("PR-063 Full Art Foil", {"printings": ["Normal"]}) == (prices.UNKNOWN, False)

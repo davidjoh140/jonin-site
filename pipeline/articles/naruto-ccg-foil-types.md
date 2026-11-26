@@ -1,5 +1,5 @@
 ---
-title: Naruto CCG foil types explained: diamond, wavy, spiral and full foil
+title: Naruto CCG foil types explained: diamond, wavy, prism, spiral and flat foil
 description: Every foil finish in the original Bandai Naruto CCG, which sets used which, and why the same card can sell for very different prices.
 date: 2026-11-26
 cover: 9:N-333
@@ -13,23 +13,23 @@ Commons, Uncommons and Rares can all come as foils. On these foils the card's na
 
 Super Rares are their own thing. They're always foil, with three dots after the copyright line and gold lettering on the name.
 
-## Diamond foil and wavy foil (sets 1 to 8)
+## Diamond foil and wavy foil (sets 1 to 8, and set 10)
 
-The early sets, from The Path to Hokage (2006) through Battle of Destiny (2008), printed foils in two patterns: **diamond** and **wavy**. Most cards in these sets exist as a normal card plus both foil versions.
+The early sets, from The Path to Hokage (2006) through Battle of Destiny (2008), printed foils in two patterns: **diamond** and **wavy**. Most cards in these sets exist as a normal card plus both foil versions. Lineage of the Legends (set 10) brought diamond and wavy back after set 9, and also has flat foils.
 
 {{cards 1:N-001, 1:N-003, 1:N-011, 1:N-013}}
 
 When buying, check which foil a listing shows. Sellers often just write "foil", and the two patterns don't always sell for the same price.
 
-## Diamond-checkered and diamond-spiral (set 9)
+## Prism and spiral (set 9 only)
 
-The Chosen (2008) swapped the standard diamond foil for two new patterns: **diamond-checkered**, sometimes called prism, and **diamond-spiral**. That makes set 9 foils easy to tell apart from the earlier sets once you know what to look for.
+The Chosen (2008) is the only set with **prism** and **spiral** foils. It has no diamond or wavy foils, so set 9 foils are easy to tell apart once you know what to look for.
 
 {{card 9:N-333}}
 
-## Full foil, also called flat foil (later sets)
+## Flat foil (set 11 on)
 
-The later sets moved to a single **full foil** finish, which some collectors call flat foil. So a card from these sets usually has only two finishes: normal and full foil. That makes them simpler to collect, but the top full foils from late sets are some of the most expensive cards in the game.
+From Approaching Wind (set 11) on, the game used a single **flat foil** finish, sometimes called full foil. So a card from these sets usually has only two finishes: normal and flat foil. That makes them simpler to collect, but the top flat foils from late sets are some of the most expensive cards in the game.
 
 {{card 20:N-1096}}
 
@@ -45,7 +45,7 @@ Super Rares mostly used the same foiling for the whole game. Full-art Super Rare
 
 ## Tips for buyers and sellers
 
-- **Name the foil.** "Foil" isn't enough for sets 1 to 9. Write diamond, wavy, diamond-checkered or diamond-spiral.
+- **Name the foil.** "Foil" isn't enough for sets 1 to 10. Write diamond, wavy, prism, spiral or flat.
 - **Check the card page.** Every card on Jonin lists the printings it came in, so you can see which foils exist before you buy.
 - **Compare like with like.** A wavy foil sale tells you little about the diamond foil of the same card. [Premium](/premium/) splits every sale by edition, foil and grade.
 

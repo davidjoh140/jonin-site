@@ -367,7 +367,7 @@ const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const RNAME={C:'Common',U:'Uncommon',R:'Rare',SR:'Super Rare',UR:'Ultra Rare',P:'Promo',F:'Starter','':'Unknown'};
 // PLACEHOLDER mapping from printing names in the data to David's five foil types; confirm with him
-const FOILS={'Full foil':['flat','Flat foil'],'Diamond foil':['diamond','Diamond'],'Diamond-checkered foil':['diamond','Diamond'],'Diamond-spiral foil':['spiral','Spiral'],'Wavy foil':['wavy','Wavy'],'Super Rare foil':['prism','Prism']};
+const FOILS={'Flat foil':['flat','Flat foil'],'Full foil':['flat','Flat foil'],'Diamond foil':['diamond','Diamond'],'Wavy foil':['wavy','Wavy'],'Prism foil':['prism','Prism'],'Spiral foil':['spiral','Spiral'],'Diamond-checkered foil':['prism','Prism'],'Diamond-spiral foil':['spiral','Spiral']};
 const rsym=k=>{const n={U:1,R:2,SR:3}[k];const inner=n?'<i></i>'.repeat(n):({C:'C',UR:'UR',P:'PR',F:'ST','':'?'}[k]??esc(k));return `<span class="rs rs-${esc(k||'X')}" title="${esc(RNAME[k]||k)}">${inner}</span>`};
 const foilsOf=c=>{const seen=new Set(),out=[];(c.v||[]).forEach(v=>{const f=FOILS[v];if(f&&!seen.has(f[0])){seen.add(f[0]);out.push(f)}});return out};
 // PSA pop report pages per set (links from David). Promos are split by year on PSA, so promo cards get one link per year.

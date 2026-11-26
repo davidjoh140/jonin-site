@@ -19,5 +19,5 @@ def test_skips_unapproved_and_unknown_versions():
 
 
 def test_version_label_graded():
-    assert version_label({"edition": "1st Edition", "printing": "Full foil", "grader": "PSA", "grade": "10"}) == \
-        "1st Edition · Full foil · PSA 10"
+    assert version_label({"edition": "1st Edition", "printing": "Flat foil", "grader": "PSA", "grade": "10"}) == \
+        "1st Edition · Flat foil · PSA 10"

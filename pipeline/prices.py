@@ -11,8 +11,9 @@ GRADE_RE = re.compile(r"\b(PSA|BGS|BECKETT|CGC|SGC|TAG|ACE)\s*(?:GRADED\s*)?(?:G
 NOT_GRADED = re.compile(r"\b(PSA|BGS|CGC|SGC|TAG)\s*(READY|CANDIDATE|WORTHY|\?)|\bNOT\s+GRADED\b|\bUNGRADED\b|"
                         r"\b(PSA|BGS|CGC)\s*10\s*(READY|CANDIDATE|WORTHY)")
 # Specific foil words first; "foil" alone only counts when the card has one foil kind.
-FOIL_WORDS = [(r"DIAMOND[\s-]*SPIRAL|\bSPIRAL\b", "Diamond-spiral foil"),
-              (r"CHECKER", "Diamond-checkered foil"),
+FOIL_WORDS = [(r"DIAMOND[\s-]*SPIRAL|\bSPIRAL\b", "Spiral foil"),
+              (r"CHECKER|\bPRISM", "Prism foil"),
+              (r"\bFLAT\b|\bFULL\s*FOIL\b", "Flat foil"),
               (r"\bDIAMOND\b", "Diamond foil"),
               (r"\bWAV(E|Y)\b", "Wavy foil"),
               (r"SUPER\s*RARE\s*FOIL", "Super Rare foil")]
