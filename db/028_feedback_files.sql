@@ -1,0 +1,7 @@
+-- Applied to Supabase on 2026-11-26 (migration feedback_files). Kept here as the record.
+-- Files David attaches to feedback notes on /admin (scans, photos, PDFs), mainly scans for Claude to cut and upload.
+-- Storage: private bucket 'feedback-files' (25 MB per file; images + PDF). Read/upload/delete: admins only (is_admin()).
+-- Table feedback_files(id, feedback_id -> feedback, path (in the bucket), name, mime, size, card_id -> cards, printing,
+--   edition, note, status 'new'|'used'|'skipped', used_note, created_at). RLS: admins only.
+-- Flow: "Start in Claude now" lists the note's 'new' files; Claude cuts each like jonin-scan-intake, stages it in
+--   scan_uploads for drain-scan-uploads to publish, then sets status = 'used'.
