@@ -1,0 +1,7 @@
+-- Applied to Supabase on 2026-11-26 (migration public_profiles). Kept here as the record.
+-- Public profiles: slabs show on a shared profile only when the member turns on "Show my slabs" (off by default).
+--   profiles.show_slabs boolean default false
+--   shared_slabs(slug)      -> card_id, printing, edition, grader, grade (never cert/note); only if sharing AND show_slabs
+--   shared_profile(slug)    -> now also show_slabs, joined, rank, xp
+--   admin_user_view(email)  -> admin only (is_admin()): profile, xp, haves/wants, slabs with certs, lists. Used by /admin/ → Accounts → View profile.
+-- See the migration in Supabase for the full SQL.

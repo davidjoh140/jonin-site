@@ -81,3 +81,11 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - Every have copy has a condition (NM / LP / MP / HP / DMG). New copies start as NM; the card's collection box shows one picker per copy (`collection_items.conds`, `db/020_collection_condition.sql`; guests keep it in `jonin_guest_v1`).
 - Premium: each condition shows its own RAW estimate (`price_estimates_cond`, built from approved price-check sales with that condition) and links to the matching sold comps (`member_card_comps`). Collection value and the export price each copy by its condition.
 - A condition with no sales of that version shows no price yet, and those copies count as unpriced in collection value (David, 2026-11-26).
+
+## Public profiles
+
+- `/#u=<share_slug>` is a member's public profile: avatar, name, badge, favorite character, scroll rank, member since, Instagram, haves and wants.
+- Slabs show there only if the member turns on **Show my slabs** on My collection (`profiles.show_slabs`, off by default). Grader and grade only, never cert numbers (`shared_slabs`, `db/022_public_profiles.sql`).
+- Members get "See my profile as others do" next to their share link.
+- PLACEHOLDER for David: `profiles.sharing` (haves/wants by link) is still ON by default for new accounts.
+- Admin: `/admin/` → Accounts → **View profile** shows any account's slabs (with certs and a PSA link), haves, wants and lists, whether or not they share.
