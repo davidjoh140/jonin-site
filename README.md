@@ -124,3 +124,11 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - Character pages (`vote.js`): "📜 Your first vote on <character> earns +5 scrolls" in the vote box, and a floating "▲ Vote for <character>'s coolest cards" button while the vote box is off screen, until they've voted there. Signed-out visitors see it too.
 - PLACEHOLDERS for David: popup shows 4 seconds after a page opens, only under 3 characters voted, at most 3 times per member, "Later" waits 7 days.
 - Umami events: scrolls-intro, scrolls-intro-click, vote-pill.
+
+## Scrolls leaderboard
+
+- `/leaderboard/` ranks members by scrolls (`scroll_leaderboard()`, `db/029_scroll_leaderboard.sql`; page script `public/leaderboard.js`). Linked from Missions and the profile menu.
+- Only members who turned on profile sharing appear (David, 2026-11-26). Shows name, picture, status badge, rank and scrolls, and links to their public profile. Nothing from collections.
+- Signed-in members outside the top get their own row pinned at the bottom; members not sharing get a note on how to join the board.
+- Setup (`/welcome/`, step 2) asks "Make your profile public?" — Public or Keep it private (default private). It sets `profiles.sharing`.
+- PLACEHOLDERS for David: top 25, members need 1+ scroll, admin accounts left off, ties share a place (earlier member listed first).

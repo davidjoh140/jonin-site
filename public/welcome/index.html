@@ -61,7 +61,8 @@ const MAXFAV=3;   // up to 3 favorite characters, first one = main favorite (Dav
 // Setup questions and answers (David confirmed 2026-11-26).
 const FOUND=[['reddit','Reddit'],['instagram','Instagram'],['facebook','Facebook group'],['search','Google / search'],['friend','A friend'],['other','Somewhere else']];
 const TYPES=[['collector','Collector'],['player','Player'],['seller','Seller / vendor'],['investor','Investor'],['new','Just getting into it']];
-let sb,USER,CHARS=[],STEP=0,Q='',A={fav:[],found:null,types:[],email:false,theme:null};
+// Profile sharing question (David, 2026-11-26): asked in setup, off unless they pick Public. Public = shared profile link + scrolls leaderboard.
+let sb,USER,CHARS=[],STEP=0,Q='',A={fav:[],found:null,types:[],email:false,theme:null,share:false};
 try{A.theme=localStorage.getItem('jtheme')||'jonin'}catch(_){A.theme='jonin'}
 
 async function init(){
@@ -70,10 +71,10 @@ async function init(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){location.replace('/');return}
   USER=session.user;
-  const [p,c]=await Promise.all([sb.from('profiles').select('fav_character,fav_characters,found_via,collector_types,email_updates,theme').eq('id',USER.id).maybeSingle(),fetch('/chars.json').then(r=>r.json()).catch(()=>[])]);
+  const [p,c]=await Promise.all([sb.from('profiles').select('fav_character,fav_characters,found_via,collector_types,email_updates,theme,sharing').eq('id',USER.id).maybeSingle(),fetch('/chars.json').then(r=>r.json()).catch(()=>[])]);
   CHARS=c;const pr=p.data||{};
   A.fav=(pr.fav_characters&&pr.fav_characters.length?pr.fav_characters:(pr.fav_character?[pr.fav_character]:[])).slice(0,MAXFAV);
-  A.found=pr.found_via||null;A.types=pr.collector_types||[];A.email=!!pr.email_updates;if(pr.theme)A.theme=pr.theme;
+  A.found=pr.found_via||null;A.types=pr.collector_types||[];A.email=!!pr.email_updates;A.share=!!pr.sharing;if(pr.theme)A.theme=pr.theme;
   render();
 }
 const bar=()=>`<div class="top"><div class="steps" aria-hidden="true">${[0,1,2].map(i=>`<i class="${i<=STEP?'on':''}"></i>`).join('')}</div><small>Step ${STEP+1} of 3</small></div>`;
@@ -93,6 +94,7 @@ function render(){
     wz.innerHTML=bar()+`<h1>A couple of questions</h1><p class="mt">Optional.</p>
     <div class="q"><h2>How did you find Jonin?</h2><div class="opts">${FOUND.map(([k,l])=>op(k,l,A.found===k,'data-found')).join('')}</div></div>
     <div class="q"><h2>What describes you?</h2><div class="opts">${TYPES.map(([k,l])=>op(k,l,A.types.includes(k),'data-type')).join('')}</div></div>
+    <div class="q"><h2>Make your profile public?</h2><p class="mt">Public puts your name, picture and scroll rank on the <a href="/leaderboard/" target="_blank" rel="noopener">leaderboard</a> and gives you a profile link with your haves and wants. Slabs stay hidden unless you turn them on. You can change this anytime on My collection.</p><div class="opts">${op('1','Public',A.share,'data-share')}${op('0','Keep it private',!A.share,'data-share')}</div></div>
     <label class="chk"><input type="checkbox" id="em"${A.email?' checked':''}><span>Email me Naruto CCG news and top sales (now and then)</span></label>`+nav(false);
   }else{
     const T=window.JONIN_THEMES||[];
@@ -104,7 +106,7 @@ function render(){
 const press=(sel,on)=>document.querySelectorAll(sel).forEach(b=>b.setAttribute('aria-pressed',on(b)));
 async function save(done){
   const row={setup_done_at:new Date().toISOString()};
-  Object.assign(row,{fav_characters:A.fav,fav_character:A.fav[0]||null,found_via:A.found,collector_types:A.types,email_updates:A.email,theme:A.theme});
+  Object.assign(row,{fav_characters:A.fav,fav_character:A.fav[0]||null,found_via:A.found,collector_types:A.types,email_updates:A.email,theme:A.theme,sharing:A.share});
   const r=await sb.from('profiles').update(row).eq('id',USER.id);
   if(r.error){const m=$('#msg');m.hidden=false;m.textContent='Could not save: '+r.error.message;return false}
   try{sessionStorage.removeItem('jret')}catch(_){}
@@ -114,6 +116,7 @@ wz.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)r
   if(t.dataset.fav){const s=t.dataset.fav,i=A.fav.indexOf(s);if(i>=0)A.fav.splice(i,1);else if(A.fav.length<MAXFAV)A.fav.push(s);else{A.fav[MAXFAV-1]=s}paintChars()}
   else if(t.dataset.found){A.found=A.found===t.dataset.found?null:t.dataset.found;press('[data-found]',b=>b.dataset.found===A.found)}
   else if(t.dataset.type){const k=t.dataset.type,i=A.types.indexOf(k);if(i>=0)A.types.splice(i,1);else A.types.push(k);press('[data-type]',b=>A.types.includes(b.dataset.type))}
+  else if(t.dataset.share){A.share=t.dataset.share==='1';press('[data-share]',b=>(b.dataset.share==='1')===A.share)}
   else if(t.dataset.th){A.theme=t.dataset.th;if(window.joninSetTheme)joninSetTheme(A.theme);press('[data-th]',b=>b.dataset.th===A.theme)}
   else if(t.hasAttribute('data-back')){STEP--;render();window.scrollTo(0,0)}
   else if(t.hasAttribute('data-next')){if(STEP<2){STEP++;render();window.scrollTo(0,0)}else{t.disabled=true;if(!await save(true))t.disabled=false}}

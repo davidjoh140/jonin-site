@@ -89,6 +89,7 @@
         '<a class="jmi" role="menuitem" '+(s.home?'href="#lists" data-v="mine" data-lmine':'href="/#lists"')+'>'+lb('scrollOpen','My lists<small>Your own card lists</small>')+'</a>'+
         '<button type="button" class="jmi" role="menuitem" data-jmsg>'+lb('mail','Messages<b class="jmn"'+(UNREAD?'':' hidden')+'>'+UNREAD+'</b><small>Questions from Jonin about your notes</small>')+'</button>'+
         '<a class="jmi" role="menuitem" href="/missions/">'+lb('scrollClosed','Missions<small>Earn scrolls and rank up</small>')+'</a>'+
+        '<a class="jmi" role="menuitem" href="/leaderboard/">'+lb('scrollClosed','Leaderboard<small>Top members by scrolls</small>')+'</a>'+
         '<a class="jmi" role="menuitem" href="/missions/#m-inv">'+lb('join','Invite friends<small>Earn scrolls for each friend who joins</small>')+'</a>'+
         (st==='free'?'<a class="jmi jprem" role="menuitem" href="/club/">'+lb('lock','Join Jonin Club')+'</a>':'')+
         fb+themeRow()+

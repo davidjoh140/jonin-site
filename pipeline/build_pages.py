@@ -502,7 +502,8 @@ def missions_page(chars):
     chips = ''.join(f'<a class="chip mch" data-ch="{c["slug"]}" href="/character/{c["slug"]}/#vote-top"><img src="/chars/{c["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(c["label"])}<i class="mok" aria-hidden="true">✓</i></a>' for c in chars)
     body = f'''<nav class="crumb"><a href="/">All cards</a> › Missions</nav>
 <section class="sethead"><h1>Missions</h1>
-<p class="lede">Earn scrolls and rank up from Academy Student to Kage. Your rank shows on your profile next to your name.</p></section>
+<p class="lede">Earn scrolls and rank up from Academy Student to Kage. Your rank shows on your profile next to your name.</p>
+<p class="btns"><a class="ghostbtn" href="/leaderboard/">📜 See the leaderboard</a></p></section>
 <section class="mhero" id="mhero"><p class="mt">Loading your rank…</p></section>
 <section class="mlist">
 <article class="mcard" id="m-inv"><div class="mtop"><h2>Invite friends</h2><span class="mxp" data-xp="invite_signup">+📜</span></div>
@@ -526,6 +527,25 @@ def missions_page(chars):
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'WebPage', 'name': title, 'description': desc, 'url': url},
         crumbs(('Naruto CCG cards', SITE + '/'), ('Missions', url))]})
+    return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
+
+
+def leaderboard_page():
+    """/leaderboard/: members ranked by scrolls. Static shell; /leaderboard.js reads scroll_leaderboard() from Supabase
+    (db/029_scroll_leaderboard.sql). PLACEHOLDERS for David: top 25, members with 1+ scroll, ties share a place."""
+    url = f'{SITE}/leaderboard/'
+    title = 'Scrolls leaderboard: top Jonin members | Jonin'
+    desc = 'The Jonin members with the most scrolls. Earn scrolls by voting for the coolest Naruto CCG cards, inviting friends and sending feedback, and climb from Academy Student to Kage.'
+    body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/missions/">Missions</a> › Leaderboard</nav>
+<section class="sethead"><h1>📜 Scrolls leaderboard</h1>
+<p class="lede">The members who have earned the most scrolls. <a href="/missions/">Do missions</a> to climb the board.</p></section>
+<section class="lbx" id="lbx"><p class="lbe mt">Loading the leaderboard…</p></section>
+<p class="mt" id="lbfoot"></p>
+<script src="/leaderboard.js?v={file_version('leaderboard.js')}" defer></script>
+'''
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'WebPage', 'name': title, 'description': desc, 'url': url},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('Missions', SITE + '/missions/'), ('Leaderboard', url))]})
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
 
 
@@ -914,6 +934,7 @@ def main():
     changed += write(os.path.join(ROOT, 'characters', 'index.html'), chars_index(chars, counts))
     changed += write(os.path.join(ROOT, 'missions', 'index.html'), missions_page(chars))
     changed += write(os.path.join(ROOT, 'giveaway', 'index.html'), giveaway_page())
+    changed += write(os.path.join(ROOT, 'leaderboard', 'index.html'), leaderboard_page())
     # Character list for the /welcome/ setup page (same order as the homepage sidebar).
     changed += write(os.path.join(ROOT, 'chars.json'), json.dumps([{'slug': ch['slug'], 'label': ch['label'], 'cards': counts[ch['slug']]} for ch in chars], ensure_ascii=False) + '\n')
     mvidx = os.path.join(ROOT, 'most-valuable')
@@ -945,7 +966,7 @@ def main():
     if hs2 == hs and '<!--setlinks-->' not in hs:
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
-    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/giveaway/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
+    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/leaderboard/', SITE + '/giveaway/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
            list_urls + [SITE + '/price-guide/'] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
