@@ -512,6 +512,9 @@ def missions_page(chars):
 <p class="mt">Open a character and vote for up to 3 of their best cards. Your first vote on each character earns scrolls, once per character. Moving a vote later keeps your scrolls.</p>
 <div class="mprog"><span class="mbar"><i style="width:0%"></i></span><b class="mcount">0 / {len(chars)}</b></div>
 <div class="chips mchips">{chips}</div></article>
+<article class="mcard" id="m-cards"><div class="mtop"><h2>Log 100 cards</h2><span class="mxp" data-xp="cards_100">+📜</span></div>
+<p class="mt">Add 100 different cards to your collection (haves and slabs count). It's a one-time thank-you for helping build the database.</p>
+<div class="mprog"><span class="mbar"><i style="width:0%"></i></span><b class="mcount">0 / 100</b></div></article>
 <article class="mcard" id="m-fb"><div class="mtop"><h2>Send feedback we use</h2><span class="mxp" data-xp="feedback_accepted">+📜</span></div>
 <p class="mt">Spotted a wrong card, a missing foil or a bug? Send a note from any page. Every note that leads to a fix earns scrolls. Sign in first, or leave the email you signed up with, so it's credited to you.</p>
 <div class="mprog"><b class="mfb">0 notes used so far</b></div>

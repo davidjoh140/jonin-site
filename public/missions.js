@@ -18,7 +18,7 @@
     '.mcard button.primary{background:var(--acc);border-color:var(--acc);color:var(--bg);font:600 15px Inter,system-ui,sans-serif;cursor:pointer}' +
     '.minv .mlink{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 10px}.minv input{flex:1;min-width:220px;font:500 14px Inter,system-ui,sans-serif;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:inherit}' +
     '.minv button{padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:inherit;font:600 14px Inter,system-ui,sans-serif;cursor:pointer}.minv button.primary{background:var(--acc);border-color:var(--acc);color:var(--bg)}' +
-    '.mranks li.cur{border-color:#F2C14E;background:rgba(242,193,78,.08)}.mranks li.got b::after{content:" ✓";color:#6FB27A}';
+    '#m-cards.done{border-color:#6FB27A}.mranks li.cur{border-color:#F2C14E;background:rgba(242,193,78,.08)}.mranks li.got b::after{content:" ✓";color:#6FB27A}';
   document.head.appendChild(css);
 
   function $(q) { return document.querySelector(q); }
@@ -33,7 +33,7 @@
   function paint(rules, ranks, me) {
     document.querySelectorAll('[data-xp]').forEach(function (el) {
       var n = rules[el.getAttribute('data-xp')];
-      if (n != null) el.textContent = '+' + n + (n===1?' scroll':' scrolls') + ({ vote_character: ' each', invite_signup: ' per friend' }[el.getAttribute('data-xp')] || ' per note');
+      if (n != null) el.textContent = '+' + n + (n===1?' scroll':' scrolls') + ({ vote_character: ' each', invite_signup: ' per friend', cards_100: ' once' }[el.getAttribute('data-xp')] || ' per note');
     });
     var xp = me ? me.xp || 0 : 0;
     $('#mladder').innerHTML = ranks.map(function (r, i) {
@@ -59,6 +59,8 @@
     list.filter(function (a) { return !a.classList.contains('done'); }).concat(list.filter(function (a) { return a.classList.contains('done'); })).forEach(function (a) { box.appendChild(a); });
     $('#m-vote .mbar i').style.width = (total ? Math.round(done / total * 100) : 0) + '%';
     $('#m-vote .mcount').textContent = done + ' / ' + total;
+    var cc = Math.min(100, me.cards || 0), cb = $('#m-cards');
+    if (cb) { cb.querySelector('.mbar i').style.width = cc + '%'; cb.querySelector('.mcount').textContent = me.cards_100 ? 'Done ✓' : cc + ' / 100'; if (me.cards_100) cb.classList.add('done'); }
     var n = me.feedback || 0;
     $('#m-fb .mfb').textContent = n + ' note' + (n === 1 ? '' : 's') + ' used so far';
   }

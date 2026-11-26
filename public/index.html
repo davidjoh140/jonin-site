@@ -193,7 +193,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .mk span{font:700 11px/1 Inter,sans-serif;padding:4px 6px;border-radius:6px;background:color-mix(in srgb,var(--deep) 90%,transparent);border:1px solid var(--line)}
 .mk .h{color:#7ee2a8;border-color:#2f6b4a}.mk .w{color:#ff9db0;border-color:#6b2f3c}.mk .sl{color:#ffd38a;border-color:#7a5a1f}
 .sellbox{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:color-mix(in srgb,#E53935 10%,var(--panel));border:1px solid color-mix(in srgb,#E53935 45%,transparent);border-radius:10px;padding:10px 12px;font-size:13px;margin:10px 0}.sellbox span{flex:1 1 220px}.sellbox .pill,.sellask .pill{text-decoration:none}
-.sellask{border-color:#E53935}.sellask .st{flex:1 1 220px}
+.sellask{border-color:#E53935}.mile{border-color:#F2C14E;flex-direction:column;align-items:stretch;text-align:center;gap:6px;padding:18px 18px 16px}.mile .mi{font-size:34px;line-height:1}.mile b{font:800 22px 'Baloo 2',sans-serif;color:#F2C14E}.mile p{margin:0}.mile .mbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}.mile .pill{text-decoration:none}.mile .x{position:absolute;top:6px;right:8px}.sellask .st{flex:1 1 220px}
 .gsave{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:color-mix(in srgb,var(--acc) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);border-radius:10px;padding:10px 12px;font-size:13px}
 .gsave .pill{min-height:34px}
 .igrow label{color:var(--mute)}.igat{display:inline-flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--edge);border-radius:8px;padding:0 4px 0 10px;color:var(--mute)}.igat input{all:unset;padding:7px 6px;color:var(--ink);min-width:140px}.igrow .igtip{flex-basis:100%;font-size:12px}
@@ -638,7 +638,7 @@ function sellState(){try{return localStorage.getItem(SKEY)}catch(_){return null}
 function sellSet(v){try{localStorage.setItem(SKEY,v)}catch(_){}}
 const sellBox=()=>{const n=sellCount();return `<div class="sellbox"><span><b>Selling?</b> ${n?'Get an offer on your collection. Your card list gets copied so you can paste it in.':'Get an offer on your cards.'}</span><a class="pill" href="${SELL_URL}" target="_blank" rel="noopener" data-sellgo>Get an offer</a></div>`};
 function sellAsk(){if(sellCount()<SELL_MIN&&!SLABS.length)return;const st=sellState();if(st==='done'||(st&&Date.now()-(+st||0)<SELL_WAIT))return;
-  let seen=null;try{seen=sessionStorage.getItem('jsellv')}catch(_){}if(seen||document.querySelector('.sellask'))return;
+  let seen=null;try{seen=sessionStorage.getItem('jsellv')}catch(_){}if(seen||document.querySelector('.sellask,.mile'))return;
   const ao=$('#authov');if(ao&&!ao.hidden)return;try{sessionStorage.setItem('jsellv','1')}catch(_){}
   document.querySelectorAll('.gtoast').forEach(x=>x.remove());
   const t=document.createElement('div');t.className='gtoast sellask';t.setAttribute('role','dialog');t.setAttribute('aria-label','Get an offer');
@@ -647,6 +647,17 @@ function sellAsk(){if(sellCount()<SELL_MIN&&!SLABS.length)return;const st=sellSt
   document.body.appendChild(t)}
 document.addEventListener('click',e=>{if(!e.target.closest('[data-sellgo]'))return;sellSet('done');const l=sellList();
   if(l&&navigator.clipboard)navigator.clipboard.writeText('My Jonin collection ('+plural(sellCount(),'card')+'):\n'+l).catch(()=>{})});
+// 100-card thank-you (2026-11-26): the first time a signed-in member has 100+ different cards (haves + slabs, same count as
+// the sell popup), Supabase gives a one-time scroll bonus (claim_card_milestone, amount in xp_rules().cards_100) and we say thanks.
+const MILE_AT=100;let MILEDONE=false;
+async function mileCheck(){if(!ME||MILEDONE||sellCount()<MILE_AT||!sbc())return;MILEDONE=true;
+  const r=await sb.rpc('claim_card_milestone').catch(()=>null);if(!r||r.error||!r.data){MILEDONE=false;return}
+  if(!r.data.ok){if(r.data.why==='not_yet')MILEDONE=false;return}if(!r.data.new)return;
+  const n=r.data.scrolls||0;document.querySelectorAll('.gtoast').forEach(x=>x.remove());
+  const t=document.createElement('div');t.className='gtoast mile';t.setAttribute('role','dialog');t.setAttribute('aria-label','Thank you');
+  t.innerHTML=`<button class="x" aria-label="Close">×</button><span class="mi">📜</span><b>100 cards logged. Thank you!</b><p>Every card you log helps build the Naruto CCG database. Here’s a little thank-you: <b style="font-size:inherit">+${n} ${n===1?'scroll':'scrolls'}</b>.</p><div class="mbtns"><a class="pill" href="/missions/">See your rank</a><button type="button" class="clear" data-mok>Keep going</button></div>`;
+  t.addEventListener('click',e=>{if(e.target.closest('.x')||e.target.closest('[data-mok]'))t.remove()});
+  document.body.appendChild(t);if(window.jtrack)jtrack('cards-100',{});loadFbPts();if(window.JoninAcct&&JoninAcct.refresh)JoninAcct.refresh()}
 function toast(msg){const t=document.createElement('div');t.className='gtoast';t.setAttribute('role','status');t.innerHTML='<span>'+esc(msg)+'</span><button class="x" aria-label="Dismiss">×</button>';t.querySelector('.x').onclick=()=>t.remove();document.body.appendChild(t);setTimeout(()=>t.remove(),6000)}
 async function mergeGuest(g){const rows=[];
   g.items.forEach(([k,q])=>{const a=k.split('|');const cur=COLL.get(k)||0;const n=Math.max(cur,q);if(n!==cur){COLL.set(k,n);if(a[3]==='have'&&n>cur&&g.conds&&g.conds.get(k))CONDS.set(k,g.conds.get(k));const row={user_id:ME.id,card_id:a[0],printing:a[1],edition:a[2],kind:a[3],qty:n,updated_at:new Date().toISOString()};if(a[3]==='have')row.conds=condsOf(k);rows.push(row)}});
@@ -662,7 +673,7 @@ function refreshMarks(){if(VIEW==='sets'&&D)renderSets();document.querySelectorA
 function sbc(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPA,SUPA_KEY);return sb}
 async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],conds:new Map(CONDS),slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();CONDS.clear();COMPS.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;MYBADGE=null;NMNEXT=undefined;NMEDIT=false;LISTS=[];LITEMS=new Map();OPENL='';
   if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty,conds').limit(20000),sb.from('memberships').select('active,until,founding').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>{const k=ck(i.card_id,i.printing,i.edition,i.kind);COLL.set(k,i.qty);if(Array.isArray(i.conds))CONDS.set(k,i.conds)});SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));MYBADGE=MEMBER?(m.founding?'founding':'premium'):null;loadFbPts();loadLists();
-    if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest);
+    if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest);setTimeout(mileCheck,1500);
     // Theme follows the account across devices.
     if(MYP&&MYP.theme&&window.joninSetTheme){let cur='';try{cur=localStorage.getItem('jtheme')||''}catch(_){}if(cur!==MYP.theme)joninSetTheme(MYP.theme)}
     // One-time setup page after sign-up (favorite characters, a few questions, theme). Finishing or skipping sets setup_done_at.
@@ -719,7 +730,7 @@ async function setItem(c,p,ed,kind,qty,conds){const id=cid(c),k=ck(id,p,ed,kind)
   if(qty>0&&!before&&window.jtrack)jtrack('collection-add',{kind,signed_in:!!ME});
   if(!ME){gSave();paintAcct();return}
   const r=qty>0?await sb.from('collection_items').upsert(Object.assign({user_id:ME.id,card_id:id,printing:p,edition:ed,kind,qty,updated_at:new Date().toISOString()},kind==='have'?{conds:condsOf(k)}:{})):await sb.from('collection_items').delete().match({user_id:ME.id,card_id:id,printing:p,edition:ed,kind});
-  if(r.error){if(before)COLL.set(k,before);else COLL.delete(k);if(cbefore)CONDS.set(k,cbefore);else CONDS.delete(k);renderMyColl(c);refreshMarks();const b=$('#mycoll');if(b)b.insertAdjacentHTML('beforeend','<p class="mt" style="color:#ff8b8b;margin:0">Could not save. Check your connection and try again.</p>')}}
+  if(r.error){if(before)COLL.set(k,before);else COLL.delete(k);if(cbefore)CONDS.set(k,cbefore);else CONDS.delete(k);renderMyColl(c);refreshMarks();const b=$('#mycoll');if(b)b.insertAdjacentHTML('beforeend','<p class="mt" style="color:#ff8b8b;margin:0">Could not save. Check your connection and try again.</p>')}else if(qty>0&&kind==='have')mileCheck()}
 const combos=c=>{const eds=(c.ed||[]).filter(Boolean);const ps=(c.v&&c.v.length?c.v:['Normal']);return (eds.length?eds:['']).flatMap(e=>ps.map(p=>[p,e]))};
 const GRADERS=['PSA','BGS','CGC','SGC','TAG','Other'];
 function slabBlock(c){const id=cid(c),mine=SLABS.filter(s=>s.card_id===id),cs=combos(c);
@@ -753,7 +764,7 @@ async function saveSlab(c){const f=$('#slabf');if(!f)return;const msg=$('#slabms
   const grade=f.querySelector('[name=gr]').value.trim(),cert=f.querySelector('[name=ce]').value.trim(),grader=f.querySelector('[name=g]').value;
   if(!grade){msg.textContent='Add the grade.';return}
   const row={card_id:cid(c),printing:p,edition:e||'',grader,grade:grade.slice(0,12),cert:cert.slice(0,30)||null,counted:slabsHave()};
-  if(ME){msg.textContent='Saving…';const r=await sb.from('collection_slabs').insert(row).select('id,card_id,printing,edition,grader,grade,cert,counted').single();if(r.error){msg.textContent='Could not save. Try again.';return}SLABS.push(r.data)}
+  if(ME){msg.textContent='Saving…';const r=await sb.from('collection_slabs').insert(row).select('id,card_id,printing,edition,grader,grade,cert,counted').single();if(r.error){msg.textContent='Could not save. Try again.';return}SLABS.push(r.data);mileCheck()}
   else{SLABS.push(Object.assign({id:'g'+Date.now()},row));gSave();paintAcct();nudge()}
   SLABFORM='';setTimeout(sellAsk,2500);if(row.counted){const k=ck(row.card_id,row.printing,row.edition,'have');await setItem(c,row.printing,row.edition,'have',(COLL.get(k)||0)+1)}renderMyColl(c);refreshMarks()}
 async function delSlab(c,id){const i=SLABS.findIndex(s=>String(s.id)===id);if(i<0)return;const [old]=SLABS.splice(i,1);renderMyColl(c);refreshMarks();
