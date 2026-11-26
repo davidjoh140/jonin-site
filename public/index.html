@@ -196,7 +196,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .card .slg{font-size:12px;font-weight:700;color:#ffd38a;margin-top:3px}
 .pchip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--edge);color:var(--ink);font-size:13px;font-weight:600;background:var(--bg)}
 .sellbox{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:color-mix(in srgb,#E53935 10%,var(--panel));border:1px solid color-mix(in srgb,#E53935 45%,transparent);border-radius:10px;padding:10px 12px;font-size:13px;margin:10px 0}.sellbox span{flex:1 1 220px}.sellbox .pill,.sellask .pill{text-decoration:none}
-.sellask{border-color:#E53935}.mile{border-color:#F2C14E;flex-direction:column;align-items:stretch;text-align:center;gap:6px;padding:18px 18px 16px}.mile .mi{font-size:34px;line-height:1}.mile b{font:800 22px 'Baloo 2',sans-serif;color:#F2C14E}.mile p{margin:0}.mile .mbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}.mile .pill{text-decoration:none}.mile .x{position:absolute;top:6px;right:8px}.sellask .st{flex:1 1 220px}
+.sellask{border-color:#E53935}.slabask{border-color:#F2C14E}.slabask .st{flex:1 1 100%}.slabask .mt{display:block;font-size:12px;margin-top:2px}.mile{border-color:#F2C14E;flex-direction:column;align-items:stretch;text-align:center;gap:6px;padding:18px 18px 16px}.mile .mi{font-size:34px;line-height:1}.mile b{font:800 22px 'Baloo 2',sans-serif;color:#F2C14E}.mile p{margin:0}.mile .mbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}.mile .pill{text-decoration:none}.mile .x{position:absolute;top:6px;right:8px}.sellask .st{flex:1 1 220px}
 .gsave{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:color-mix(in srgb,var(--acc) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);border-radius:10px;padding:10px 12px;font-size:13px}
 .gsave .pill{min-height:34px}
 .igrow label{color:var(--mute)}.igat{display:inline-flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--edge);border-radius:8px;padding:0 4px 0 10px;color:var(--mute)}.igat input{all:unset;padding:7px 6px;color:var(--ink);min-width:140px}.igrow .igtip{flex-basis:100%;font-size:12px}
@@ -675,7 +675,7 @@ function sellState(){try{return localStorage.getItem(SKEY)}catch(_){return null}
 function sellSet(v){try{localStorage.setItem(SKEY,v)}catch(_){}}
 const sellBox=()=>{const n=sellCount();return `<div class="sellbox"><span><b>Selling?</b> ${n?'Get an offer on your collection. Your card list gets copied so you can paste it in.':'Get an offer on your cards.'}</span><a class="pill" href="${SELL_URL}" target="_blank" rel="noopener" data-sellgo>Get an offer</a></div>`};
 function sellAsk(){if(sellCount()<SELL_MIN&&!SLABS.length)return;const st=sellState();if(st==='done'||(st&&Date.now()-(+st||0)<SELL_WAIT))return;
-  let seen=null;try{seen=sessionStorage.getItem('jsellv')}catch(_){}if(seen||document.querySelector('.sellask,.mile'))return;
+  let seen=null;try{seen=sessionStorage.getItem('jsellv')}catch(_){}if(seen||document.querySelector('.sellask,.mile,.slabask'))return;
   const ao=$('#authov');if(ao&&!ao.hidden)return;try{sessionStorage.setItem('jsellv','1')}catch(_){}
   document.querySelectorAll('.gtoast').forEach(x=>x.remove());
   const t=document.createElement('div');t.className='gtoast sellask';t.setAttribute('role','dialog');t.setAttribute('aria-label','Get an offer');
@@ -684,6 +684,20 @@ function sellAsk(){if(sellCount()<SELL_MIN&&!SLABS.length)return;const st=sellSt
   document.body.appendChild(t)}
 document.addEventListener('click',e=>{if(!e.target.closest('[data-sellgo]'))return;sellSet('done');const l=sellList();
   if(l&&navigator.clipboard)navigator.clipboard.writeText('My Jonin collection ('+plural(sellCount(),'card')+'):\n'+l).catch(()=>{})});
+// First-slab privacy question (David, 2026-11-26): once a signed-in member has a slab, ask one time whether their slabs
+// are public or private. profiles.slab_privacy_asked_at marks it answered (× counts too). "Make public" turns on
+// show_slabs, and sharing too if it's off, since slabs can't show on an unshared profile. Members who already had slabs
+// get it the next time they open My collection (placeholder). Guests get it after they sign in.
+async function slabAsk(){if(!ME||!MYP||!SLABS.length||MYP.slab_privacy_asked_at||document.querySelector('.slabask'))return;
+  if(MYP.show_slabs&&MYP.sharing){slabMark({});return}
+  document.querySelectorAll('.gtoast').forEach(x=>x.remove());
+  const t=document.createElement('div');t.className='gtoast slabask';t.setAttribute('role','dialog');t.setAttribute('aria-label','Slab privacy');
+  t.innerHTML=`<button class="x" aria-label="Keep private">×</button><span class="st"><b>Show your slabs on your public profile?</b><span class="mt">Grade only, never cert numbers. You can change this anytime on My collection.</span></span><button type="button" class="pill" data-slabpub>Make public</button><button type="button" class="clear" data-slabpriv>Keep private</button>`;
+  t.addEventListener('click',e=>{if(e.target.closest('[data-slabpub]')){t.remove();slabMark({show_slabs:true,sharing:true})}
+    else if(e.target.closest('[data-slabpriv]')||e.target.closest('.x')){t.remove();slabMark({})}});
+  document.body.appendChild(t)}
+async function slabMark(extra){const r=await sb.from('profiles').update(Object.assign({slab_privacy_asked_at:new Date().toISOString()},extra)).eq('id',ME.id).select().maybeSingle();
+  if(!r.error&&r.data){MYP=r.data;if(extra.show_slabs){toast('Your slabs now show on your public profile.');if(window.jtrack)jtrack('slabs-public',{})}if(VIEW==='mine')renderMine()}}
 // 100-card thank-you (2026-11-26): the first time a signed-in member has 100+ different cards (haves + slabs, same count as
 // the sell popup), Supabase gives a one-time scroll bonus (claim_card_milestone, amount in xp_rules().cards_100) and we say thanks.
 const MILE_AT=100;let MILEDONE=false;
@@ -818,7 +832,7 @@ async function saveSlab(c){const f=$('#slabf');if(!f)return;const msg=$('#slabms
   const grade=f.querySelector('[name=gr]').value.trim(),cert=f.querySelector('[name=ce]').value.trim(),grader=f.querySelector('[name=g]').value;
   if(!grade){msg.textContent='Add the grade.';return}
   const row={card_id:cid(c),printing:p,edition:e||'',grader,grade:grade.slice(0,12),cert:cert.slice(0,30)||null,counted:slabsHave()};
-  if(ME){msg.textContent='Saving…';const r=await sb.from('collection_slabs').insert(row).select('id,card_id,printing,edition,grader,grade,cert,counted,psa_status,psa_front').single();if(r.error){msg.textContent='Could not save. Try again.';return}SLABS.push(r.data);mileCheck()}
+  if(ME){msg.textContent='Saving…';const r=await sb.from('collection_slabs').insert(row).select('id,card_id,printing,edition,grader,grade,cert,counted,psa_status,psa_front').single();if(r.error){msg.textContent='Could not save. Try again.';return}SLABS.push(r.data);mileCheck();slabAsk()}
   else{SLABS.push(Object.assign({id:'g'+Date.now()},row));gSave();paintAcct();nudge()}
   SLABFORM='';setTimeout(sellAsk,2500);if(row.counted){const k=ck(row.card_id,row.printing,row.edition,'have');await setItem(c,row.printing,row.edition,'have',(COLL.get(k)||0)+1)}renderMyColl(c);refreshMarks()}
 async function delSlab(c,id){const i=SLABS.findIndex(s=>String(s.id)===id);if(i<0)return;const [old]=SLABS.splice(i,1);renderMyColl(c);refreshMarks();
@@ -905,7 +919,7 @@ let FBPTS=null;
 function loadFbPts(){if(!ME||!sbc())return;sb.rpc('my_xp').then(r=>{if(!r.error&&r.data){FBPTS=r.data;paintAcct();const el=$('#v-mine');if(el&&el.innerHTML)renderMine()}}).catch(()=>{})}
 function rankRow(){if(!FBPTS)return '';const p=FBPTS.xp!=null?FBPTS.xp:(FBPTS.points||0),lo=FBPTS.prev_at||0;const pct=FBPTS.next_at?Math.min(100,Math.round((p-lo)/(FBPTS.next_at-lo)*100)):100;
   return `<div class="share fbrank"><span>Rank:</span><b>${esc(FBPTS.rank)}</b><span class="mt">📜 ${p} ${p===1?'scroll':'scrolls'}${FBPTS.next?` · ${FBPTS.next_at-p} ${FBPTS.next_at-p===1?'scroll':'scrolls'} to ${esc(FBPTS.next)}`:''}</span><span class="fbbar" aria-hidden="true"><i style="width:${pct}%"></i></span><a class="clear" href="/missions/" style="text-decoration:none">Missions: earn scrolls</a></div>`}
-function renderMine(){const el=$('#v-mine');if(!ME){const n=gCount();if(!n){el.innerHTML='<h1>My collection</h1><p class="mt">Sign up or sign in to track your haves, wants and slabs.</p><div class="row"><button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button></div>'+sellBox();return}
+function renderMine(){const el=$('#v-mine');if(ME)setTimeout(slabAsk,800);if(!ME){const n=gCount();if(!n){el.innerHTML='<h1>My collection</h1><p class="mt">Sign up or sign in to track your haves, wants and slabs.</p><div class="row"><button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button></div>'+sellBox();return}
     listView(el,`<div class="mhead"><h1>My collection</h1><div class="macts"></div></div><div class="gsave"><span><b>Saved on this device only.</b> If you clear your browser or switch phones, it’s gone. Make a free account to keep it and share it.</span><button type="button" class="pill" data-auth="up">Sign up so you don’t lose it</button><button type="button" class="clear" data-auth="in">I have an account</button></div>${sellSlim()}`,COLL,false);return}
   const link=MYP?location.origin+'/#u='+MYP.share_slug:'';
   // Cleanup (2026-11-26): profile/sharing rows live in one collapsible "Profile settings" panel; rank, share link and Get an offer sit in the header.
