@@ -81,7 +81,7 @@ def year_page(y, ysets, cards, years, chars, sets_by_id):
     lede = (f'Bandai released {len(ysets)} Naruto CCG product{"s" if len(ysets) != 1 else ""} in {y}'
             + (f', including {len(main)} main set{"s" if len(main) != 1 else ""}' if main and len(main) != len(ysets) else '')
             + f': {len(cs)} cards in all. '
-            + (f'{len(priced)} of them have a recorded sale on Jonin, selling for {money_span(sp)} depending on the card, edition, foil and grade.'
+            + (f'{len(priced)} of them have a recorded sale on Jonin, with typical copies selling for {money_span(sp)} depending on the card.'
                if sp else 'Prices fill in as sales are recorded.'))
     setrows = ''.join(f'<a class="chip" href="/set/{B.set_slug(s)}/">{B.sym_img(s)}{e(s["name"])}'
                       f'{" · " + e(s["rel"]) if s.get("rel") else ""}</a>' for s in ysets)
@@ -97,7 +97,7 @@ def year_page(y, ysets, cards, years, chars, sets_by_id):
         csp = span_of(mine)
         sections.append(
             f'<section class="cgroup" id="{e(ch["slug"])}"><h2>{y} {e(ch["name"])} cards<span>{len(mine)} card{"s" if len(mine) != 1 else ""}</span></h2>'
-            + (f'<p class="mt">Selling for {e(money_span(csp))} depending on the card, edition, foil and grade.</p>' if csp else '')
+            + (f'<p class="mt">Typical copies sell for {e(money_span(csp))} depending on the card.</p>' if csp else '')
             + f'<div class="grid">{"".join(tile_px(c, sets_by_id[c["s"]]) for c in mine[:YEAR_CHAR_CARDS])}</div>'
             + f'<p class="mt"><a href="/character/{e(ch["slug"])}/">Every {e(ch["name"])} card →</a>'
             + (f' · <a href="/character/{e(ch["slug"])}/most-valuable/">Most valuable {e(ch["name"])} cards →</a>' if ch.get('mv') else '')
@@ -106,7 +106,7 @@ def year_page(y, ysets, cards, years, chars, sets_by_id):
             best = next((c for c in mine if c.get('pr')), None)
             qas.append((f'What is my {y} {ch["label"]} card worth?',
                         f'It depends which card you have. Bandai printed {len(mine)} {e(ch["name"])} card{"s" if len(mine) != 1 else ""} in {y}, '
-                        f'and the ones with recorded sales go for {e(money_span(csp))}, depending on the card, edition, foil and grade. '
+                        f'and a typical copy of the ones with recorded sales goes for {e(money_span(csp))}, depending on which card it is. '
                         + (f'The highest seller so far is <a href="/card/{B.slug(best)}/">{e(best["name"])} {e(best["n"])}</a> '
                            f'({e(B.range_text(best))}). ' if best else '')
                         + 'Find your exact card in the list above to see its price.'))

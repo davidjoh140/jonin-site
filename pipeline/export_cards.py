@@ -78,18 +78,28 @@ def _round_sig(v, up):
     return int((math.ceil if up else math.floor)(v / step) * step) or 1
 
 
-def price_range(rows):
-    """Free price range for a card: [low, high] across every recorded sale of every version
-    (raw to graded), rounded so exact comps stay Jonin Club only. None with no sales.
-    PLACEHOLDER rule (all versions, 2-significant-figure rounding) for David to revisit."""
-    if not rows:
+def price_range(sales):
+    """Free price range for one card from its approved sales: [low, high] of a typical copy, rounded so exact
+    comps stay Jonin Club only, plus "raw" or "graded" for which copies it describes. None with no sales.
+    PLACEHOLDER rules for David to revisit: raw sales only when the card has any (graded otherwise);
+    with 4+ sales the middle half (25th–75th percentile) so one-off highs and lows don't stretch it;
+    rounded to 2 significant figures."""
+    ok = [x for x in sales if x.get("status") == "approved" and float(x.get("price") or 0) > 0
+          and (x.get("printing") or "") != "?" and (x.get("edition") or "") != "?"]
+    raw = [float(x["price"]) for x in ok if (x.get("grader") or "Raw") == "Raw"]
+    kind, ps = ("raw", raw) if raw else ("graded", [float(x["price"]) for x in ok])
+    if not ps:
         return None
-    lo = min(min(r[4], r[5]) for r in rows)
-    hi = max(max(r[4], r[5]) for r in rows)
-    if lo <= 0 or hi <= 0:
-        return None
+    ps.sort()
+    if len(ps) >= 4:
+        lo, hi = ps[(len(ps) - 1) // 4], ps[-1 - (len(ps) - 1) // 4]
+    else:
+        lo, hi = ps[0], ps[-1]
+    if lo == hi:                       # one price: show "about $X" rounded to the nearest 2 figures
+        v = round(lo) if lo < 10 else int(round(lo, -(len(str(int(lo))) - 2)))
+        return [v, v], kind
     a, b = _round_sig(lo, False), _round_sig(hi, True)
-    return [a, max(a, b)]
+    return [a, max(a, b)], kind
 
 
 def version_label(sale):
@@ -315,6 +325,9 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
     pnames = {p["id"]: p["name"] for p in products}
     px = price_rows(ranges)
     tops = top_sales(sales)
+    sales_by = {}
+    for x in sales:
+        sales_by.setdefault(x.get("card_id"), []).append(x)
     am = attr_map(attrs)
     out_cards = []
     for c in sorted(cards, key=lambda c: (c.get("sort") is None, c.get("sort"), c["id"])):
@@ -333,9 +346,11 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
             o["img"] = url_for(u[len("storage:scans/"):]) if u.startswith("storage:scans/") else u
         if c["id"] in px:
             o["pb"] = price_band(px[c["id"]])   # free price band only; exact prices stay in Supabase (Jonin Club)
-            pr = price_range(px[c["id"]])
+            pr = price_range(sales_by.get(c["id"], ()))
             if pr:
-                o["pr"] = pr                    # free rounded low–high across all versions (card pages, Google)
+                o["pr"] = pr[0]                 # free rounded range of a typical copy (card pages, Google)
+                if pr[1] == "graded":
+                    o["prk"] = "g"              # no raw sales: the range describes graded copies
         if c["id"] in tops:
             o["top"] = tops[c["id"]]
         if c["id"] in am:

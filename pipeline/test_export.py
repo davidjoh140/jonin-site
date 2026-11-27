@@ -44,9 +44,11 @@ def test_load_skips_reviewed():
     assert [r["card_id"] for r in sent] == ["1:N-3"]
 
 
-def test_price_range_rounds_out_and_spans_versions():
+def test_price_range_typical_raw_copy():
     from export_cards import price_range
-    rows = [["Normal", "1st Edition", "Raw", "", 13.5, 22, 3, ""], ["Normal", "1st Edition", "PSA", "10", 1247, 1247, 1, ""]]
-    assert price_range(rows) == [13, 1300]
-    assert price_range([["", "", "Raw", "", 7.4, 7.4, 1, ""]]) == [7, 8]
-    assert price_range([]) is None
+    s = lambda p, g="Raw", st="approved": {"price": p, "grader": g, "status": st, "printing": "Normal", "edition": "1st Edition"}
+    # raw only, middle half of 8 sales: drops the $3 low and the $400 high
+    assert price_range([s(p) for p in (3, 12, 14, 15, 18, 20, 22, 400)] + [s(5000, "PSA")]) == ([12, 22], "raw")
+    assert price_range([s(13.5), s(22)]) == ([13, 22], "raw")
+    assert price_range([s(1247, "PSA")]) == ([1200, 1200], "graded")
+    assert price_range([s(50, st="pending")]) is None

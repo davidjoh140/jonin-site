@@ -172,8 +172,9 @@ def price_block(c):
     guide = '<p class="mt pgl"><a href="/price-guide/">Naruto CCG price guide →</a></p>'
     rt = range_text(c)
     if rt:
-        return (f'<section class="px"><h3>Market price<span> across all versions</span></h3>'
-                f'<p class="band">{e(rt)}</p><p class="mt">What it sells for, depending on edition, foil and grade, from real sales.</p>'
+        return (f'<section class="px"><h3>Market price<span> typical copy</span></h3>'
+                f'<p class="band">{e(rt)}</p><p class="mt">{"A typical graded copy" if c.get("prk") == "g" else "A typical raw copy"}, from real sales. '
+                f'{"Higher grades and rarer versions" if c.get("prk") == "g" else "Graded copies and rarer versions"} can sell for more.</p>'
                 f'{lock}{guide}</section>')
     if pb is None or not 0 <= pb < len(BANDS):
         return f'<section class="px"><h3>Market price</h3>{lock}{guide}</section>'
@@ -744,7 +745,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
     rt = range_text(c)
     band = BANDS[c['pb']] if c.get('pb') is not None and 0 <= c['pb'] < len(BANDS) else ''
     desc = (f"What is the {y + ' ' if y else ''}{c['name']} {slab_num(c)} from {s['name']} worth? "
-            + (f"It sells for {rt}, depending on edition, foil and grade. " if rt else
+            + (f"A typical {'graded' if c.get('prk') == 'g' else 'raw'} copy sells for {rt}. " if rt else
                f"Market price: {band}. " if band else '')
             + f"{c['r']} {c['t']} card, {slab_set(s).split(':')[0]} of the Bandai Naruto CCG. "
             f"Printings: {', '.join(c.get('v') or [])}{'; ' + ' and '.join(eds) if eds else ''}. "
