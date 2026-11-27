@@ -1,7 +1,7 @@
 name: One-off PR068B scan fix
 on:
   push: { branches: [fix-pr068b-images] }
-permissions: { contents: read }
+permissions: { contents: write }
 jobs:
   fix:
     runs-on: ubuntu-latest
@@ -19,5 +19,7 @@ jobs:
           R2_BUCKET: jonin-scans
           WRITE_MASTER: "0"
         run: python pipeline/oneoff/fix_pr068b.py
-      - uses: actions/upload-artifact@v4
-        with: { name: preview, path: out/*_strip.png }
+      - run: |
+          mkdir /tmp/p && cp out/*_strip.png /tmp/p/ && cd /tmp/p && git init -q -b preview && git add . \
+            && git -c user.name=bot -c user.email=bot@jonin.cards commit -qm preview \
+            && git push -qf https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} preview:fix-pr068b-preview
