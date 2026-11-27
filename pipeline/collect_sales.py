@@ -304,7 +304,7 @@ def main():
         stats["sealed_matched"] = len(srows)
         batch = list(rows.values())
         for i in range(0, len(batch), 500):
-            supa.upsert("listings", batch[i:i + 500], "external_id")
+            supa.upsert_skipping_conflicts("listings", batch[i:i + 500], "external_id")
         try:
             sb = list(srows.values())
             for i in range(0, len(sb), 500):

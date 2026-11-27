@@ -92,6 +92,35 @@ def upsert(table, rows, on_conflict):
     r.raise_for_status()
 
 
+def upsert_skipping_conflicts(table, rows, on_conflict, unique=("url",)):
+    """upsert(), but a row that clashes with another unique column (e.g. two eBay variation items sharing one
+    listing URL) is skipped instead of failing the whole batch (2026-11-27: one such clash stopped every price run)."""
+    seen, keep = {k: set() for k in unique}, []
+    for r in rows:                                  # duplicates inside the batch itself
+        if any(r.get(k) and r[k] in seen[k] for k in unique):
+            continue
+        for k in unique:
+            if r.get(k):
+                seen[k].add(r[k])
+        keep.append(r)
+    try:
+        upsert(table, keep, on_conflict)
+        return 0
+    except requests.HTTPError as e:
+        if e.response is None or e.response.status_code != 409:
+            raise
+    skipped = 0                                     # a clash with a row already in the table: go one by one
+    for r in keep:
+        try:
+            upsert(table, [r], on_conflict)
+        except requests.HTTPError as e:
+            if e.response is None or e.response.status_code != 409:
+                raise
+            skipped += 1
+    print(f"{table}: skipped {skipped} row(s) that clash on {', '.join(unique)}")
+    return skipped
+
+
 def rpc(fn, args=None):
     r = requests.post(f"{URL}/rest/v1/rpc/{fn}", json=args or {},
                       headers=_h({"Content-Type": "application/json"}), timeout=120)
