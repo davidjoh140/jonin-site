@@ -75,14 +75,14 @@
     });
 
     /* YouTube player */
-    var P,shuf=ls('jmusic_shuf')==='1',vol=+(ls('jmusic_vol')||60);
+    var P,fails=0,shuf=ls('jmusic_shuf')==='1',vol=+(ls('jmusic_vol')||60);
     $('jvl').value=vol;$('jsh').classList.toggle('on',shuf);
     function info(){if(!P||!P.getVideoData)return;var d=P.getVideoData()||{};if(d.title)$('jtt').textContent=d.title}
     window.onYouTubeIframeAPIReady=function(){
       P=new YT.Player('jyt',{width:200,height:200,playerVars:{listType:'playlist',list:LIST,autoplay:1,rel:0,playsinline:1},
         events:{onReady:function(){P.setVolume(vol);if(shuf){P.setShuffle(true);P.playVideoAt(0)}else P.playVideo();info()},
-          onStateChange:function(e){$('jpp').textContent=e.data===1?'⏸':'▶';info()},   // 1 = playing; if a phone blocks autoplay, tap ▶
-          onError:function(){$('jtt').textContent='Track unavailable, skipping…';setTimeout(function(){P.nextVideo()},1500)}}});
+          onStateChange:function(e){if(e.data===1)fails=0;$('jpp').textContent=e.data===1?'⏸':'▶';info()},   // 1 = playing; if a phone blocks autoplay, tap ▶
+          onError:function(e){fails++;if(fails>=5){$('jtt').textContent='YouTube blocks these tracks off YouTube (code '+e.data+')';return}$('jtt').textContent='Track unavailable, skipping…';setTimeout(function(){P.nextVideo()},1200)}}});
     };
     var y=document.createElement('script');y.src='https://www.youtube.com/iframe_api';document.head.appendChild(y);
     $('jpp').onclick=function(){if(!P)return;P.getPlayerState()===1?P.pauseVideo():P.playVideo()};
