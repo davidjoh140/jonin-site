@@ -28,6 +28,9 @@
 .sf .opt{font-weight:400;color:var(--mute)}
 .sf input[type=text],.sf input[type=email],.sf input[type=tel],.sf textarea{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--ink);font:inherit}
 .sf textarea{min-height:90px;resize:vertical}
+.sf select{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--ink);font:inherit}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sf [hidden]{display:none!important}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chips label{margin:0;font-weight:500;display:inline-flex}
 .chips input{position:absolute;opacity:0;width:1px;height:1px}
@@ -62,25 +65,23 @@
 <form class="sf" id="sf" novalidate>
 <div><label for="f-name">Your name</label><input id="f-name" name="name" type="text" autocomplete="name" required maxlength="120"></div>
 <div><label for="f-email">Email</label><input id="f-email" name="email" type="email" autocomplete="email" required maxlength="200"></div>
-<div><label for="f-phone">Phone <span class="opt">(optional, if you'd rather text)</span></label><input id="f-phone" name="phone" type="tel" autocomplete="tel" maxlength="40"></div>
-<div><label for="f-town">Town or ZIP code</label><input id="f-town" name="town" type="text" autocomplete="postal-code" maxlength="80"></div>
-<div><label>About how many Naruto cards do you have?</label><div class="chips" role="radiogroup">
-<label><input type="radio" name="card_count" value="Under 100"><span>Under 100</span></label>
-<label><input type="radio" name="card_count" value="100–500"><span>100–500</span></label>
-<label><input type="radio" name="card_count" value="500–1,000"><span>500–1,000</span></label>
-<label><input type="radio" name="card_count" value="1,000+"><span>1,000+</span></label></div></div>
-<div><label>Any shiny/foil cards?</label><div class="chips" role="radiogroup">
-<label><input type="radio" name="has_foils" value="Yes"><span>Yes</span></label>
-<label><input type="radio" name="has_foils" value="No"><span>No</span></label>
-<label><input type="radio" name="has_foils" value="Not sure"><span>Not sure</span></label></div></div>
+<div><label for="f-phone">Phone <span class="opt">(optional, if you'd rather text. Outside the US? Add your country code.)</span></label><input id="f-phone" name="phone" type="tel" autocomplete="tel" maxlength="40"></div>
+<div><label for="f-country">Country</label><select id="f-country" name="country"><option>United States</option><option>Canada</option><option>Mexico</option><option>United Kingdom</option><option>Ireland</option><option>France</option><option>Germany</option><option>Italy</option><option>Spain</option><option>Portugal</option><option>Netherlands</option><option>Belgium</option><option>Switzerland</option><option>Austria</option><option>Sweden</option><option>Norway</option><option>Denmark</option><option>Finland</option><option>Poland</option><option>Australia</option><option>New Zealand</option><option>Japan</option><option>South Korea</option><option>Philippines</option><option>Singapore</option><option>Malaysia</option><option>Indonesia</option><option>Thailand</option><option>Brazil</option><option>Argentina</option><option>Chile</option><option>Colombia</option><option>Peru</option><option value="Other">Other country</option></select>
+<input id="f-country-other" name="country_other" type="text" placeholder="Your country" maxlength="60" hidden style="margin-top:8px"></div>
+<div id="loc-us" class="row2"><div><label for="f-state">State</label><select id="f-state" name="state"><option value="">State</option><option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option><option>CT</option><option>DE</option><option>DC</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option><option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option><option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option><option>PR</option><option>RI</option><option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option><option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option></select></div>
+<div><label for="f-postal">ZIP code</label><input id="f-postal" name="postal" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="10"></div></div>
+<div id="loc-intl" hidden><label for="f-city">City</label><input id="f-city" name="city" type="text" autocomplete="address-level2" maxlength="80"></div>
+<div><label>What are you selling? <span class="opt">(pick all that apply)</span></label><div class="chips"><label><input type="checkbox" name="selling" value="Singles"><span>Singles</span></label><label><input type="checkbox" name="selling" value="Graded slabs"><span>Graded slabs</span></label><label><input type="checkbox" name="selling" value="Sealed"><span>Sealed</span></label></div></div>
+<div><label>Card language</label><div class="chips"><label><input type="radio" name="language" value="English"><span>English</span></label><label><input type="radio" name="language" value="Japanese"><span>Japanese</span></label><label><input type="radio" name="language" value="French"><span>French</span></label><label><input type="radio" name="language" value="Other"><span>Other</span></label><label><input type="radio" name="language" value="Mixed"><span>Mixed</span></label></div></div>
+<div><label>About how many cards?</label><div class="chips"><label><input type="radio" name="card_count" value="Under 100"><span>Under 100</span></label><label><input type="radio" name="card_count" value="100–500"><span>100–500</span></label><label><input type="radio" name="card_count" value="500–1,000"><span>500–1,000</span></label><label><input type="radio" name="card_count" value="1,000+"><span>1,000+</span></label></div></div>
+<div><label>Roughly what's it all worth?</label><div class="chips"><label><input type="radio" name="value_range" value="Under $100"><span>Under $100</span></label><label><input type="radio" name="value_range" value="$100–500"><span>$100–500</span></label><label><input type="radio" name="value_range" value="$500–2,000"><span>$500–2,000</span></label><label><input type="radio" name="value_range" value="$2,000–10,000"><span>$2,000–10,000</span></label><label><input type="radio" name="value_range" value="$10,000+"><span>$10,000+</span></label><label><input type="radio" name="value_range" value="Not sure"><span>Not sure</span></label></div></div>
 <div><label for="f-photos">Photos of your cards</label>
-<div class="drop" id="drop" tabindex="0" role="button" aria-label="Add photos">Tap to add photos<div class="fine">Binder pages, the whole pile, and close-ups of any shiny cards. Up to 20.</div></div>
+<div class="drop" id="drop" tabindex="0" role="button" aria-label="Add photos">Tap to add photos<div class="fine">Binder pages, the whole pile, and close-ups of your best cards. Up to 20.</div></div>
 <input id="f-photos" type="file" accept="image/*" multiple hidden>
 <div class="thumbs" id="thumbs"></div></div>
-<div><label for="f-about">Tell us about your collection <span class="opt">(optional)</span></label><textarea id="f-about" name="about" maxlength="4000"></textarea></div>
-<div><label>Local pickup or ship?</label><div class="chips" role="radiogroup">
-<label><input type="radio" name="handoff" value="Local pickup (NJ/NY/PA)"><span>Local pickup (NJ/NY/PA)</span></label>
-<label><input type="radio" name="handoff" value="Ship"><span>Ship</span></label></div></div>
+<div><label for="f-about">Anything else? <span class="opt">(optional)</span></label><textarea id="f-about" name="about" maxlength="4000" placeholder="List your best cards here."></textarea></div>
+<div id="handoff-box"><label>Local pickup or ship?</label><div class="chips"><label><input type="radio" name="handoff" value="Local pickup (NJ/NY/PA)"><span>Local pickup (NJ/NY/PA)</span></label><label><input type="radio" name="handoff" value="Ship"><span>Ship</span></label></div></div>
+<p class="fine" id="ship-note" hidden>You'll ship your cards. We'll sort out shipping before anything is agreed.</p>
 <p class="err" id="ferr" role="alert"></p>
 <div><button class="sbtn" id="sbtn" type="submit">Get my cash offer</button></div>
 <p class="fine">No obligation. Your info goes only to Jonin or one trusted buyer, and only with your OK. Questions: <a href="mailto:buy@jonin.cards">buy@jonin.cards</a></p>
@@ -105,11 +106,27 @@ var rid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().
 async function upload(fl,i){var s=await shrink(fl),path='u/'+rid+'/'+(i+1)+'.'+s.ext;
  var r=await fetch(SUPA+'/storage/v1/object/sell-photos/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':s.type},body:s.blob});
  if(!r.ok)throw new Error('photo');return SUPA+'/storage/v1/object/public/sell-photos/'+path}
+var cSel=document.getElementById('f-country'),cOth=document.getElementById('f-country-other'),sSel=document.getElementById('f-state'),
+ lUS=document.getElementById('loc-us'),lIn=document.getElementById('loc-intl'),hBox=document.getElementById('handoff-box'),sNote=document.getElementById('ship-note');
+function country(){return cSel.value==='Other'?cOth.value.trim():cSel.value}
+function local(){return cSel.value==='United States'&&/^(NJ|NY|PA)$/.test(sSel.value)}
+function syncLoc(){var us=cSel.value==='United States';cOth.hidden=cSel.value!=='Other';lUS.hidden=!us;lIn.hidden=us;
+ var loc=local();if(loc&&hBox.hidden)f.querySelectorAll('[name=handoff]').forEach(function(x){x.checked=false});hBox.hidden=!loc;sNote.hidden=loc||(us&&!sSel.value);
+ if(!loc){var sh=f.querySelector('[name=handoff][value="Ship"]');if(sh)sh.checked=true}}
+cSel.onchange=syncLoc;sSel.onchange=syncLoc;syncLoc();
 function val(n){var e=f.querySelector('[name="'+n+'"]:checked')||f.querySelector('[name="'+n+'"]');return e&&(e.type!=='radio'||e.checked)?e.value.trim():''}
 f.onsubmit=async function(e){e.preventDefault();err.textContent='';
- var p={name:val('name'),email:val('email'),phone:val('phone'),town:val('town'),card_count:val('card_count'),has_foils:val('has_foils'),about:val('about'),handoff:val('handoff'),page:location.pathname+location.search};
+ var us=cSel.value==='United States';
+ var p={name:val('name'),email:val('email'),phone:val('phone'),country:country(),state:us?sSel.value:'',postal:us?val('postal'):'',city:us?'':val('city'),
+  selling:[].map.call(f.querySelectorAll('[name=selling]:checked'),function(x){return x.value}),language:val('language'),
+  card_count:val('card_count'),value_range:val('value_range'),about:val('about'),handoff:local()?val('handoff'):'Ship',page:location.pathname+location.search};
  if(!p.name){err.textContent='Please add your name.';return}
  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(p.email)){err.textContent='Please add a valid email.';return}
+ if(!p.country){err.textContent='Please add your country.';return}
+ if(us&&(!p.state||!/^\d{5}(-\d{4})?$/.test(p.postal))){err.textContent='Please add your state and a 5-digit ZIP code.';return}
+ if(!us&&!p.city){err.textContent='Please add your city.';return}
+ if(!p.value_range){err.textContent='Please pick roughly what it\'s worth (Not sure is fine).';return}
+ if(local()&&!p.handoff){err.textContent='Please pick local pickup or ship.';return}
  if(!files.length&&!p.about){err.textContent='Please add a few photos (or tell us what you have).';return}
  btn.disabled=true;btn.textContent=files.length?'Uploading photos…':'Sending…';
  try{var urls=[];for(var i=0;i<files.length;i++){btn.textContent='Uploading photo '+(i+1)+' of '+files.length+'…';try{urls.push(await upload(files[i],i))}catch(x){}}
@@ -117,7 +134,7 @@ f.onsubmit=async function(e){e.preventDefault();err.textContent='';
   p.photos=urls;btn.textContent='Sending…';
   var r=await fetch(SUPA+'/rest/v1/rpc/submit_sell_lead',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({p:p})});
   if(!r.ok){var m='';try{m=(await r.json()).message}catch(x){}throw new Error(m||'Something went wrong. Please try again.')}
-  if(window.jtrack)jtrack('sell-submit',{cards:p.card_count||'',handoff:p.handoff||'',photos:urls.length});
+  if(window.jtrack)jtrack('sell-submit',{cards:p.card_count||'',value:p.value_range||'',country:p.country||'',handoff:p.handoff||'',photos:urls.length});
   document.getElementById('sellbox').innerHTML='<div class="done"><h2>Got it, thanks!</h2><p>We\'ll look through your photos and get back to you at <b></b> soon.</p><p><a href="/">Back to the card database</a></p></div>';
   document.querySelector('.done b').textContent=p.email;window.scrollTo(0,0);
   try{var lid=await r.json();fetch(SUPA+'/functions/v1/sell-confirm',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({id:lid,email:p.email})}).then(function(x){return x.json()}).then(function(j){if(j&&j.sent){var n=document.createElement('p');n.className='fine';n.textContent='We emailed you a copy. Check spam if you don\'t see it.';var d=document.querySelector('.done p');d.parentNode.insertBefore(n,d.nextSibling)}}).catch(function(){})}catch(x){}
