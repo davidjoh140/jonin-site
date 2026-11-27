@@ -1,0 +1,2 @@
+-- refresh_sealed_prices(): a set-level entry's range counts its own sales plus every art's / deck's sales
+-- (applied 2026-11-27; see the live function for the full body). sealed_export.py does the same for the page's sale list.

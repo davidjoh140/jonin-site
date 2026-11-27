@@ -43,6 +43,15 @@ def build(products, sets, ranges, sales, listings, now=None):
             {"t": li.get("title") or "", "p": float(li["price"]), "ed": li.get("edition") or "",
              "k": li.get("kind"), "b": li.get("bids") or 0, "bo": bool(li.get("best_offer")),
              "end": li.get("ends_at"), "u": li.get("url") or "", "img": li.get("image_url") or ""})
+    # a set-level entry also shows its arts' / decks' sales (its price counts every sale of the item)
+    kids = {}
+    for p in products:
+        if p.get("parent_id"):
+            kids.setdefault(p["parent_id"], []).append(p["id"])
+    for parent, ids in kids.items():
+        extra = [x for k in ids for x in sold.get(k, [])]
+        if extra:
+            sold[parent] = sorted(sold.get(parent, []) + extra, key=lambda x: x[2], reverse=True)
     out = []
     for p in sorted(products, key=lambda p: (set_sort.get(p["set_id"], 99), p.get("sort") or 0, p["name"])):
         if not p.get("public", True) or not p.get("slug"):
