@@ -1,0 +1,64 @@
+# Enhances the original 350x490 card scans (branch scan-originals) into 1400x1960 masters in R2
+# (bucket jonin-scans) and queues each one in Supabase `enhanced_scans` for David's review.
+# Split across parallel runners; re-running skips scans already done.
+name: Enhance card scans
+on:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: "Parallel runners (1-20)"
+        required: false
+        default: "20"
+      limit:
+        description: "Max scans per runner (blank = all; use 2 for a quick test)"
+        required: false
+        default: ""
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.p.outputs.shards }}
+    steps:
+      - id: p
+        run: |
+          n="${{ github.event.inputs.shards }}"; n=${n:-20}
+          echo "shards=$(python3 -c "import json;print(json.dumps(list(range($n))))")" >> "$GITHUB_OUTPUT"
+  enhance:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJson(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { ref: scan-originals, path: orig }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install
+        run: |
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q pillow numpy opencv-python-headless boto3 requests
+      - uses: actions/cache@v4
+        with: { path: "pipeline/enhance/*.pth", key: esrgan-models-v1 }
+      - name: Download models
+        run: |
+          cd pipeline/enhance
+          [ -f anime6b.pth ] || curl -sSL -o anime6b.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth
+          [ -f esrnet.pth ] || curl -sSL -o esrnet.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.1/RealESRNet_x4plus.pth
+          ls -la *.pth
+      - name: Enhance
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://f6d20bce1fc2f76725b857ef0fed6d10.r2.cloudflarestorage.com
+          R2_BUCKET: jonin-scans
+          ENHANCE_LIMIT: ${{ github.event.inputs.limit }}
+          OMP_NUM_THREADS: "4"
+        run: cd pipeline/enhance && python run.py ../../orig/originals ${{ matrix.shard }} ${{ strategy.job-total }}
