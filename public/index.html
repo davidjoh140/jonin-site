@@ -181,7 +181,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .card:active .art{transform:scale(.98);transition-duration:.1s}
 .card .nm{transition:color .2s}
 .tpx{font:700 17px "Baloo 2",sans-serif;color:var(--acc);line-height:1.1}.tpx.none{height:18.7px}.card:hover .nm{color:var(--acc2)}
-.card.in{animation:rise .5s var(--ease) both;animation-delay:calc(var(--k,0)*12ms)}
+.card.in{animation:rise .5s var(--ease) both;animation-delay:calc(var(--k,0)*12ms)}#grid.quick .card.in{animation-duration:.18s;animation-delay:calc(var(--k,0)*3ms)}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .set{transition:transform .35s var(--spring),border-color .2s,box-shadow .3s}
 .set:hover{transform:translateY(-2px);box-shadow:0 14px 24px -14px rgba(0,0,0,.8)}.set:active{transform:scale(.96);transition-duration:.1s}
@@ -490,7 +490,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('#details .ddb'),
   if(!e.target.closest('#details'))ddClose()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')ddClose()});
 let VIEW='cards',D=null,S=S0(),list=[],shown=0,sel=-1;
-const PAGE=120;
+const PAGE=48;   // tiles per batch; more load as you scroll (was 120, 2026-11-26 speed-up)
 const setName=id=>D.byId[id]?.name||id;
 const setLabel=s=>s.kind==='Main'?'Set '+s.id:s.kind==='Promo'?'Promo':s.id;
 const SYMV='2';const symUrl=u=>u?u+(u.includes('?')?'&':'?')+'v='+SYMV:'';
@@ -515,15 +515,23 @@ const wordHit=(w,hay)=>w.length<=3?new RegExp('(^|[^a-z0-9])'+w.replace(/[.*+?^$
 // Multi-word search: if any card holds the whole phrase ("gen con", "dream legacy"), only phrase matches show;
 // otherwise each word matches on its own ("kakashi 12"). Checked once per query.
 const flatOf=c=>(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')+' '+(c.t||'')+' '+(c.el||'')+' '+(c.vil||'')).toLowerCase().replace(/[\s'’.-]/g,'');
+// Speed (2026-11-26): each card's search text and character names are worked out once (prep), and the search words
+// once per query (qPrep), instead of for every card on every click and keystroke.
+const hayOf=c=>c._hay||(c._hay=(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')+' '+(c.t||'')+' '+(c.el||'')+' '+(c.vil||'')).toLowerCase());
+const flatC=c=>c._flat||(c._flat=flatOf(c));
+const namesOf=c=>c._nm||(c._nm=c.name.split(/\s*&\s*/).map(baseName));
+let QP={q:null};
+function qPrep(){if(QP.q===S.q)return QP;const q0=qNorm(S.q.toLowerCase().trim()),ws=(ALIAS[q0.replace(/[\s'’.-]/g,'')]||q0).split(/\s+/).filter(Boolean);
+  QP={q:S.q,ws:ws.map(w=>({w,num:/^#?\d+$/.test(w),re:w.length<=3?new RegExp('(^|[^a-z0-9])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')):null}))};return QP}
 let PH={q:null,k:'',on:false};
-const phraseOn=()=>{if(PH.q!==S.q){const k=qNorm(S.q.toLowerCase()).replace(/[\s'’.-]/g,'');PH={q:S.q,k,on:k.length>2&&D.cards.some(c=>flatOf(c).includes(k))}}return PH.on};
+const phraseOn=()=>{if(PH.q!==S.q){const k=qNorm(S.q.toLowerCase()).replace(/[\s'’.-]/g,'');PH={q:S.q,k,on:k.length>2&&D.cards.some(c=>flatC(c).includes(k))}}return PH.on};
 function match(c){
   if(S.set&&c.s!==S.set)return false;
   if(S.rars.length&&!S.rars.includes(c.src))return false;
   if(S.type&&c.t!==S.type)return false;
   for(const [k] of DETAILS)if(S[k]&&String(c[k]??'')!==S[k])return false;
-  if(S.chars.length){const names=c.name.split(/\s*&\s*/).map(baseName);if(!S.chars.some(v=>v.split('|').some(w=>names.includes(w))))return false}
-  if(S.q){const q0=qNorm(S.q.toLowerCase().trim()),q=(ALIAS[q0.replace(/[\s'’.-]/g,'')]||q0).split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')+' '+(c.t||'')+' '+(c.el||'')+' '+(c.vil||'')).toLowerCase(),flat=flatOf(c);if(q.length>1&&phraseOn()){if(!flat.includes(PH.k))return false}else if(!q.every(w=>numHit(w,c.n)||(!/^#?\d+$/.test(w)&&wordHit(w,hay))))return false}
+  if(S.chars.length){const names=namesOf(c);if(!S.chars.some(v=>v.split('|').some(w=>names.includes(w))))return false}
+  if(S.q){const {ws}=qPrep();if(ws.length>1&&phraseOn()){if(!flatC(c).includes(PH.k))return false}else{const hay=hayOf(c);if(!ws.every(o=>numHit(o.w,c.n)||(!o.num&&(o.re?o.re.test(hay):hay.includes(o.w)))))return false}}
   return true}
 // Price band on each grid tile (free). Exact prices are Jonin Club only.
 const BANDS0=['Under $10','$10–50','$50–200','$200+'],band=c=>{const b=(D&&D.bands)||BANDS0;return c.pb==null?null:b[c.pb]??null};
@@ -581,13 +589,14 @@ function sddClose(focusBtn){$('#sddl').hidden=true;$('#setsel').setAttribute('ar
 function sddPick(v){sddClose(true);if(v===S.set)return;S.set=v;writeHash();renderCards(true)}
 // Character panel: count of cards per character under every current filter except the character picks
 function paintChars(){const rows=[...document.querySelectorAll('#clist .crow')];if(!rows.length||!D)return;const keep=S.chars;S.chars=[];const base=D.cards.filter(match);S.chars=keep;
-  const n=rows.map(b=>{const ws=b.dataset.q.split('|');let k=0;for(const c of base){const names=c.name.split(/\s*&\s*/).map(baseName);if(ws.some(w=>names.includes(w)))k++}return k}),mx=Math.max(1,...n);
+  const idx=new Map();rows.forEach((b,i)=>b.dataset.q.split('|').forEach(w=>{if(!idx.has(w))idx.set(w,[]);idx.get(w).push(i)}));
+  const n=rows.map(()=>0);for(const c of base){const hit=new Set();for(const nm of namesOf(c)){const r=idx.get(nm);if(r)r.forEach(i=>hit.add(i))}hit.forEach(i=>n[i]++)}const mx=Math.max(1,...n);
   {const q=$('#qn'),on=QUICK.filter(([l,v])=>S.chars.includes(v.replace(/^char:/,''))).map(([l])=>l);q.textContent=on.length?'· '+on.join(', '):'('+QUICK.length+')';q.classList.toggle('on',!!on.length)}
   {const cl=$('#clist'),ord=rows.map((b,i)=>[b,n[i],i]).sort((a,b)=>(+b[0].classList.contains('fav'))-(+a[0].classList.contains('fav'))||b[1]-a[1]||a[2]-b[2]);if(ord.some(([b],i)=>cl.children[i]!==b))ord.forEach(([b])=>cl.appendChild(b))}
   rows.forEach((b,i)=>{b.setAttribute('aria-pressed',S.chars.includes(b.dataset.q));b.classList.toggle('zero',!n[i]);b.querySelector('.cnum').textContent=n[i];b.querySelector('.cbar i').style.width=(n[i]/mx*100).toFixed(1)+'%';b.title=n[i]+' card'+(n[i]===1?'':'s')})}
 function renderCards(reset){
   {const k=S.rars.length+(S.type?1:0)+DETAILS.filter(([d])=>S[d]).length;$('#fn').textContent=k?'· '+k:''}
-  if(reset){list=sorted(D.cards.filter(match));shown=0;$('#grid').innerHTML=''}
+  if(reset){list=sorted(D.cards.filter(match));shown=0;const g=$('#grid');if(g.dataset.r)g.classList.add('quick');g.dataset.r='1';g.innerHTML=''}
   const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
   {const ct=$('#count'),txt=list.length.toLocaleString()+' cards';if(ct.textContent!==txt){ct.textContent=txt;if(reset){ct.classList.remove('bump');void ct.offsetWidth;ct.classList.add('bump')}}}$('#more').hidden=shown>=list.length;
   $('#clear').hidden=!active();
@@ -621,7 +630,7 @@ function close(){$('#ov').hidden=true;sel=-1;if(CARDH){CARDH=0;POPSKIP=location.
 addEventListener('popstate',()=>{if(POPSKIP!=null){const u=POPSKIP;POPSKIP=null;if(u!==location.href)history.replaceState(null,'',u);return}
   if(CARDH){CARDH=0;$('#ov').hidden=true;sel=-1;return}
   if(!D||location.hash==='#feedback')return;const v=readHash();view(v);if(v==='cards')renderCards(true);scrollTo(0,0)});
-$('#q').addEventListener('input',e=>{S.q=e.target.value.trim();clearTimeout(trackT);if(S.q.length>=2){const t=S.q.slice(0,80);trackT=setTimeout(()=>track('search',{term:t}),1500)}writeHash();renderCards(true)});
+$('#q').addEventListener('input',e=>{S.q=e.target.value.trim();clearTimeout(trackT);if(S.q.length>=2){const t=S.q.slice(0,80);trackT=setTimeout(()=>track('search',{term:t}),1500)}clearTimeout(QT);QT=setTimeout(()=>{writeHash();renderCards(true)},90)});let QT=0;   // redraw once typing pauses (90ms)
 $('#setsel').addEventListener('click',()=>$('#sddl').hidden?sddOpen():sddClose(false));
 $('#setsel').addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','Enter',' '].includes(e.key)){e.preventDefault();sddOpen()}});
 $('#sddl').addEventListener('click',e=>{const o=e.target.closest('.opt');if(o)sddPick(o.dataset.sv)});
