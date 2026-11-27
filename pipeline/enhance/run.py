@@ -42,10 +42,27 @@ def set_for(folder):
 
 
 def number_for(name):
+    """Possible card numbers for a file name, most likely first: n133 -> N-133; pr018b -> PR-018b, PR018B."""
     m = NAME_RX.match(name)
     if not m:
-        return None, None
-    return f"{m.group(1).upper()}-{(m.group(2) + '-') if m.group(2) else ''}{m.group(3)}{m.group(4)}", (m.group(5) or "").strip() or None
+        return [], None
+    p, us, d, sfx = m.group(1).upper(), m.group(2), m.group(3), m.group(4)
+    tag = (m.group(5) or "").strip() or None
+    dashed = f"{p}-{'US-' if us else ''}{d}{sfx}"
+    plain = f"{p}{'US' if us else ''}{d}{sfx.upper()}"      # promo style: EX001, PR018B, PRUS001, M621
+    return [dashed, plain, f"{p}-{'US' if us else ''}{d}{sfx.upper()}"], tag
+
+
+def resolve(cards, by_number, set_id, nums):
+    for n in nums:
+        if (set_id, n) in cards:
+            return cards[(set_id, n)], n
+    if set_id == "P":                        # promos filed in another set (e.g. tin promos PR-069): only if unique
+        for n in nums:
+            ids = by_number.get(n, [])
+            if len(ids) == 1:
+                return ids[0], n
+    return None, (nums[0] if nums else None)
 
 
 def slug(s):
@@ -57,8 +74,12 @@ def main():
     files = sorted(os.path.relpath(os.path.join(d, f), root) for d, _, fs in os.walk(root) for f in fs
                    if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp")))
     mine = [f for i, f in enumerate(files) if i % shards == shard]
-    done = {r["src_path"] for r in supa.select("enhanced_scans", {"select": "src_path"})}
-    cards = {(c["set_id"], c["number"]): c["id"] for c in supa.select("cards", {"select": "id,set_id,number"})}
+    done = {r["src_path"] for r in supa.select("enhanced_scans", {"select": "src_path", "status": "neq.unmatched"})}
+    allc = supa.select("cards", {"select": "id,set_id,number"})
+    cards = {(c["set_id"], c["number"]): c["id"] for c in allc}
+    by_number = {}
+    for c in allc:
+        by_number.setdefault(c["number"], []).append(c["id"])
     todo = [f for f in mine if f not in done]
     if os.environ.get("ENHANCE_LIMIT"):
         todo = todo[:int(os.environ["ENHANCE_LIMIT"])]
@@ -73,8 +94,10 @@ def main():
     for i, rel in enumerate(todo):
         folder, name = os.path.split(rel)
         set_id = set_for(folder)
-        num, tag = number_for(name)
-        card_id = cards.get((set_id, num)) if set_id and num else None
+        nums, tag = number_for(name)
+        card_id, num = resolve(cards, by_number, set_id, nums) if set_id and nums else (None, None)
+        if card_id:
+            num = card_id.split(":", 1)[1]
         if not card_id:
             supa.upsert("enhanced_scans", [{"src_path": rel, "status": "unmatched",
                                             "note": f"no card {set_id}:{num}" if num else "file name not understood"}], "src_path")
