@@ -247,7 +247,27 @@ def write_article_sales(sales):
         ARTICLE_SALES.write_text(text)
 
 
-def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None, ranges=(), sales=()):
+# Approved card details (card_attrs, read off the scans and approved by David) -> short cards.json keys.
+ATTR_KEYS = {"element": "el", "turn_cost": "tc", "hand_cost": "hc", "village": "vil"}
+
+
+def attr_map(rows):
+    """{card_id: {"el": "Fire", "tc": 3, ...}} from approved card_attrs rows. Costs become numbers."""
+    out = {}
+    for r in rows:
+        if r.get("status") != "approved" or r.get("value") in (None, "", "None") or r.get("field") not in ATTR_KEYS:
+            continue
+        v = r["value"]
+        if r["field"] in ("turn_cost", "hand_cost"):
+            try:
+                v = int(v)
+            except ValueError:
+                continue
+        out.setdefault(r["card_id"], {})[ATTR_KEYS[r["field"]]] = v
+    return out
+
+
+def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None, ranges=(), sales=(), attrs=()):
     """Pure transform: Supabase rows -> the cards.json object (same key order as before).
     A card with recorded sales gets "pb": its free price band (see price_band); exact prices are Jonin Club only.
     "top": [rank, band, version, date] of its highest sale, for the most-valuable pages (see top_sales)."""
@@ -272,6 +292,7 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
     pnames = {p["id"]: p["name"] for p in products}
     px = price_rows(ranges)
     tops = top_sales(sales)
+    am = attr_map(attrs)
     out_cards = []
     for c in sorted(cards, key=lambda c: (c.get("sort") is None, c.get("sort"), c["id"])):
         o = {"s": c["set_id"], "n": c["number"], "name": c["name"], "t": _s(c.get("type")),
@@ -291,6 +312,8 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
             o["pb"] = price_band(px[c["id"]])   # free price band only; exact prices stay in Supabase (Jonin Club)
         if c["id"] in tops:
             o["top"] = tops[c["id"]]
+        if c["id"] in am:
+            o.update(am[c["id"]])           # element / turn cost / hand cost / village (approved only)
         out_cards.append(o)
     out = {"sets": out_sets, "cards": out_cards, "bands": band_labels()}
     if version is not None:
@@ -325,7 +348,8 @@ def main():
                      supa.select("products"),
                      (supa.select("checklist_version") or [{}])[0].get("version"),
                      supa.select("price_ranges"),
-                     sales)
+                     sales,
+                     supa.select("card_attrs", {"select": "card_id,field,value,status", "status": "eq.approved"}))
         revealed = reveal_top_prices(data, sales)
         write_article_sales(sales)
         write_votes(supa.select("card_votes", {"select": "character,card_id,user_id"}))

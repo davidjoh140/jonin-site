@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card details review — Jonin admin</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1B1622;--panel:#241E2D;--line:#352C40;--ink:#FFF4E6;--mute:#B8AEA6;--acc:#F57C00;--acc2:#FF9A3D;--red:#B5121B;--ok:#6CC24A}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif}
+a{color:var(--acc)}
+header{border-bottom:1px solid #2E2638}.hw{max-width:1120px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:20px}
+.logo{display:flex;align-items:center;gap:.06em;font:800 28px/1 "Baloo 2",sans-serif;color:var(--ink);text-decoration:none}.logo .jc{position:relative;height:1.42cap;width:1.02cap;flex:none;margin-right:.06em}.logo .jc i{position:absolute;inset:0;border-radius:.1em;box-shadow:.05em .05em 0 #0A080D}.logo .jc i:first-child{background:var(--acc);transform:rotate(10deg) translate(.2em,-.06em)}.logo .jc i:last-child{background:var(--red);transform:rotate(-8deg);display:flex;align-items:center;justify-content:center;font-style:normal;color:var(--ink)}.logo .jc b{text-box:trim-both cap alphabetic;margin-left:-.03em}.logo>span:last-child{text-box:trim-both cap alphabetic}
+main{max-width:1120px;margin:0 auto;padding:32px 20px 72px}
+h1{font:800 40px/1.05 "Baloo 2",sans-serif;margin:0 0 6px}h2{font:800 22px "Baloo 2",sans-serif;margin:28px 0 10px}
+.mt{color:var(--mute);margin:0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+form.grant{display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:10px;align-items:end}
+@media(max-width:760px){form.grant{grid-template-columns:1fr}}
+label span{display:block;font-size:12px;color:var(--mute);margin-bottom:4px}
+input{width:100%;min-height:42px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:15px Inter,sans-serif}
+input:focus{outline:none;border-color:var(--acc)}
+button{min-height:42px;padding:8px 16px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:#1B1622;font:600 14px Inter,sans-serif;cursor:pointer}
+button.ghost{background:none;color:var(--mute);border-color:var(--line);min-height:32px;padding:4px 10px}button.ghost:hover{color:var(--ink);border-color:#a33}
+.msg{margin:10px 0 0;font-size:14px}.msg.err{color:#ff8a80}.msg.ok{color:var(--ok)}
+.stats{display:flex;gap:28px;flex-wrap:wrap;margin:18px 0}.stats b{display:block;font:800 30px/1 "Baloo 2",sans-serif;color:var(--acc)}.stats span{color:var(--mute);font-size:13px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-weight:600;color:var(--mute);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.st{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;background:#2E2638}.st.active{background:#1F3A1A;color:var(--ok)}.st.invited{background:#3A2A10;color:var(--acc2)}.st.revoked,.st.expired{color:var(--mute)}
+.tag{font-size:12px;color:var(--mute)}
+.fbp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:rgba(242,193,78,.06)}.fbch{padding:6px 0;border-top:1px dashed var(--line)}.fbdel{color:#ff8a80}.fbadd{color:var(--ok)}.fbalt[hidden]{display:none!important}
+.fbfix{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}.fbq{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}.fbc{min-height:30px;padding:3px 11px;font-size:13px;border-radius:99px;background:#3A2A10;border-color:#5A4318;color:var(--ink)}.fbc:hover{border-color:var(--acc)}.fbed{border:1px solid var(--acc);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:rgba(245,124,0,.05)}.fbrow{padding:8px 0;border-bottom:1px dashed var(--line)}.fbtg{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:6px}.fbtg>.tag{width:64px}.fbt{min-height:28px;padding:2px 10px;font-size:12px;font-weight:500;border-radius:99px;background:none;border-color:var(--line);color:var(--mute)}.fbt.on{background:#2E2638;color:var(--ink);border-color:#5b4f6b}.fbt.ch{border-color:var(--ok);color:var(--ok)}.fbsaved{color:var(--ok);font-weight:600}.fbfiles{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.fbf{display:flex;gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px;background:var(--bg);max-width:360px}.fbf.done{opacity:.6}.fbf img,.fbfi{width:64px;height:90px;object-fit:cover;border-radius:6px;flex:none;display:grid;place-items:center;background:#2E2638;color:var(--mute);font:700 12px Inter;text-decoration:none}.fbfm{display:grid;gap:4px;min-width:0;flex:1}.fbfm input,.fbfm select{min-height:30px;padding:2px 8px;font-size:13px}.fbfm select{width:auto;max-width:150px}.fbx{min-height:22px!important;padding:0 6px!important;font-size:11px}label.fbattach{display:inline-flex;align-items:center;min-height:34px;padding:4px 14px;border:1px dashed var(--acc);border-radius:99px;color:var(--acc);font-size:13px;font-weight:600;cursor:pointer}label.fbattach:hover{background:rgba(245,124,0,.1)}.fbn.drop{outline:2px dashed var(--acc);outline-offset:-4px}.fbt.ch:not(.on){text-decoration:line-through;color:#ff8a80;border-color:#ff8a80}
+.gate{max-width:440px}
+.mn{display:inline-block;margin-left:6px;min-width:18px;padding:0 5px;border-radius:99px;background:var(--red);color:#fff;font:700 11px/18px Inter,sans-serif;text-align:center}
+.mrow{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}.mrow:hover{background:#2B2435}.mrow:last-child{border-bottom:0}
+.mrow img,.mrow .mi{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--bg);flex:none;display:grid;place-items:center;font-weight:700}
+.mrow .mb{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--mute);font-size:13px}.mrow.un .mb{color:var(--ink);font-weight:600}
+.th{display:grid;gap:8px;max-height:46vh;overflow:auto;padding:4px 2px;margin:10px 0}
+.bb{max-width:80%;padding:9px 12px;border-radius:12px;white-space:pre-wrap;font-size:14px}.bb.me{justify-self:end;background:#3A2A10;border:1px solid #5A4318}.bb.them{justify-self:start;background:var(--bg);border:1px solid var(--line)}
+.bb .tag{display:block;margin-top:4px;font-size:11px}.bb .use{margin-top:6px;min-height:28px;padding:2px 10px;font-size:12px}
+.tnote{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;margin-bottom:6px}
+textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:15px/1.45 Inter,sans-serif;resize:vertical}textarea:focus{outline:none;border-color:var(--acc)}
+form.psale{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end}form.psale .wide{grid-column:span 2}
+@media(max-width:760px){form.psale{grid-template-columns:1fr 1fr}form.psale .wide{grid-column:1/-1}}
+.jump{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}.jump a{padding:6px 12px;border:1px solid var(--line);border-radius:99px;color:var(--mute);text-decoration:none;font-size:13px}.jump a:hover{color:var(--ink);border-color:var(--acc)}
+h2.big{font-size:30px;margin-top:40px}#acc h2.big{margin-top:24px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.fs{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel)}.fs b{font:800 18px "Baloo 2",sans-serif;color:#F2C14E;margin-right:6px}.fs.open{border-style:dashed;color:var(--mute)}.fs .tag{display:block}
+.st.f{background:#3A2E10;color:#F2C14E}
+select{width:100%;min-height:42px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:15px Inter,sans-serif}
+</style>
+<style>
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.tabs button{background:none;color:var(--mute);border-color:var(--line)}.tabs button.on{color:var(--ink);border-color:var(--acc)}
+.views{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.t{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.t.done{opacity:.35}
+.z{width:100%;height:120px;border-radius:8px;background-color:#000;background-repeat:no-repeat;cursor:zoom-in}
+.nm{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g{font-size:12px;color:var(--mute)}.g b{color:var(--acc2)}
+.opts{display:flex;flex-wrap:wrap;gap:4px}.opts button{min-height:28px;padding:2px 9px;font-size:12px;background:var(--bg);color:var(--ink);border-color:var(--line)}
+.opts button.gs{border-color:var(--acc);background:#3A2A10}.opts button:hover{border-color:var(--acc2)}
+.opts .skip{color:var(--mute)}
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px}dialog img{max-height:80vh;display:block}
+.bulk{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.bulk select{width:auto}
+</style>
+</head>
+<body>
+<header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a><span class="tag">Admin</span></div></header>
+<main>
+  <h1>Card details</h1>
+  <p class="mt">Element, turn cost, hand cost and village, read off the card scans. Nothing reaches the site until you approve it. Approved details show in the jonin.cards filters within about 15 minutes. <a href="/admin/">← Admin</a></p>
+  <div id="app"><p class="mt" style="margin-top:20px">Loading…</p></div>
+</main>
+<dialog id="big"><img alt=""><p class="tag" style="margin:6px 0 0">Click to close</p></dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"></script>
+<script>
+{
+const SUPA='https://cfzpayanhvvqtkuqfgof.supabase.co',SUPA_KEY='sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe';
+const $=s=>document.querySelector(s),app=$('#app');
+const sb=window.supabase.createClient(SUPA,SUPA_KEY);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// PLACEHOLDER option lists (David to review). Villages beyond the seven the reader knows are for picking by hand.
+const FIELDS={element:{label:'Element',opts:['Fire','Water','Wind','Lightning','Earth','Void','None']},
+  turn_cost:{label:'Turn cost',opts:['0','1','2','3','4','5','6','7','8','9','None']},
+  hand_cost:{label:'Hand cost',opts:['0','1','2','3','4','None']},
+  village:{label:'Village',opts:['Leaf','Sand','Sound','Mist','Cloud','Rock','Rain','Grass','Waterfall','Star','Akatsuki','Rogue Ninja','None']}};
+let FIELD='element',VIEW='look',ROWS=[],IMG={},SETS={},SHOW=120;
+function gate(msg){app.innerHTML=`<div class="box gate" style="margin-top:20px"><p style="margin-top:0">${esc(msg)}</p><form id="login"><label><span>Email</span><input name="e" type="email" required autocomplete="email"></label><label style="display:block;margin-top:10px"><span>Password</span><input name="p" type="password" required autocomplete="current-password"></label><button style="margin-top:12px">Sign in</button><p class="msg" id="lm"></p></form></div>`;
+  $('#login').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const r=await sb.auth.signInWithPassword({email:f.e.value.trim(),password:f.p.value});if(r.error){$('#lm').className='msg err';$('#lm').textContent=r.error.message}else load()}}
+async function load(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)return gate('Sign in with your Jonin account.');
+  const {data:adm}=await sb.rpc('is_admin');if(!adm)return gate('This account doesn\'t have admin access.');
+  const d=await fetch('/cards.json',{cache:'no-store'}).then(r=>r.json());
+  d.cards.forEach(c=>{if(c.img)IMG[c.s+':'+c.n]=c.img});d.sets.forEach(s=>SETS[s.id]=s.name);
+  await fetchRows();
+}
+async function fetchRows(){app.innerHTML='<p class="mt" style="margin-top:20px">Loading…</p>';
+  const r=await sb.rpc('admin_card_attrs',{p_field:FIELD});if(r.error){app.innerHTML=`<p class="msg err">${esc(r.error.message)}</p>`;return}
+  ROWS=r.data||[];SHOW=120;render()}
+const inView=x=>VIEW==='look'?x.status==='pending'&&!x.sure:VIEW==='sure'?x.status==='pending'&&x.sure:x.status===VIEW;
+function zoom(x){const u=IMG[x.card_id];if(!u||!x.box)return'background:#000';const b=x.box,W=210,H=120,z=Math.min(W/b.w,H/b.h)*0.95;
+  return `background-image:url('${esc(u)}');background-size:${500*z}px ${700*z}px;background-position:${-(b.x*z)+(W-b.w*z)/2}px ${-(b.y*z)+(H-b.h*z)/2}px`}
+function render(){const F=FIELDS[FIELD],n=k=>ROWS.filter(x=>{const v=VIEW;VIEW=k;const r=inView(x);VIEW=v;return r}).length;
+  const list=ROWS.filter(inView),sets=[...new Set(ROWS.filter(x=>x.status==='pending'&&x.sure).map(x=>x.set_id))];
+  app.innerHTML=`<div class="tabs">${Object.entries(FIELDS).map(([k,f])=>`<button data-f="${k}" class="${k===FIELD?'on':''}">${f.label}</button>`).join('')}</div>
+  <div class="box bulk"><div><b>${n('sure')}</b> the reader is sure about, waiting for you. Glance at them under “Sure”, then approve in one go:</div>
+    <select id="bset"><option value="">All sets</option>${sets.map(s=>`<option value="${esc(s)}">${esc(SETS[s]||s)}</option>`).join('')}</select>
+    <button id="bulk" ${n('sure')?'':'disabled'}>Approve sure ${esc(F.label.toLowerCase())}s</button><span class="msg" id="bm"></span></div>
+  <div class="views">${[['look','Needs a look'],['sure','Sure'],['approved','Approved'],['skipped',"Can't tell"]].map(([k,l])=>`<button class="ghost" data-v="${k}" style="${VIEW===k?'color:var(--ink);border-color:var(--acc)':''}">${l} (${n(k)})</button>`).join('')}</div>
+  ${list.length?'':'<p class="mt">Nothing here.</p>'}
+  <div class="grid">${list.slice(0,SHOW).map(x=>{const cur=x.status==='approved'?x.value:x.guess;return `<div class="t" data-id="${esc(x.card_id)}">
+    <div class="z" style="${zoom(x)}" data-big="${esc(x.card_id)}" title="Click for the whole card"></div>
+    <div class="nm" title="${esc(x.name)}">${esc(x.name)}</div><div class="g">${esc(SETS[x.set_id]||x.set_id)} · ${esc(x.number)} · ${esc(x.type)}</div>
+    <div class="g">${x.status==='approved'?'Approved: <b>'+esc(x.value)+'</b>':'Reader says <b>'+esc(x.guess??'?')+'</b> ('+Math.round((x.conf||0)*100)+'%)'}</div>
+    <div class="opts">${F.opts.map(o=>`<button data-pick="${esc(o)}" class="${o===cur?'gs':''}">${esc(o)}</button>`).join('')}<button class="skip" data-skip>Can't tell</button></div></div>`}).join('')}</div>
+  ${list.length>SHOW?`<p><button class="ghost" id="more">Show more (${list.length-SHOW} left)</button></p>`:''}`;
+}
+app.addEventListener('click',async e=>{const b=e.target.closest('button,[data-big]');if(!b)return;const d=b.dataset;
+  if(d.f){FIELD=d.f;VIEW='look';return fetchRows()}
+  if(d.v){VIEW=d.v;SHOW=120;return render()}
+  if(b.id==='more'){SHOW+=120;return render()}
+  if(d.big){const u=IMG[d.big];if(u){$('#big img').src=u;$('#big').showModal()}return}
+  if(b.id==='bulk'){const set=$('#bset').value||null,cnt=ROWS.filter(x=>x.status==='pending'&&x.sure&&(!set||x.set_id===set)).length;
+    if(!confirm(`Approve ${cnt} ${FIELDS[FIELD].label.toLowerCase()}s the reader is sure about${set?' in '+(SETS[set]||set):''}?`))return;
+    b.disabled=true;const r=await sb.rpc('admin_card_attr_approve_sure',{p_field:FIELD,p_set:set});if(r.error){alert(r.error.message);b.disabled=false;return}
+    return fetchRows()}
+  const t=b.closest('.t');if(!t)return;const id=t.dataset.id,x=ROWS.find(r=>r.card_id===id);
+  const val=d.skip!==undefined?null:d.pick,st=d.skip!==undefined?'skipped':(val==='None'?'approved':'approved');
+  t.classList.add('done');const r=await sb.rpc('admin_card_attr_set',{p_card:id,p_field:FIELD,p_value:val,p_status:st});
+  if(r.error){t.classList.remove('done');alert(r.error.message);return}
+  x.status=st;x.value=st==='approved'?val:null;
+});
+$('#big').onclick=()=>$('#big').close();
+load();
+}
+</script>
+</body>
+</html>

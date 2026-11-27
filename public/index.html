@@ -35,6 +35,7 @@ h1{font:800 clamp(26px,3.2vw,34px)/1.15 "Baloo 2",sans-serif;margin:0 0 16px}
 #q:focus{border-color:var(--red)}
 .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
 .lbl{color:var(--mute);font-size:13px;margin-right:2px}
+.details{display:contents}.details[hidden]{display:none}.dsel{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mute)}.dsel select{min-height:34px;padding:0 10px;border-radius:999px;background:var(--panel);color:var(--ink);border:1px solid var(--edge);font:500 13px Inter,sans-serif;cursor:pointer}
 .pill{min-height:34px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;background:var(--panel);color:var(--ink);border:1px solid var(--edge)}
 .pill[aria-pressed=true]{background:var(--red);color:var(--ont);border-color:var(--red)}
 .bar .brk{flex-basis:100%;height:0}
@@ -397,6 +398,8 @@ b.innerHTML=ctaHTML(n,true);b.hidden=false}})();</script>
       <span id="rars" style="display:contents"></span>
       <span class="brk" aria-hidden="true"></span>
       <span id="types" style="display:contents"></span>
+      <span class="brk" aria-hidden="true"></span>
+      <span id="details" class="details" hidden></span>
       <span class="count" id="count">Loading…</span>
       <button class="clear" id="clear" hidden>↺ Reset</button>
     </div>
@@ -439,7 +442,14 @@ const psaFrag=c=>{const num=c.n.replace(/-/g,''),nm=c.name.replace(/\s*[\[(].*?[
 const TYPES=['','Ninja','Jutsu','Mission','Client'];
 const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['SR','Super Rare'],['ALT','Alt Art /20'],['P','Promo']];
 // PLACEHOLDER character list (fan favorites that have cards); David to confirm. 'A|B' = either name, e.g. Minato also printed as The Fourth Hokage
-const S0=()=>({q:'',set:'',type:'',chars:[],rars:[],sort:''});
+const S0=()=>({q:'',set:'',type:'',chars:[],rars:[],sort:'',el:'',tc:'',hc:'',vil:''});
+// Card details read off the scans and approved by David (cards.json el/tc/hc/vil). Each dropdown only shows once some cards have that detail.
+const DETAILS=[['el','Element'],['tc','Turn cost'],['hc','Hand cost'],['vil','Village']];
+const EL_ORDER=['Fire','Water','Wind','Lightning','Earth','Void'];
+function buildDetails(){const box=$('#details');if(!box)return;box.innerHTML=DETAILS.map(([k,l])=>{const vals=[...new Set(D.cards.map(c=>c[k]).filter(v=>v!=null&&v!==''))];if(!vals.length)return '';
+  vals.sort((a,b)=>k==='el'?EL_ORDER.indexOf(a)-EL_ORDER.indexOf(b):typeof a==='number'?a-b:String(a).localeCompare(String(b)));
+  return `<label class="dsel"><span>${l}</span><select data-dk="${k}"><option value="">Any</option>${vals.map(v=>`<option value="${esc(String(v))}">${esc(String(v))}</option>`).join('')}</select></label>`}).join('');
+  box.hidden=!box.innerHTML;box.querySelectorAll('select').forEach(x=>x.onchange=()=>{S[x.dataset.dk]=x.value;writeHash();renderCards(true)})}
 let VIEW='cards',D=null,S=S0(),list=[],shown=0,sel=-1;
 const PAGE=120;
 const setName=id=>D.byId[id]?.name||id;
@@ -472,6 +482,7 @@ function match(c){
   if(S.set&&c.s!==S.set)return false;
   if(S.rars.length&&!S.rars.includes(c.src))return false;
   if(S.type&&c.t!==S.type)return false;
+  for(const [k] of DETAILS)if(S[k]&&String(c[k]??'')!==S[k])return false;
   if(S.chars.length){const names=c.name.split(/\s*&\s*/).map(baseName);if(!S.chars.some(v=>v.split('|').some(w=>names.includes(w))))return false}
   if(S.q){const q0=qNorm(S.q.toLowerCase().trim()),q=(ALIAS[q0.replace(/[\s'’.-]/g,'')]||q0).split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')).toLowerCase(),flat=flatOf(c);if(q.length>1&&phraseOn()){if(!flat.includes(PH.k))return false}else if(!q.every(w=>numHit(w,c.n)||(!/^#?\d+$/.test(w)&&wordHit(w,hay))))return false}
   return true}
@@ -530,7 +541,7 @@ function paintChars(){const rows=[...document.querySelectorAll('#clist .crow')];
   {const cl=$('#clist'),ord=rows.map((b,i)=>[b,n[i],i]).sort((a,b)=>(+b[0].classList.contains('fav'))-(+a[0].classList.contains('fav'))||b[1]-a[1]||a[2]-b[2]);if(ord.some(([b],i)=>cl.children[i]!==b))ord.forEach(([b])=>cl.appendChild(b))}
   rows.forEach((b,i)=>{b.setAttribute('aria-pressed',S.chars.includes(b.dataset.q));b.classList.toggle('zero',!n[i]);b.querySelector('.cnum').textContent=n[i];b.querySelector('.cbar i').style.width=(n[i]/mx*100).toFixed(1)+'%';b.title=n[i]+' card'+(n[i]===1?'':'s')})}
 function renderCards(reset){
-  {const k=S.rars.length+(S.type?1:0);$('#fn').textContent=k?'· '+k:''}
+  {const k=S.rars.length+(S.type?1:0)+DETAILS.filter(([d])=>S[d]).length;$('#fn').textContent=k?'· '+k:''}
   if(reset){list=sorted(D.cards.filter(match));shown=0;$('#grid').innerHTML=''}
   const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
   {const ct=$('#count'),txt=list.length.toLocaleString()+' cards';if(ct.textContent!==txt){ct.textContent=txt;if(reset){ct.classList.remove('bump');void ct.offsetWidth;ct.classList.add('bump')}}}$('#more').hidden=shown>=list.length;
@@ -538,7 +549,7 @@ function renderCards(reset){
   if(!list.length)$('#grid').innerHTML='<p class="empty">No cards match. <button class="clear" data-clear>↺ Reset</button></p>';
   if(reset)paintChars();
   document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r?S.rars.includes(b.dataset.r):!S.rars.length));
-  paintSet();$('#sortsel').value=S.sort;document.querySelectorAll('#types .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ty===S.type));if(document.activeElement!==$('#q'))$('#q').value=S.q}
+  paintSet();$('#sortsel').value=S.sort;document.querySelectorAll('#types .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ty===S.type));document.querySelectorAll('#details select').forEach(x=>x.value=S[x.dataset.dk]||'');if(document.activeElement!==$('#q'))$('#q').value=S.q}
 // Set completion (rule confirmed by David): a card counts as owned if you have any printing/edition of it.
 // Master set: every printing x edition of every card; by.p[set] = printings you have, PRINTS[set] = printings that exist.
 let PRINTS=null;function setPrints(){if(PRINTS)return PRINTS;PRINTS={};D.cards.forEach(c=>{PRINTS[c.s]=(PRINTS[c.s]||0)+Math.max(1,(c.v||[]).length)*Math.max(1,(c.ed||[]).filter(Boolean).length)});return PRINTS}
@@ -574,7 +585,7 @@ let CARDH=0,POPSKIP=null;
 function openCard(i){sel=i;const c=list[i];if(!c)return;if($('#ov').hidden&&!CARDH){try{history.pushState({jcard:1},'',location.href);CARDH=1}catch(_){}}const s=D.byId[c.s]||{};const q=encodeURIComponent('naruto ccg '+c.name+' '+c.n.replace(/-/g,''));
   $('#panel').innerHTML=`<div class="nav3"><button class="ib" data-step="-1" aria-label="Previous card">‹</button><button class="ib" data-step="1" aria-label="Next card">›</button><span></span><button class="ib" data-close aria-label="Close">✕</button></div><div class="pvwrap"><div class="pvart">${/^https:\/\//.test(c.img||'')?`<div class="art big"><img src="${esc(c.img)}" alt="${esc(c.name)} card scan"></div>`:`<div class="art big"><span class="num" style="font-size:34px">${esc(c.n)}</span><span class="ty">${esc(c.t)} · scan coming soon</span></div>`}</div><div class="pvinfo">
   <div><h2>${esc(c.name)}</h2><div class="mt">${esc(s.name||c.s)} · ${esc(c.n)} · ${esc(c.r)}</div></div>
-  <div class="facts"><div><div>Set</div><div>${setTag(s.id)}<br><span class="mt">${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</span></div></div><div><div>Rarity</div><div>${rsym(c.src)} ${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div><div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div class="pv">${(c.v||[]).map(v=>{const f=FOILS[v];return `<span>${f?`<span class="fx f-${f[0]}" aria-hidden="true"></span>`:''}${esc(v)}</span>`}).join('')}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
+  <div class="facts"><div><div>Set</div><div>${setTag(s.id)}<br><span class="mt">${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</span></div></div><div><div>Rarity</div><div>${rsym(c.src)} ${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div>${c.el?`<div><div>Element</div><div>${esc(c.el)}</div></div>`:''}${c.tc!=null?`<div><div>Turn cost</div><div>${esc(c.tc)}</div></div>`:''}${c.hc!=null?`<div><div>Hand cost</div><div>${esc(c.hc)}</div></div>`:''}${c.vil?`<div><div>Village</div><div>${esc(c.vil)}</div></div>`:''}<div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div class="pv">${(c.v||[]).map(v=>{const f=FOILS[v];return `<span>${f?`<span class="fx f-${f[0]}" aria-hidden="true"></span>`:''}${esc(v)}</span>`}).join('')}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
   ${priceBlock(c)}
   <div class="mycoll" id="mycoll"></div>
   <div class="links"><a href="/card/${encodeURIComponent((c.s+'-'+c.n).toLowerCase())}/">Card page · share link</a><a href="https://www.ebay.com/sch/i.html?_nkw=${q}&amp;${EPN}" target="_blank" rel="sponsored noopener">See listings on eBay</a>${PSA[c.s]?`<a href="${PSA_POP+PSA[c.s]+psaFrag(c)}" target="_blank" rel="noopener">PSA pop report · ${esc(setLabel(s))}</a>`:c.s==='P'?`<span class="psay"><span class="mt">PSA pop report:</span> ${PSA_PROMO.map(([y,u])=>`<a href="${PSA_POP+u+psaFrag(c)}" target="_blank" rel="noopener">${y}</a>`).join('')}</span>`:'<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>'}</div>
@@ -1089,7 +1100,7 @@ fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promis
   $('#ftog').addEventListener('click',e=>{e.stopPropagation();const o=$('#fbar').classList.toggle('fopen');$('#ftog').setAttribute('aria-expanded',String(o))});
   {const d=$('#quick');d.addEventListener('toggle',()=>{try{localStorage.setItem('jq',d.open?'0':'1')}catch(_){}})}
   $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${k?rsym(k)+' ':''}${l}</button>`).join('');$('#types').innerHTML=TYPES.map(k=>`<button class="pill" data-ty="${k}" aria-pressed="false">${k||'All types'}</button>`).join('');
-  $('#sortsel').innerHTML=SORTS.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');buildSetList();
+  $('#sortsel').innerHTML=SORTS.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');buildSetList();buildDetails();
   renderSets();const v=readHash();view(v);renderCards(true);{const m=location.hash.match(/(?:^#|&)card=([^&]+)/);if(m){const k=decodeURIComponent(m[1]),i=list.findIndex(c=>c.s+':'+c.n===k);if(i>=0)openCard(i);history.replaceState(null,'',location.pathname)}}let rf='';try{rf=document.referrer?new URL(document.referrer).hostname:''}catch(_){}track('view',{page:v,ref:rf.slice(0,80)||null})}).catch(()=>{$('#count').textContent='Could not load cards'});
 }
 </script>

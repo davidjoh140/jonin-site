@@ -28,6 +28,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: cd pipeline && python mirror_images.py
+      - name: Load scan-read card details (pending until approved on /admin/)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: cd pipeline && python load_card_attrs.py
       - name: Export from Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
