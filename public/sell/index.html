@@ -119,7 +119,8 @@ f.onsubmit=async function(e){e.preventDefault();err.textContent='';
   if(!r.ok){var m='';try{m=(await r.json()).message}catch(x){}throw new Error(m||'Something went wrong. Please try again.')}
   if(window.jtrack)jtrack('sell-submit',{cards:p.card_count||'',handoff:p.handoff||'',photos:urls.length});
   document.getElementById('sellbox').innerHTML='<div class="done"><h2>Got it, thanks!</h2><p>We\'ll look through your photos and get back to you at <b></b> soon.</p><p><a href="/">Back to the card database</a></p></div>';
-  document.querySelector('.done b').textContent=p.email;window.scrollTo(0,0)
+  document.querySelector('.done b').textContent=p.email;window.scrollTo(0,0);
+  try{var lid=await r.json();fetch(SUPA+'/functions/v1/sell-confirm',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({id:lid,email:p.email})}).then(function(x){return x.json()}).then(function(j){if(j&&j.sent){var n=document.createElement('p');n.className='fine';n.textContent='We emailed you a copy. Check spam if you don\'t see it.';var d=document.querySelector('.done p');d.parentNode.insertBefore(n,d.nextSibling)}}).catch(function(){})}catch(x){}
  }catch(x){err.textContent=x.message;btn.disabled=false;btn.textContent='Get my cash offer'}};
 })();
 </script>
