@@ -23,7 +23,11 @@ from find_scans import EBAY, Budget, OutOfCalls, big, ebay_token, fetch_image
 PER_PRODUCT = 4        # PLACEHOLDER: photos queued per product
 MAX_CALLS = 150        # PLACEHOLDER: eBay calls per run (one per product, then the broad searches)
 BROAD = ["naruto ccg theme deck", "naruto ccg starter deck", "naruto card game theme deck bandai",
-         "naruto ccg booster box", "naruto ccg booster pack", "naruto ccg tin"]   # PLACEHOLDER
+         "naruto ccg booster box", "naruto ccg booster pack", "naruto ccg tin",
+         "naruto ccg 3 pack blister", "naruto 3 pack blister bandai", "naruto ccg blister"]   # PLACEHOLDER
+# Hidden slots looked for only by the broad searches (no per-item call): 3-pack blisters (David 2026-11-27). A photo
+# found for one waits in the Hub; picking it puts the 3-pack blister on the site.
+HIDDEN_KINDS = {"blister_3pack"}
 BROAD_PAGES = 3
 
 
@@ -42,7 +46,10 @@ def search(tok, q, budget):
 
 def find():
     with supa.Run("find_sealed_images") as run:
-        products = [p for p in supa.select("products") if p.get("public", True)]
+        allp = supa.select("products")
+        products = [p for p in allp if p.get("public", True)]
+        hidden = [p for p in allp if not p.get("public", True) and p["kind"] in HIDDEN_KINDS and not p.get("image_url")]
+        products_all = products + hidden            # for title matching, so a 3-pack title finds its hidden slot
         sets = supa.select("sets")
         have, seen = {}, set()
         for c in supa.select("sealed_image_candidates", {"select": "product_id,status,image_url"}):
@@ -75,11 +82,11 @@ def find():
                 for it in search(tok, query(p), budget):
                     if got >= want:
                         break
-                    hit = sealed.match(it.get("title", ""), products, sets, photo=True)
+                    hit = sealed.match(it.get("title", ""), products_all, sets, photo=True)
                     url = big((it.get("image") or {}).get("imageUrl"))
                     if not hit or hit[0]["id"] != p["id"] or not url or (p["id"], url) in seen:
                         continue
-                    strict = sealed.match(it.get("title", ""), products, sets)
+                    strict = sealed.match(it.get("title", ""), products_all, sets)
                     note = "" if strict and strict[0]["id"] == p["id"] else "title says opened, empty or similar: photo may show an opened item"
                     try:
                         _, thumb = fetch_image(url)
@@ -93,7 +100,7 @@ def find():
                 if not got and not have.get(p["id"]):
                     stats["none_found"].append(p["id"])
             # 2. broad searches for whatever is still missing (rare decks are rarely titled the way we search)
-            missing = {pid for pid in stats["none_found"]}
+            missing = {pid for pid in stats["none_found"]} | {h["id"] for h in hidden if not have.get(h["id"])}
             per = {}
             for q in BROAD:
                 if not missing:
@@ -106,7 +113,7 @@ def find():
                     r.raise_for_status()
                     items = r.json().get("itemSummaries", [])
                     for it in items:
-                        hit = sealed.match(it.get("title", ""), products, sets, photo=True)
+                        hit = sealed.match(it.get("title", ""), products_all, sets, photo=True)
                         url = big((it.get("image") or {}).get("imageUrl"))
                         if not hit or hit[0]["id"] not in missing or not url or per.get(hit[0]["id"], 0) >= PER_PRODUCT \
                                 or (hit[0]["id"], url) in seen:
