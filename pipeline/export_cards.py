@@ -465,6 +465,12 @@ def main():
                                                 "state": "eq.active"}))
         except Exception as e:                 # sealed must never stop the card export
             print("sealed export failed:", e)
+        # Collector activity (card pages, 2026-11-27): counts only, never who. "act": [collectors, haves, wants, slabs, votes]
+        act = {r["card_id"]: r for r in supa.select("card_activity", {"select": "card_id,collectors,haves,wants,slabs,votes"})}
+        for c in data["cards"]:
+            a = act.get(c["s"] + ":" + c["n"])
+            if a and (a["collectors"] or a["votes"]):
+                c["act"] = [a["collectors"], a["haves"], a["wants"], a["slabs"], a["votes"]]
         # Grid thumbnails (thumbs.py): "th" for every card whose thumbnail exists, added last like thumbs.py does.
         import thumbs
         for c in data["cards"]:

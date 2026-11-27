@@ -910,6 +910,108 @@ def detail_html(f, v):
     return f'<a href="/#{f}={quote(str(v))}">{img}{e(str(v))}</a>'
 
 
+
+# ---- Card-page text (2026-11-27): foil/version note and collector activity. Wording is a placeholder for David to edit. ----
+FOIL_ART = '/articles/naruto-ccg-foil-types/'
+CARD_INDEX = {}   # filled in main(): card key -> card, plus "n:<number>" -> the main-set card with that number
+
+
+def foil_art_live():
+    """Link the foil article only once it's published (a draft is hidden from search, so card pages don't point at it)."""
+    try:
+        head = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'articles', 'naruto-ccg-foil-types.md'), encoding='utf-8').read(600)
+    except OSError:
+        return False
+    return not re.search(r'^draft:\s*(true|yes|1)\s*$', head, re.M | re.I)
+
+
+def card_a(c):
+    return f'<a href="/card/{slug(c)}/">{e(c["name"])} {e(c["n"])}</a>'
+
+
+PROMO_RE = re.compile(r'^(.*?) promo \((\w+) foil\)$', re.I)
+
+
+def foil_note(c, s):
+    """A short "about this version" paragraph from the card's printings, set and rarity. Returns '' when we have nothing solid."""
+    v = c.get('v') or []
+    vs = set(v)
+    rw = (c['r'] if known_rar(c) else 'card')
+    out = []
+    # Promo foil pairs (PS002 Diamond = Gen Con, PS002B Wavy = E3): name both, link the other.
+    m = PROMO_RE.match(c.get('note') or '')
+    if c['s'] == 'P' and m:
+        sib = CARD_INDEX.get('P:' + (c['n'][:-1] if c['n'].endswith('B') else c['n'] + 'B'))
+        m2 = PROMO_RE.match((sib or {}).get('note') or '')
+        if sib and m2:
+            out.append(f'This card in {m.group(2).title()} foil is the exclusive {e(m.group(1))} promo, while the '
+                       f'<a href="/card/{slug(sib)}/">{e(m2.group(2).title())} foil variant</a> is the {e(m2.group(1))} promo.')
+        else:
+            out.append(f'This is the {e(m.group(1))} promo, printed in {e(m.group(2).lower())} foil.')
+    elif c['s'] == 'P' and re.search(r' promo$', c.get('note') or ''):
+        main = CARD_INDEX.get('n:' + c['n'])
+        ev = c['note'][:-6]
+        out.append(f'This is the {e(ev)} promo printing.' + (f' The regular pack version is {card_a(main)} from {e(CARD_INDEX["set:" + main["s"]]["name"])}.' if main and main['name'] == c['name'] else ''))
+    elif 'Alt Art /20' in vs:
+        base = CARD_INDEX.get('n:' + c['n'].replace('-ALT', ''))
+        out.append('One of the 20 rainbow foil alternate arts Bandai made to mark Tales of the Gallant Sage, the 20th set. '
+                   'Only 20 copies of this art exist, randomly inserted into booster and blister packs.'
+                   + (f' The regular version is {card_a(base)}.' if base else ''))
+    elif vs == {'Normal', 'Diamond foil', 'Wavy foil'}:
+        out.append(f'This {e(rw)} comes three ways: a normal (non-foil) card, a diamond foil and a wavy foil. On these foils the card name stays non-foil. '
+                   'Listings often just say "foil", so check which pattern the photos show: the two don\'t always sell for the same price.')
+    elif vs == {'Normal', 'Prism foil', 'Spiral foil'}:
+        out.append(f'This {e(rw)} comes as a normal card, a prism foil and a spiral foil. The Chosen is the only set with these two foils, '
+                   'so a foil from this set is never diamond or wavy.')
+    elif vs == {'Normal', 'Flat foil'}:
+        out.append(f'This {e(rw)} comes in two finishes: a normal card and a flat foil (sometimes called full foil). '
+                   'From Approaching Wind on, flat foil was the only foil finish.')
+    elif 'Super Rare foil' in vs:
+        out.append('Super Rares only come as foils, with gold lettering on the name and three dots after the copyright line. There is no non-foil copy.'
+                   + (' This one also exists in a Black &amp; Gold foil.' if any('Black & Gold' in x for x in v) else ''))
+    elif vs == {'Full art'}:
+        out.append('A full-art Super Rare. US full-art Super Rares often have a textured surface, but not all of them do, so compare photos when buying.')
+    elif vs == {'Starter (no foil)'}:
+        out.append('A starter deck card. It was printed without a foil version.')
+    elif vs == {'Black & Gold'}:
+        out.append(f'Printed in Black &amp; Gold foil for the {e(s["name"].replace(" (tin)", ""))} collector tin.')
+    if not out:
+        return ''
+    # Reverse links: a main-set card that also has a promo or an Alt Art /20 version.
+    for k in ('promo:' + c['n'], 'alt:' + c['n']):
+        o = CARD_INDEX.get(k)
+        if o and o is not c and c['s'] != 'P' and 'Alt Art /20' not in vs:
+            out.append(f'A {"limited Alt Art /20" if k.startswith("alt") else e((o.get("note") or "promo").replace(" promo", "") + " promo")} version of this card also exists: {card_a(o)}.')
+    eds = [x for x in (c.get('ed') or []) if x]
+    if len(eds) > 1:
+        out.append(f'It was printed in {" and ".join(e(x) for x in eds)}, which sell separately.')
+    if 'placeholders until confirmed' in (s.get('notes') or ''):
+        out.append('Printing details for this set are still being confirmed.')
+    more = f' <a href="{FOIL_ART}">How to tell the foils apart</a>' if foil_art_live() and c['s'] != 'P' else ''
+    return f'<section class="aboutv"><h3>About this version</h3><p>{" ".join(out)}{more}</p></section>\n'
+
+
+ACT_MIN = 2   # placeholder: collector counts show once at least this many people track the card (1 is usually just us)
+
+
+def activity_line(c):
+    a = c.get('act')
+    if not a:
+        return ''
+    n, have, want, slabs, votes = (list(a) + [0] * 5)[:5]
+    bits = []
+    if n >= ACT_MIN:
+        bits.append(f'<b>{n}</b> collectors on Jonin track this card')
+        if have: bits.append(f'{have} {"has" if have == 1 else "have"} it')
+        if want: bits.append(f'{want} want{"s" if want == 1 else ""} it')
+        if slabs: bits.append(f'{slabs} slab{"s" if slabs != 1 else ""} logged')
+    if votes:
+        bits.append(f'<b>{votes}</b> battle vote{"s" if votes != 1 else ""}' if not bits else f'{votes} battle vote{"s" if votes != 1 else ""}')
+    if not bits:
+        return ''
+    return f'<p class="actline" data-jt="activity-line">{" · ".join(bits)}</p>\n'
+
+
 def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None, ranks=None, pops=None):
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
@@ -966,8 +1068,8 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 <p class="mt">{e(s["name"])} · {e(c["n"])}{(" · " + e(c["r"])) if known_rar(c) else ""}</p>
 <p class="mt slabname">{e(slab_name(c, s))}</p>
 {quick_links(c, s, set_cards, char_lists or {}, chars_by_name or {})}
-{value_line(c)}{mv_badges(c, ranks, pops)}<div class="fsslot" data-fsslot></div><dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
-{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
+{value_line(c)}{activity_line(c)}{mv_badges(c, ranks, pops)}<div class="fsslot" data-fsslot></div><dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
+{foil_note(c, s)}{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="slab">eBay sold · slabs</a>
 <a href="{e(sold(card_q(c), 'raw'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="raw">eBay sold · raw</a>
@@ -1199,6 +1301,18 @@ def main():
             pop_ranks.setdefault(c['s'] + ':' + c['n'], []).append((ch, i + 1))
     for i, (c, _n) in enumerate(LB.popular_ranked(votes.get('_all'), cards_by_key, 10)):
         pop_ranks.setdefault(c['s'] + ':' + c['n'], []).insert(0, (None, i + 1))
+    CARD_INDEX.clear()
+    for x in sets:
+        CARD_INDEX['set:' + x['id']] = x
+    kinds = {x['id']: x.get('kind') for x in sets}
+    for x in d['cards']:
+        CARD_INDEX[x['s'] + ':' + x['n']] = x
+        if kinds.get(x['s']) == 'Main' and 'Alt Art /20' not in (x.get('v') or []):
+            CARD_INDEX.setdefault('n:' + x['n'], x)
+        if 'Alt Art /20' in (x.get('v') or []):
+            CARD_INDEX['alt:' + x['n'].replace('-ALT', '')] = x
+        if x['s'] == 'P' and re.search(r' promo$', x.get('note') or ''):
+            CARD_INDEX['promo:' + x['n']] = x
     changed, keep_c, keep_s = 0, set(), set()
     for s in sets:
         cs = by_set[s['id']]
