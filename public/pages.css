@@ -384,3 +384,4 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .vg .also span{color:var(--ink);opacity:.88;font-size:16px;line-height:1.6}
 @media (max-width:760px){.vg .anat{grid-template-columns:1fr;gap:32px}.vg .sample{max-width:320px;margin:0 auto}.vg .also{grid-template-columns:1fr}}
 .vg .sample .strip{margin-top:38px}
+.pvav{display:block;font:400 11px Inter,sans-serif;color:var(--mute);text-align:right}.pvcap{margin:0 0 6px;font-size:12px;color:var(--mute)}

@@ -186,7 +186,7 @@
     if(h)h.innerHTML='Price estimate<span><svg class="jstar" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.5l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg> Jonin Club</span>';
     var band=sec&&sec.querySelector('.band');if(band)band.remove();
     Promise.all([
-      rest('/rest/v1/price_estimates?card_id=eq.'+encodeURIComponent(id)+'&select=printing,edition,grader,grade,estimate,sales_count,last_sold_at,last_price',tok).catch(function(){return null}),
+      rest('/rest/v1/price_estimates?card_id=eq.'+encodeURIComponent(id)+'&select=printing,edition,grader,grade,estimate,sales_count,last_sold_at,last_price,avg_price,listing_cap',tok).catch(function(){return null}),
       rest('/rest/v1/rpc/member_card_sales',tok,{p_card_id:id}).catch(function(){return []})
     ]).then(function(r){
       var rows=r[0],sales=r[1]||[];
@@ -204,9 +204,9 @@
         var list=by[vk(x)]||[];
         var lis=list.map(function(y){var ok=/^https:\/\//.test(y.url||''),href=ok?esc(y.url+(y.url.indexOf('?')>-1?'&':'?')+EPN):'';
           return '<'+(ok?'a href="'+href+'" target="_blank" rel="sponsored noopener"':'span')+' class="pvsr"><span>'+esc(lDate(y.sold_at))+'</span><span class="pvty">'+esc(TYPE[y.sale_type]||'Sale')+'</span><b>'+money(y.price)+'</b><span class="pvl">'+(ok?'eBay ↗':'')+'</span></'+(ok?'a':'span')+'>'}).join('');
-        return '<details class="pvrow"><summary><span class="pvn">'+ver.replace(/^ · /,'')+'</span><span class="pvc">'+x.sales_count+(x.last_sold_at?'<small>last '+esc(sDate(x.last_sold_at))+'</small>':'')+'</span><b>'+money(x.estimate)+'</b></summary>'+
+        return '<details class="pvrow"><summary><span class="pvn">'+ver.replace(/^ · /,'')+'</span><span class="pvc">'+x.sales_count+(x.last_sold_at?'<small>last '+esc(sDate(x.last_sold_at))+'</small>':'')+'</span><b>'+money(x.estimate)+(x.avg_price!=null?'<small class="pvav">avg '+money(x.avg_price)+'</small>':'')+'</b></summary>'+(x.listing_cap!=null?'<p class="pvcap">Listed now for '+money(x.listing_cap)+', so the estimate won’t go above that.</p>':'')+
           (lis?'<div class="pvsl">'+lis+'</div>':'')+'</details>'}).join('')+
-        '<p class="none">Tap a version to see its sales. Estimates lean on the newest sales; best offers show the accepted price.</p>';
+        '<p class="none">Tap a version to see its sales. Estimates lean on the newest sales and never sit above the cheapest current listing of that version; avg is every sale. Best offers show the accepted price.</p>';
     });
   }
   var LAST='';
@@ -311,7 +311,7 @@
     var d=document.createElement('div');d.className='jmo jsi jup';
     d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="juph"><button class="jmx" type="button" aria-label="Close">×</button>'+
       '<h2 id="juph">'+u.h+'</h2><p class="jsr">'+u.p+'</p><ul>'+
-      ['Exact prices by edition, foil and grade','Every sold listing, linked to the sale','Price estimates and sort by market value','Alerts for the cards you’re hunting','Alt Art /20 sniper alerts','Your collection value, a spreadsheet export and a badge']
+      ['Alerts for the cards you’re hunting','Alt Art /20 sniper alerts','Buy and sell posts from the marketplaces','Average sale price and a live estimate for every version','Every sale, by edition, foil and grade','A spreadsheet export and a badge']
         .map(function(t){return '<li><span>'+t+'</span><b>✓</b></li>'}).join('')+
       '</ul><div class="jsb"><a class="jmgo" href="/#mine">See my collection</a><button type="button" class="jsl">Close</button></div></div>';
     var go=function(){if(!document.body)return setTimeout(go,50);document.body.appendChild(d);if(window.jtrack)jtrack('upgrade-popup',{kind:kind})};go();
