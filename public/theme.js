@@ -22,8 +22,6 @@
   }
   apply(get());
   window.JONIN_THEMES=T;
-  /* Naruto music pop-out button (bottom-right) on every page */
-  try{var ms=document.createElement('script');ms.src='/music.js?v=1';ms.defer=true;document.head.appendChild(ms)}catch(_){}
   window.joninSetTheme=function(id){var t=apply(id);try{localStorage.setItem(K,t.id)}catch(_){}var b=document.querySelector('.tp .tpb');if(b){b.querySelector('.tsw').setAttribute('style',st(t));b.querySelector('.tpn').textContent=t.n;document.querySelectorAll('.tp [data-t]').forEach(function(y){y.setAttribute('aria-checked',y.getAttribute('data-t')===t.id)})}return t.id};
   function st(t){return '--a:'+t.bg+';--b:'+t.a+';--c:'+t.c+";--f:url('"+t.f+"')"}
   function sw(t){return 'style="'+st(t)+'"'}
@@ -58,7 +56,7 @@
 /* Umami visitor analytics (cloud.umami.is, Jonin site). theme.js loads on every public page, so this covers the whole site. */
 (function(){
   if(document.querySelector('script[data-website-id]'))return;
-  if(window.top!==window&&window.name!=='jsite')return;   // the card page's embedded collection panel isn't a page view (pages inside the music player still count)
+  if(window.top!==window)return;   // the card page's embedded collection panel isn't a page view
   var s=document.createElement('script');
   s.defer=true;s.src='https://cloud.umami.is/script.js';
   s.setAttribute('data-website-id','8f5abd87-d29c-4e49-8544-c1ca76ff15b0');
