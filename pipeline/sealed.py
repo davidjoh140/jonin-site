@@ -11,7 +11,7 @@ import re
 import prices
 import settings as cfg
 
-KIND_LABEL = {"booster_pack": "Booster pack", "booster_box": "Booster box", "blister_pack": "Blister pack", "blister_box": "Blister box", "theme": "Theme deck",
+KIND_LABEL = {"booster_pack": "Booster pack", "booster_box": "Booster box", "blister_pack": "Blister pack", "blister_3pack": "3-pack blister", "blister_box": "Blister box", "theme": "Theme deck",
               "starter": "Starter deck", "tin": "Tin", "tournament_pack": "Tournament pack"}
 
 # A title with any of these is not one sealed item. PLACEHOLDER
@@ -70,8 +70,12 @@ def find_kind(t):
         return "theme", False
     if " starter deck " in t or " starter " in t:
         return "starter", False
-    if " blister " in t or " blisters " in t:                 # one pack in a retail blister, or a box of them
-        return ("blister_box", False) if re.search(r" (?:box|display|case) ", t) else ("blister_pack", False)
+    if " blister " in t or " blisters " in t:                 # one pack in a retail blister, a 3-pack blister, or a box of them
+        if re.search(r" (?:box|display|case) ", t):
+            return "blister_box", False
+        if re.search(r" (?:3|three|triple) ?(?:pack|packs|booster|boosters) ", t):
+            return "blister_3pack", False
+        return "blister_pack", False
     if " booster box " in t or " display " in t:
         return "booster_box", False
     if " booster pack " in t:
@@ -118,9 +122,11 @@ def match(title, products, sets, photo=False):
     if not kind:
         return None
     multi = MULTI.search(low)
-    if multi and not (kind in ("booster_box", "blister_box") and PACK_COUNT.fullmatch(multi.group(0).strip())):
+    own_count = kind in ("booster_box", "blister_box") or (kind == "blister_3pack" and multi and multi.group(0).strip().startswith("3"))
+    if multi and not (own_count and PACK_COUNT.fullmatch(multi.group(0).strip())):
         return None
-    by_kind = lambda k: [p for p in products if p["kind"] == k and p.get("public", True)]
+    # hidden entries (template slots not on the site yet) still collect sales, so a sale shows David the item exists
+    by_kind = lambda k: [p for p in products if p["kind"] == k]
     if kind == "tin":
         for p in by_kind("tin"):
             for w in p.get("match_words") or []:

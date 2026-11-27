@@ -46,6 +46,7 @@ ARTS = [{"id": "1-booster-pack-silver-naruto", "set_id": "1", "kind": "booster_p
         {"id": "12-blister-pack-naruto", "set_id": "12", "kind": "blister_pack", "parent_id": "12-blister-pack", "art": "Naruto", "match_words": ["naruto art", "naruto pack art"]},
         {"id": "12-blister-pack-sakura", "set_id": "12", "kind": "blister_pack", "parent_id": "12-blister-pack", "art": "Sakura", "match_words": ["sakura"]},
         {"id": "12-blister-box", "set_id": "12", "kind": "blister_box", "match_words": []},
+        {"id": "12-blister-3pack", "set_id": "12", "kind": "blister_3pack", "match_words": [], "public": False},
         {"id": "1-starter-naruto", "set_id": "1", "kind": "starter", "parent_id": "1-starter", "art": "Naruto", "match_words": ["naruto deck", "naruto starter", "uzumaki"]},
         {"id": "1-starter-sasuke", "set_id": "1", "kind": "starter", "parent_id": "1-starter", "art": "Sasuke", "match_words": ["sasuke"]}]
 
@@ -67,6 +68,8 @@ def test_arts_blisters_and_decks():
     assert apid("2009 Naruto CCG A New Chronicle (Set 12) 1st Edition Blister Booster Pack Sealed") == "12-blister-pack"
     assert apid("Naruto A New Chronicle TCG CCG Blister Booster Pack Box 15 Packs sealed") == "12-blister-box"
     assert apid("Naruto CCG A New Chronicle Booster Packs in Blister SET OF 2") is None
+    assert apid("Naruto CCG A New Chronicle 3 Pack Blister factory sealed") == "12-blister-3pack"       # hidden slot still matches
+    assert apid("Naruto CCG A New Chronicle 3 Booster Blister + promo sealed") == "12-blister-3pack"
     assert apid("Naruto CCG Path to Hokage Booster Box 24 Packs factory sealed") == "1-booster-box"     # box contents
     assert apid("Naruto A New Chronicle booster pack sealed") == "12-booster-pack"                    # loose pack, not blister
     assert apid("Naruto CCG TCG The Path to Hokage Sasuke Uchiha Starter Deck sealed") == "1-starter-sasuke"

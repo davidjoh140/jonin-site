@@ -11,13 +11,13 @@ B = None   # build_pages module, set by setup()
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sealed.json')
 EPN = '&mkevt=1&mkcid=1&mkrid=711-53200-19255-0&campid=5339262225&toolid=10001&customid=jonin-sealed'
 KIND = {'booster_box': 'Booster box', 'booster_pack': 'Booster pack', 'blister_pack': 'Blister pack',
-        'blister_box': 'Blister box', 'theme': 'Theme deck',
+        'blister_3pack': '3-pack blister', 'blister_box': 'Blister box', 'theme': 'Theme deck',
         'starter': 'Starter deck', 'tin': 'Tin', 'tournament_pack': 'Tournament pack'}
 KIND_PLURAL = {'booster_box': 'Booster boxes', 'booster_pack': 'Booster packs', 'blister_pack': 'Blister packs',
-               'blister_box': 'Blister boxes', 'theme': 'Theme decks',
+               'blister_3pack': '3-pack blisters', 'blister_box': 'Blister boxes', 'theme': 'Theme decks',
                'starter': 'Starter decks', 'tin': 'Tins', 'tournament_pack': 'Tournament packs'}
-KIND_ORDER = ['booster_box', 'booster_pack', 'blister_box', 'blister_pack', 'theme', 'starter', 'tin', 'tournament_pack']
-ICON = {'booster_box': '📦', 'booster_pack': '🎴', 'blister_box': '📦', 'blister_pack': '🎴', 'theme': '🃏', 'starter': '🃏', 'tin': '🥫', 'tournament_pack': '🏆'}
+KIND_ORDER = ['booster_box', 'booster_pack', 'blister_box', 'blister_3pack', 'blister_pack', 'theme', 'starter', 'tin', 'tournament_pack']
+ICON = {'booster_box': '📦', 'booster_pack': '🎴', 'blister_box': '📦', 'blister_3pack': '🎴', 'blister_pack': '🎴', 'theme': '🃏', 'starter': '🃏', 'tin': '🥫', 'tournament_pack': '🏆'}
 
 
 _BY_SET = None
@@ -96,7 +96,7 @@ def short(p):
         return f"{KIND[p['kind']]}: {p['art']} art"
     if p['kind'] in ('theme', 'starter') and ':' in n:
         return KIND[p['kind']] + ': ' + n.split(':', 1)[1].strip()
-    if p['kind'] in ('booster_box', 'booster_pack', 'blister_box', 'blister_pack'):
+    if p['kind'] in ('booster_box', 'booster_pack', 'blister_box', 'blister_3pack', 'blister_pack'):
         return KIND[p['kind']]
     return n
 
