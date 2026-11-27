@@ -71,7 +71,7 @@
       box.innerHTML = '<p class="btns" style="margin:0"><a class="primary" href="/#signup">Sign up free</a><a class="ghostbtn" href="/#signin">Sign in</a></p>';
       return;
     }
-    var url = 'https://jonin.cards/?invite=' + inv.code, wait = (inv.joined || 0) - (inv.counted || 0);
+    var url = 'https://jonin.cards/join/' + inv.code + '/', wait = (inv.joined || 0) - (inv.counted || 0);
     box.innerHTML = '<div class="mlink"><input readonly value="' + esc(url) + '" aria-label="Your invite link"><button type="button" class="primary" data-copy>Copy link</button>' +
       (navigator.share ? '<button type="button" data-share>Share</button>' : '') + '</div>' +
       '<div class="mprog"><b>' + (inv.counted || 0) + (inv.counted === 1 ? ' friend' : ' friends') + ' joined</b>' +
