@@ -165,7 +165,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .f-prism{background:conic-gradient(from 200deg at 50% 70%,#ff5f6d,#ffc371,#f9f871,#5ef0a0,#4cc9f0,#9d6bff,#ff5f6d)}
 .fchips{position:absolute;top:8px;right:8px;display:flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:999px;background:color-mix(in srgb,var(--deep) 88%,transparent);border:1px solid var(--line)}.fchips .fx{font-size:4.5px}
 .pv{display:flex;flex-wrap:wrap;gap:6px 14px}.pv span{display:inline-flex;align-items:center;gap:6px}.pv .fx{font-size:5px}
-@media(max-width:900px){#v-cards:not([hidden]){display:flex;flex-direction:column}#v-cards>.hrow{order:1}#v-cards>.picks{order:2}#v-cards>.bar{order:3}#v-cards>.lside{order:4}#v-cards>.ctaband{order:5}#v-cards>.grid{order:6}#v-cards>.more{order:7}#v-cards>.lside{margin:0 0 16px}.ftog{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-weight:600;font-size:14px}.ftog:focus-visible{outline:2px solid var(--acc);outline-offset:2px}.ftog .fn{color:var(--acc2);font-weight:600}.ftog .chev{font-size:11px;color:var(--mute);transform:rotate(-90deg);transition:transform .15s}#fbar.fopen .ftog .chev{transform:none}#fbar:not(.fopen) #rars,#fbar:not(.fopen) #types,#fbar:not(.fopen) .brk{display:none!important}#fbar.fopen .ftbrk{display:block}.ftog{white-space:nowrap}.clist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:4px;max-height:min(46vh,360px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:2px}.crow{grid-template-columns:26px minmax(0,1fr) auto;column-gap:8px;padding:6px 6px 7px 4px;min-height:44px}.crow img,.crow .cdot{width:26px;height:26px}.crow .cn{font-size:13px}.chars:not([open]) .qn.on{color:var(--ink)}}
+@media(max-width:900px){#v-cards:not([hidden]){display:flex;flex-direction:column}#v-cards>.hrow{order:1}#v-cards>#q{order:2}#v-cards>.picks{order:3}#v-cards>.bar{order:4}#v-cards>.lside{order:5}#v-cards>.ctaband{order:6}#v-cards>.grid{order:7}#v-cards>.more{order:8}#v-cards>.lside{margin:0 0 16px}.ftog{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-weight:600;font-size:14px}.ftog:focus-visible{outline:2px solid var(--acc);outline-offset:2px}.ftog .fn{color:var(--acc2);font-weight:600}.ftog .chev{font-size:11px;color:var(--mute);transform:rotate(-90deg);transition:transform .15s}#fbar.fopen .ftog .chev{transform:none}#fbar:not(.fopen) #rars,#fbar:not(.fopen) #types,#fbar:not(.fopen) .brk{display:none!important}#fbar.fopen .ftbrk{display:block}.ftog{white-space:nowrap}.clist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:4px;max-height:min(46vh,360px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:2px}.crow{grid-template-columns:26px minmax(0,1fr) auto;column-gap:8px;padding:6px 6px 7px 4px;min-height:44px}.crow img,.crow .cdot{width:26px;height:26px}.crow .cn{font-size:13px}.chars:not([open]) .qn.on{color:var(--ink)}}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}nav{order:3;width:100%}aside{width:100%}}
 
 /* motion: springy presses, lifts and entrances */
@@ -359,9 +359,9 @@ a.card{color:inherit;text-decoration:none}
 @media(max-width:600px){header nav{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);padding-right:28px}}
 #more[hidden]{display:none!important}#grid>.empty{grid-column:1/-1}
 </style>
-<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=f0c908cc"><script>if(/[?&]embed=coll(&|$)/.test(location.search))document.documentElement.classList.add('embed');
+<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=06d77c22"><script>if(/[?&]embed=coll(&|$)/.test(location.search))document.documentElement.classList.add('embed');
 /* Old /#card=ID links (shared links, admin) now go straight to that card's page. */
-else{var jgo=function(){var jm=location.hash.match(/(?:^#|&)card=([^&]+)/);if(jm){var jid=decodeURIComponent(jm[1]);if(/^[^:]+:[^:]+$/.test(jid))location.replace('/card/'+encodeURIComponent(jid.replace(':','-').toLowerCase())+'/')}};jgo();addEventListener('hashchange',jgo)}</script><script src="/theme.js?v=8"></script><script src="/acct.js?v=80cf22be"></script>
+else{var jgo=function(){var jm=location.hash.match(/(?:^#|&)card=([^&]+)/);if(jm){var jid=decodeURIComponent(jm[1]);if(/^[^:]+:[^:]+$/.test(jid))location.replace('/card/'+encodeURIComponent(jid.replace(':','-').toLowerCase())+'/')}};jgo();addEventListener('hashchange',jgo)}</script><script src="/theme.js?v=8"></script><script src="/acct.js?v=ab3eb553"></script>
 </head>
 <body>
 <header><div class="hw">
@@ -1279,7 +1279,7 @@ fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;setTimeout(liveFill,150
 </script>
 <button class="totop" id="totop" type="button" aria-label="Back to top"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script>(function(){var b=document.getElementById('totop');function u(){b.classList.toggle('on',window.scrollY>500)}addEventListener('scroll',u,{passive:true});u();b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})})})();</script>
-<script src="/feedback.js?v=5e872c82" defer></script>
+<script src="/feedback.js?v=45736d11" defer></script>
 <script src="/battle.js?v=5" defer></script>
 </body>
 </html>

@@ -155,3 +155,6 @@ body .buy a{display:inline-flex;align-items:center;color:color-mix(in srgb,#2FB4
 .jstar{display:inline-block;flex:none;width:1em;height:1em;vertical-align:-.14em;fill:#F5BE3F;stroke:#F5BE3F;stroke-width:1.4;stroke-linejoin:round}
 .pnb .jstar{width:14px;height:14px}
 .pbadge.fnd2 .jstar{fill:currentColor;stroke:currentColor}
+
+/* Narrow phones (audit fix 2026-11-27): keep logo, Instagram, Sell and the account button on one row when signed out too. */
+@media (max-width:420px){header .hw>.sell{padding:0 11px!important;font-size:13px}header .igf{width:32px!important;height:32px!important;margin-left:auto}header .hw{column-gap:6px!important}}
