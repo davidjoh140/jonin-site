@@ -166,6 +166,8 @@ def match(title, products, sets, photo=False):
                     return p, 0.9, f"tin name '{w}'"
         return None
     if kind == "tournament_pack":
+        if strict and re.search(r" (?:booster )?box(?:es)? ", t):
+            return None                             # a box of tournament packs: no catalog entry for that
         m = re.search(r" (?:tp|tournament pack) ?(\d) ", t)
         p = next((p for p in by_kind("tournament_pack") if m and p["set_id"] == f"TP{m.group(1)}"), None)
         return (p, 0.9, f"tournament pack {m.group(1)}") if p else None

@@ -113,6 +113,7 @@ def test_strict_exact_items():
     assert m("2006 BANDAI NARUTO COILS OF THE SNAKE BOOSTER BOX (24 PACKS) NEW SEALED U.S.") == "2-booster-box"
     assert m("Naruto CCG Battle of Destiny Booster Pack Factory Sealed Bandai - Sasuke Art") == "8-booster-pack"
     assert m("Naruto Chibi Tournament Series 3 Booster Box - Factory Sealed 24 Packs") is None   # a box of them, not one pack
+    assert m("Bandai 2011 Naruto Chibi Tournament Series 3 Booster Box - New, Factory Sealed") is None
     assert m("Naruto - Chibi Tournament Series 3 - Booster Pack -Sealed - Bandai") == "tp3-pack"
 
 
@@ -158,3 +159,4 @@ def test_photo_rules():
     assert pid(t) is None
     assert sealed.match(t, P, SETS, photo=True)[0]["id"] == "1-booster-box"
     assert sealed.match("Lot of 3 Naruto Path to Hokage booster box", P, SETS, photo=True) is None
+
