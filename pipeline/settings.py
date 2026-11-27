@@ -62,3 +62,10 @@ VOTE_MIN_VOTERS = 5   # people who must vote for a character before its Most pop
 POPULAR_TOP = 10      # cards on a character's Most popular page (David OK'd 10 for now)
 # Card names that count toward a character on top of their homepage filter names (exact card name, parentheses included).
 CHARACTER_EXTRA_NAMES = {"sasuke": ["Susano'o (Sasuke)"]}   # David, 2026-11-25: Susano'o (Sasuke) counts as Sasuke
+
+# ---------------------------------------------------------------- sealed products (sealed.py, collect_sales.py)
+# Added 2026-11-27. Everything here is a PLACEHOLDER for David to change.
+SEALED_QUERIES = ["naruto ccg booster", "naruto ccg sealed", "naruto bandai booster box",
+                  "naruto ccg theme deck", "naruto ccg starter deck", "naruto ccg tin"]   # PLACEHOLDER
+SEALED_PAGES_PER_QUERY = 1         # PLACEHOLDER: 200 listings per page, read on the hourly full sweep (~6 calls/hour)
+SEALED_MIN_CONFIDENCE = 0.65       # PLACEHOLDER: below this, a sealed-looking listing is ignored

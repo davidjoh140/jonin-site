@@ -23,6 +23,7 @@ from datetime import datetime, timedelta, timezone
 import requests
 
 import prices
+import sealed
 import settings as cfg
 import supa
 from find_scans import EBAY, Budget, OutOfCalls, big, ebay_token, fetch_image
@@ -171,10 +172,10 @@ def ebay_item(utok, external_id):
     return {"record": record, "summary": summary}
 
 
-def fill_thumbs(limit=200):
+def fill_thumbs(limit=200, table="sales"):
     """Save a small copy of each waiting sale's listing photo, so the Buying Desk can show it
     (the Buying Desk page can't load images from eBay directly)."""
-    rows = supa.select("sales", {"select": "id,image_url", "status": "eq.pending", "thumb_b64": "is.null",
+    rows = supa.select(table, {"select": "id,image_url", "status": "eq.pending", "thumb_b64": "is.null",
                                  "image_url": "not.is.null", "limit": str(limit)})
     done = 0
     for r in rows[:limit]:
@@ -184,7 +185,7 @@ def fill_thumbs(limit=200):
         except Exception as e:
             print("photo failed for sale", r["id"], e)
             thumb = ""                                # don't retry forever
-        supa.update("sales", {"id": r["id"]}, {"thumb_b64": thumb})
+        supa.update(table, {"id": r["id"]}, {"thumb_b64": thumb})
         done += 1
     return done
 
@@ -198,6 +199,41 @@ def last_full_sweep():
     return None
 
 
+def settle_sealed(t, full, stats, utok):
+    """Ended sealed listings -> pending sealed_sales (same rules as cards), then the sealed price ranges."""
+    active = supa.select("sealed_listings", {"select": "*", "state": "eq.active"})
+    can_vanish = full and stats.get("sealed_complete") and stats.get("complete")
+    n = {"ended": 0, "sold": 0, "unsold": 0, "gone": 0}
+    for li in active:
+        ends = datetime.fromisoformat(li["ends_at"].replace("Z", "+00:00")) if li.get("ends_at") else None
+        auction = li["kind"] == "AUCTION"
+        if not ((auction and ends and ends < t - timedelta(minutes=2)) or
+                (not auction and ((ends and ends < t) or (can_vanish and li["seen_at"] and
+                 datetime.fromisoformat(li["seen_at"].replace("Z", "+00:00")) < t - timedelta(minutes=5))))):
+            continue
+        if n["ended"] >= 60:                                  # PLACEHOLDER: sealed lookups per run
+            break
+        n["ended"] += 1
+        rec = None
+        if utok:
+            try:
+                got = ebay_item(utok, li["external_id"])
+                rec = got and got["record"]
+                time.sleep(0.2)
+            except Exception as e:
+                print("GetItem failed for sealed", li["external_id"], e)
+            if rec is None and not auction and not (ends and ends < t):
+                continue                                      # still live, just missing from search
+        state, sale = sealed.settle(li, rec, t)
+        n[state] = n.get(state, 0) + 1
+        if sale:
+            supa.insert("sealed_sales", [sale], ignore_duplicates=True, returning=False)
+        supa.update("sealed_listings", {"external_id": li["external_id"]}, {"state": state})
+    n["thumbs"] = fill_thumbs(table="sealed_sales", limit=60)
+    n["ranges"] = supa.rpc("refresh_sealed_prices")
+    stats["sealed"] = n
+
+
 def main():
     with supa.Run("collect_sales") as run:
         t = now()
@@ -207,6 +243,28 @@ def main():
         tok = ebay_token()
         budget = Budget(cfg.SALES_MAX_CALLS_PER_RUN)
         rows, seen_ids = {}, set()
+        srows = {}                                            # sealed listings (sealed.py)
+        try:
+            products = supa.select("products")
+            sets_all = supa.select("sets")
+        except Exception as e:                                # sealed must never stop card prices
+            print("sealed catalog failed to load:", e)
+            products, sets_all = [], []
+
+        def take(it):
+            """Sealed product first, else a single card."""
+            if products:
+                try:
+                    sr = sealed.to_listing(it, products, sets_all, iso(t))
+                except Exception as e:
+                    print("sealed match failed:", e)
+                    sr = None
+                if sr:
+                    srows[sr["external_id"]] = sr
+                    return
+            row = to_listing(it, matcher, t)
+            if row:
+                rows[row["external_id"]] = row
         last = last_full_sweep()
         full = last is None or t - last >= timedelta(minutes=cfg.SALES_FULL_SWEEP_MINUTES - 5)
         window = f"buyingOptions:{{AUCTION}},itemEndDate:[{iso(t)}..{iso(t + timedelta(minutes=cfg.SALES_ENDING_WINDOW_MINUTES))}]"
@@ -214,9 +272,7 @@ def main():
             for q in cfg.SALES_QUERIES:                       # 1. auctions ending soon
                 for it in search(tok, q, budget, 2, window):
                     stats["seen"] += 1
-                    row = to_listing(it, matcher, t)
-                    if row:
-                        rows[row["external_id"]] = row
+                    take(it)
             if full:                                          # 2. everything, about hourly
                 complete = True
                 for q in cfg.SALES_QUERIES:
@@ -225,20 +281,36 @@ def main():
                         got += 1
                         stats["seen"] += 1
                         seen_ids.add(f"ebay:{it['itemId']}")
-                        row = to_listing(it, matcher, t)
-                        if row:
-                            rows[row["external_id"]] = row
+                        take(it)
                     if got >= cfg.SALES_PAGES_PER_QUERY * 200:
                         complete = False              # more results than we read: can't tell what vanished
+                sealed_complete = complete
+                for q in (cfg.SEALED_QUERIES if products else []):   # sealed: a few narrow searches
+                    got = 0
+                    for it in search(tok, q, budget, cfg.SEALED_PAGES_PER_QUERY):
+                        got += 1
+                        stats["seen"] += 1
+                        seen_ids.add(f"ebay:{it['itemId']}")
+                        take(it)
+                    if got >= cfg.SEALED_PAGES_PER_QUERY * 200:
+                        sealed_complete = False
+                stats["sealed_complete"] = sealed_complete
                 stats["full"] = True
                 stats["complete"] = complete
         except OutOfCalls:
             stats["stopped"] = "call budget used up"
             full = stats["full"] = False                      # an incomplete sweep can't say what vanished
         stats["matched"] = len(rows)
+        stats["sealed_matched"] = len(srows)
         batch = list(rows.values())
         for i in range(0, len(batch), 500):
             supa.upsert("listings", batch[i:i + 500], "external_id")
+        try:
+            sb = list(srows.values())
+            for i in range(0, len(sb), 500):
+                supa.upsert("sealed_listings", sb[i:i + 500], "external_id")
+        except Exception as e:
+            stats["sealed_error"] = f"listings: {e}"[:200]
 
         # 3. settle listings that ended
         active = supa.select("listings", {"select": "*", "state": "eq.active"})
@@ -299,6 +371,10 @@ def main():
                 supa.insert("sales", [row], ignore_duplicates=True, returning=False)
                 stats[sale["status"]] += 1
             supa.update("listings", {"external_id": li["external_id"]}, {"state": state})
+        try:
+            settle_sealed(t, full, stats, utok)
+        except Exception as e:                                # sealed must never stop card prices
+            stats["sealed_error"] = f"settle: {e}"[:200]
         stats["thumbs"] = fill_thumbs()
         stats["ranges"] = supa.rpc("refresh_price_ranges")
         print(stats)

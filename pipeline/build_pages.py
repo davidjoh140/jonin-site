@@ -133,7 +133,7 @@ HEAD = '''<!DOCTYPE html>
 </head>
 <body>
 <header><div class="hw"><a class="logo" href="/" aria-label="Jonin home"><span class="jc" aria-hidden="true"><i></i><i><b>J</b></i></span><span aria-hidden="true">ONIN</span></a>
-<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/lists/">Lists</a><a href="/news/">News</a><a href="/articles/">Articles</a><div class="pn"><a class="pnb" href="/club/"><svg class="lk" viewBox="0 0 14 17" aria-hidden="true"><defs><linearGradient id="lkn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE99A"/><stop offset=".45" stop-color="#F2C14E"/><stop offset="1" stop-color="#B07A1C"/></linearGradient></defs><g class="lift"><path class="sh" d="M4 8.5V5.5a3 3 0 0 1 6 0v3" fill="none" stroke="#E0B045" stroke-width="2.1" stroke-linecap="round"/></g><g class="bd"><rect x="1" y="8" width="12" height="9" rx="2.2" fill="url(#lkn)" stroke="#8C5F14" stroke-width=".6"/><circle cx="7" cy="11.7" r="1.35" fill="#5C3D0A"/><rect x="6.4" y="12" width="1.2" height="2.6" rx=".55" fill="#5C3D0A"/></g></svg>Jonin Club</a><div class="pdd"><div class="scr"><i class="rod"></i><div class="paper"><div class="in"><div class="pad"><h4>What Jonin Club unlocks</h4><ul><li>Alerts for the cards you&#39;re hunting, by Discord DM or email</li><li>Alt Art /20 sniper: a ping the moment a limited alt art is listed</li><li>Buy and sell posts from the Naruto CCG marketplaces</li><li>Average sale price and a live estimate for every version</li><li>Every sale, by edition, foil and grade</li><li>Collection spreadsheet export and a Jonin Club badge</li></ul><a class="go" href="/club/">See Jonin Club →</a></div></div></div><i class="rod"></i></div></div></div></nav>{igh}</div></header>
+<nav><a href="/">Cards</a><a href="/#sets">Sets</a><a href="/characters/">Characters</a><a href="/lists/">Lists</a><a href="/sealed/">Sealed</a><a href="/news/">News</a><a href="/articles/">Articles</a><div class="pn"><a class="pnb" href="/club/"><svg class="lk" viewBox="0 0 14 17" aria-hidden="true"><defs><linearGradient id="lkn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE99A"/><stop offset=".45" stop-color="#F2C14E"/><stop offset="1" stop-color="#B07A1C"/></linearGradient></defs><g class="lift"><path class="sh" d="M4 8.5V5.5a3 3 0 0 1 6 0v3" fill="none" stroke="#E0B045" stroke-width="2.1" stroke-linecap="round"/></g><g class="bd"><rect x="1" y="8" width="12" height="9" rx="2.2" fill="url(#lkn)" stroke="#8C5F14" stroke-width=".6"/><circle cx="7" cy="11.7" r="1.35" fill="#5C3D0A"/><rect x="6.4" y="12" width="1.2" height="2.6" rx=".55" fill="#5C3D0A"/></g></svg>Jonin Club</a><div class="pdd"><div class="scr"><i class="rod"></i><div class="paper"><div class="in"><div class="pad"><h4>What Jonin Club unlocks</h4><ul><li>Alerts for the cards you&#39;re hunting, by Discord DM or email</li><li>Alt Art /20 sniper: a ping the moment a limited alt art is listed</li><li>Buy and sell posts from the Naruto CCG marketplaces</li><li>Average sale price and a live estimate for every version</li><li>Every sale, by edition, foil and grade</li><li>Collection spreadsheet export and a Jonin Club badge</li></ul><a class="go" href="/club/">See Jonin Club →</a></div></div></div><i class="rod"></i></div></div></div></nav>{igh}</div></header>
 <main>
 '''
 FOOT = '''</main>
@@ -318,6 +318,7 @@ from settings import MOST_VALUABLE_CHARACTERS, MOST_VALUABLE_TOP, MOST_VALUABLE_
 import articles_build as AB
 import lists_build as LB
 import value_pages as VP
+import sealed_pages as SP
 featured_in = lambda c: AB.featured_in(c)
 
 NOTES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'character_notes.json')
@@ -656,6 +657,7 @@ def price_guide(cards, sets, sets_by_id, mv_chars):
 <section class="sethead"><h1>Naruto CCG price guide</h1>
 <p class="lede">What original Bandai Naruto CCG cards (2006–2013) are worth, from real sold listings. Every sale is checked by hand before it counts. {n} cards have a recorded sale so far, and the guide updates on its own as new sales come in.</p>
 <p class="mt"><a href="/what-are-my-naruto-cards-worth/">How to tell what your Naruto cards are worth →</a></p>
+<p class="mt"><a href="/sealed/">Sealed booster boxes, packs, decks and tins: prices →</a></p>
 <p class="mt">Each card's price range is based on its highest recorded sale across every version. <a href="/club/">Jonin Club</a> shows exact prices by edition, foil and grade, with every sold listing.</p>
 <div class="chips">{jump}</div></section>
 <section class="mvlistcard"><h2>What makes a Naruto CCG card valuable</h2>
@@ -1006,7 +1008,7 @@ def set_page(s, cards):
 <section class="sethead"><h1>{sym}{e(s["name"])}</h1>
 <dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
 {f'<p class="note">{e(s["notes"])}</p>' if s.get('notes') else ''}
-<p><a class="primary" href="/#set={quote(s['id'])}">Browse and filter this set</a></p></section>
+<p class="btns"><a class="primary" href="/#set={quote(s['id'])}">Browse and filter this set</a>{SP.set_link(s['id'])}</p></section>
 {newbie('set')}<section class="spx" id="set-progress" data-set="{e(s['id'])}" data-total="{len(cards)}" data-prints="{sum(max(1, len(c.get('v') or [])) * max(1, len([x for x in (c.get('ed') or []) if x])) for c in cards)}" aria-live="polite"></section>
 <section class="grid">{grid}</section>
 <script src="/set-progress.js?v={file_version('set-progress.js')}" defer></script>
@@ -1136,6 +1138,7 @@ def set_links(sets):
     names = {'Main': 'Main sets', 'Promo': 'Promos', 'Tournament pack': 'Tournament packs', 'Tin': 'Collector tins'}
     return ('<!--setlinks--><nav class="setlinks" aria-label="All sets"><h2>All Naruto CCG sets</h2>'
             + ''.join(f'<p><b>{e(names.get(k, k))}</b> {" · ".join(groups[k])}</p>' for k in order)
+            + '<p><b>Sealed product</b> <a href="/sealed/">Booster boxes, packs, theme decks and tins, with prices</a></p>'
             + '</nav><!--/setlinks-->')
 
 
@@ -1221,6 +1224,9 @@ def main():
     elif os.path.isdir(mvidx):
         shutil.rmtree(mvidx)
     changed += write(os.path.join(ROOT, 'price-guide', 'index.html'), price_guide(d['cards'], sets, sets_by_id, mv_chars))
+    SP.setup(sys.modules[__name__])
+    schanged, sealed_urls = SP.build(sets_by_id)
+    changed += schanged
     VP.setup(sys.modules[__name__])
     years = VP.years_of(sets)
     changed += write(os.path.join(ROOT, VP.GUIDE_SLUG, 'index.html'), VP.guide_page(d['cards'], years, mv_chars, sets_by_id))
@@ -1254,7 +1260,7 @@ def main():
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
     urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/leaderboard/', SITE + '/battle/', SITE + '/giveaway/', SITE + '/articles/', SITE + '/sell/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
-           list_urls + [SITE + '/price-guide/', f'{SITE}/{VP.GUIDE_SLUG}/'] + [f'{SITE}/year/{y}/' for y in years] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
+           list_urls + sealed_urls + [SITE + '/price-guide/', f'{SITE}/{VP.GUIDE_SLUG}/'] + [f'{SITE}/year/{y}/' for y in years] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
     page_imgs = {f'{SITE}/card/{slug(c)}/': [c['img']] for c in d['cards'] if re.match(r'^https://jonin\.cards/', c.get('img') or '')}

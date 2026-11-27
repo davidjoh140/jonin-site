@@ -455,6 +455,16 @@ def main():
         write_card_sales(sales)
         write_card_history(sales)
         write_votes(supa.select("card_votes", {"select": "character,card_id,user_id"}))
+        try:                                   # sealed products (sealed_export.py) -> pipeline/sealed.json
+            import sealed_export
+            run.stats_sealed = sealed_export.write(
+                supa.select("products"), supa.select("sets"), supa.select("sealed_price_ranges"),
+                supa.select("sealed_sales", {"select": "product_id,price,edition,sold_at,url,source,image_url",
+                                             "status": "eq.approved"}),
+                supa.select("sealed_listings", {"select": "product_id,title,price,edition,kind,bids,best_offer,ends_at,url,image_url",
+                                                "state": "eq.active"}))
+        except Exception as e:                 # sealed must never stop the card export
+            print("sealed export failed:", e)
         # Grid thumbnails (thumbs.py): "th" for every card whose thumbnail exists, added last like thumbs.py does.
         import thumbs
         for c in data["cards"]:

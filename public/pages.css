@@ -393,3 +393,19 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 #prices{scroll-margin-top:84px}
 /* Record sale stays in view next to the taller price table instead of leaving a gap under it. */
 @media(min-width:801px){.market>.soldslab{position:sticky;top:84px}}
+/* Sealed product pages (/sealed/, 2026-11-27) */
+.sgrid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.stile .simg,.stile .snoimg{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:10px;background:var(--panel);border:1px solid var(--line);display:block;transition:transform .18s}
+.stile:hover .simg,.stile:hover .snoimg{transform:translateY(-3px)}
+.snoimg{display:grid!important;place-items:center;align-content:center;gap:4px;color:var(--mute)}.snoimg b{font-size:44px;line-height:1}.snoimg small{font-size:12px}
+.stile .tpx{color:var(--acc);font-weight:700}
+.sealpage .art .sbig{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;border-radius:14px;background:var(--panel);border:1px solid var(--line);display:block}
+.sealpage .art .snoimg.sbig{display:grid!important}.sealpage .art .snoimg b{font-size:90px}
+.scred{font-size:12px;color:var(--mute);margin:8px 0 0}
+.sfacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:16px 0}.sfacts div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px}.sfacts dt{font-size:12px;color:var(--mute)}.sfacts dd{margin:2px 0 0;font-weight:600}.sfacts a{color:var(--acc)}
+.snote{font-size:13px;color:var(--mute)}.linkbtn{background:none;border:0;padding:0;color:var(--acc);font:inherit;cursor:pointer;text-decoration:underline}
+.sfilt{margin-top:14px}.sfilt .chip{padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}.sfilt .chip.on{border-color:var(--acc);color:var(--acc)}
+.cgroup[hidden],.stile[hidden]{display:none}
+.market.one .px{max-width:720px}
+.sealpage dl.sfacts{border:0;background:none;padding:0;box-shadow:none}
+@media (max-width:760px){.sealpage .art .snoimg.sbig{aspect-ratio:auto;height:150px}.sealpage .art .snoimg b{font-size:56px}}

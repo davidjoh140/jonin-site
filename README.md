@@ -132,3 +132,11 @@ Red dots mean a starter/theme deck printing. Those cards are marked `starter_exc
 - Signed-in members outside the top get their own row pinned at the bottom; members not sharing get a note on how to join the board.
 - Setup (`/welcome/`, step 2) asks "Make your profile public?" — Public or Keep it private (default private). It sets `profiles.sharing`.
 - Rules (David approved 2026-11-26): top 25, members need 1+ scroll, ties share a place (earlier member listed first).
+
+## Sealed products (/sealed/)
+
+- `db/030_sealed.sql`: `products` is the one sealed catalog (it already held the decks cards come in). Added booster pack + booster box per main set, the 4 tins and 4 tournament packs, all `confirmed = false` until David checks contents, MSRP and release. `match_words` are extra title words for matching (deck names).
+- `sealed_listings` / `sealed_sales` / `sealed_price_ranges`: no public access. `collect_sales.py` hands every eBay listing to `pipeline/sealed.py` first; one clear sealed item becomes a sealed listing (not a card). Ended listings settle like cards and wait as pending in `sealed_sales` until David OKs them in **Jonin Hub → Sealed**. `refresh_sealed_prices()` rebuilds the ranges.
+- Ranges: per product + edition, last 180 days (or 3 newest), middle half once there are 4+ sales. A title with no edition stays "Edition not stated" (not assumed Unlimited like cards).
+- `export_cards.py` writes `pipeline/sealed.json` (`sealed_export.py`); `build_pages.py` builds `/sealed/` and `/sealed/<slug>/` from it (`sealed_pages.py`). Free for everyone: range per edition, last 5 sold, what's listed now (affiliate links).
+- PLACEHOLDERS for David (`settings.py` SEALED_*, `sealed.py` SKIP): the 6 sealed eBay searches (1 page each, hourly), skip words (opened, resealed, lots, breaks, Japanese…), multiples skipped rather than split per item, a bare "box" = booster box and bare "pack" = booster pack, 0.65 minimum match.
