@@ -9,7 +9,7 @@
 //   });
 //
 // Senders (who signs, which links show):
-//   david  -> David Johannesson <david@jonin.cards>  personal emails, member emails, announcements
+//   david  -> "Dave, Jonin" <david@jonin.cards>     personal emails, member emails, announcements
 //   buy    -> Jonin <buy@jonin.cards>                 seller confirmations, offers, buying follow-ups
 //   alerts -> Jonin Club <alerts@jonin.cards>         price / listing / Alt Art alerts
 //
@@ -56,10 +56,10 @@ type Profile = {
 
 export const SENDERS: Record<Sender, Profile> = {
   david: {
-    from: "David Johannesson <david@jonin.cards>",
+    from: "\"Dave, Jonin\" <david@jonin.cards>",
     header: `${IMG}/header-david.png`,
-    name: "David Johannesson",
-    title: "Founder, Jonin", // PLACEHOLDER title — change to whatever David wants
+    name: "Dave",
+    title: "Jonin",
     lines: ["The original Bandai Naruto CCG, and what your cards are worth."],
     links: [["jonin.cards", LINKS.site], ["Instagram", LINKS.instagram], ["Sell your cards", LINKS.sell]],
     footer: "You're getting this because you have an account at jonin.cards.",
