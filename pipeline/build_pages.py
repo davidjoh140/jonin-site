@@ -934,6 +934,8 @@ def card_a(c):
     return f'<a href="/card/{slug(c)}/">{e(c["name"])} {e(c["n"])}</a>'
 
 
+SHARED_PROMO_NUMBERS = {'PR068'}   # two different promos printed with this number; the second is filed as <n>B
+
 PROMO_RE = re.compile(r'^(.*?) promo \((\w+) foil\)$', re.I)
 
 
@@ -945,7 +947,15 @@ def foil_note(c, s):
     out = []
     # Promo foil pairs (PS002 Diamond = Gen Con, PS002B Wavy = E3): name both, link the other.
     m = PROMO_RE.match(c.get('note') or '')
-    if c['s'] == 'P' and m:
+    # Two different promos printed with the same number (PR068 Killer Bee / Sasuke): the second is filed with a B.
+    # Only numbers David confirmed are listed in SHARED_PROMO_NUMBERS (other B promos may be foil pairs or unchecked).
+    twin = (CARD_INDEX.get('P:' + (c['n'][:-1] if c['n'].endswith('B') else c['n'] + 'B'))
+            if c['s'] == 'P' and c['n'].removesuffix('B') in SHARED_PROMO_NUMBERS else None)
+    if twin and twin['name'] != c['name'] and not m:
+        num = c['n'].removesuffix('B')
+        out.append(f'Bandai printed two different promos with the number {e(num)}: this {e(c["name"])} and '
+                   f'{card_a(twin)}. Both cards say {e(num)}; we list one as {e(num)}B to keep them apart.')
+    elif c['s'] == 'P' and m:
         sib = CARD_INDEX.get('P:' + (c['n'][:-1] if c['n'].endswith('B') else c['n'] + 'B'))
         m2 = PROMO_RE.match((sib or {}).get('note') or '')
         if sib and m2:
