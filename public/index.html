@@ -470,7 +470,7 @@ const SYMV='2';const symUrl=u=>u?u+(u.includes('?')?'&':'?')+'v='+SYMV:'';
 const setTag=id=>{const s=D.byId[id]||{id,name:id};return `<span class="stag">${s.symbol?`<img class="ssym" src="${esc(symUrl(s.symbol))}" alt="" loading="lazy">`:''}<span>${esc(s.name||id)}</span></span>`};
 const baseName=n=>n.replace(/\s*\(.*?\)\s*/g,'').trim();
 function readHash(){const h=location.hash.slice(1);if(h==='sets')return 'sets';if(h==='mine')return 'mine';if(h==='lists'){MTAB='lists';return 'mine'}if(h.startsWith('u='))return 'user';S=S0();h.split('&').forEach(p=>{const i=p.indexOf('=');if(i<0)return;const k=p.slice(0,i),v=decodeURIComponent(p.slice(i+1));if(!v)return;
-  if(k==='chars'||k==='rars')S[k]=v.split(',').filter(Boolean);else if(k==='rar')S.rars=[v];else if(k==='quick'){const[a,b]=v.split(':');if(a==='char')S.chars=[b];if(a==='rar')S.rars=[b]}else if(k in S)S[k]=v});return 'cards'}
+  if(k==='chars'||k==='rars')S[k]=v.split(',').filter(Boolean);else if(k==='rar')S.rars=[v];else if(k==='quick'){const[a,b]=v.split(':');if(a==='char')S.chars=[b];if(a==='rar')S.rars=[b]}else if(k in S)S[k]=v});if(S.sort==='px-d')S.sort='';return 'cards'}
 function writeHash(){const h=Object.entries(S).filter(([k,v])=>Array.isArray(v)?v.length:v).map(([k,v])=>k+'='+encodeURIComponent(Array.isArray(v)?v.join(','):v)).join('&');history.replaceState(null,'',h?'#'+h:location.pathname)}
 const active=()=>Object.values(S).some(v=>Array.isArray(v)?v.length:v);
 const tog=(a,v)=>a.includes(v)?a.filter(x=>x!==v):[...a,v];
@@ -529,10 +529,11 @@ function tile(c,i,extra){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c)
   return `<a class="card in" href="${cardUrl(c)}" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div>${tpx(c)}<div class="nm">${esc(c.name)}</div><div class="mt">${setTag(c.s)}</div><div class="mt">${esc(c.n)} · ${rsym(c.src)}</div>${extra||''}</a>`}
 // Sort options. PLACEHOLDER choices for David to confirm: rarity order (UR > SR > R > U > C, then Promo, Starter, unknown),
 // "Newest sets first" = main sets 28 down to 1, then packs/tins/promos; "market value" = the price band (free data only); cards with no sales always go last.
-const SORTS=[['','Set & number'],['name','Name A–Z'],['name-d','Name Z–A'],['rar-d','Rarity: high to low'],['rar','Rarity: low to high'],['px-d','Market value: high to low'],['px','Market value: low to high'],['set-d','Newest sets first']];
+// Default sort (David, 2026-11-26): market value high to low, so visitors see the big cards first. 'num' = set & number.
+const SORTS=[['','Market value: high to low'],['num','Set & number'],['name','Name A–Z'],['name-d','Name Z–A'],['rar-d','Rarity: high to low'],['rar','Rarity: low to high'],['px','Market value: low to high'],['set-d','Newest sets first']];
 const RORD={UR:6,SR:5,R:4,U:3,C:2,P:1,F:0,'':-1};
 const pxOf=c=>{if(MEMBER&&EST){const e=tileEst(c);return e?+e.estimate:null}return c.pb==null?null:c.pb};
-function sorted(a){const k=S.sort;if(!k)return a;const ix=new Map(D.cards.map((c,i)=>[c,i])),so=new Map(D.sets.map((s,i)=>[s.id,i]));const d=k.endsWith('-d')?-1:1,b=k.replace(/-d$/,'');
+function sorted(a){const k=!S.sort||S.sort==='px-d'?'px-d':S.sort;if(k==='num')return a;const ix=new Map(D.cards.map((c,i)=>[c,i])),so=new Map(D.sets.map((s,i)=>[s.id,i]));const d=k.endsWith('-d')?-1:1,b=k.replace(/-d$/,'');
   const key={name:c=>c.name.toLowerCase(),rar:c=>RORD[c.src]??-1,px:pxOf,set:c=>{const i=so.get(c.s)??0;return (D.byId[c.s]||{}).kind==='Main'?i:i-1000}}[b];
   return a.map(c=>[c,key(c)]).sort(([x,kx],[y,ky])=>{if(b==='px'&&(kx==null||ky==null)){if(kx==null&&ky==null)return ix.get(x)-ix.get(y);return kx==null?1:-1}
     if(b==='rar'&&d===1){const lo=v=>v<2?99:v;kx=lo(kx);ky=lo(ky)}
