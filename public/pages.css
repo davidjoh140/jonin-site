@@ -239,3 +239,6 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .fsslot .fs h3{margin-top:0}.market.one{grid-template-columns:1fr}.market .soldslab{margin:0}
 
 .cardpage .slabname{font-size:12.5px;margin-top:-4px;opacity:.85}
+.tile .tpx{color:var(--acc);font-weight:600}
+.faq h3{font-size:15px;margin:16px 0 4px}.faq h3:first-of-type{margin-top:6px}
+.chips .chip.on{border-color:var(--acc);color:var(--acc)}

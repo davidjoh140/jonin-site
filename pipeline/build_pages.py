@@ -185,6 +185,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from settings import MOST_VALUABLE_CHARACTERS, MOST_VALUABLE_TOP, MOST_VALUABLE_MIN_CARDS, CHARACTER_EXTRA_NAMES
 import articles_build as AB
 import lists_build as LB
+import value_pages as VP
 featured_in = lambda c: AB.featured_in(c)
 
 NOTES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'character_notes.json')
@@ -522,6 +523,7 @@ def price_guide(cards, sets, sets_by_id, mv_chars):
     body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/lists/">Lists</a> › Price guide</nav>
 <section class="sethead"><h1>Naruto CCG price guide</h1>
 <p class="lede">What original Bandai Naruto CCG cards (2006–2013) are worth, from real sold listings. Every sale is checked by hand before it counts. {n} cards have a recorded sale so far, and the guide updates on its own as new sales come in.</p>
+<p class="mt"><a href="/what-are-my-naruto-cards-worth/">How to tell what your Naruto cards are worth →</a></p>
 <p class="mt">Each card's price range is based on its highest recorded sale across every version. <a href="/club/">Jonin Club</a> shows exact prices by edition, foil and grade, with every sold listing.</p>
 <div class="chips">{jump}</div></section>
 <section class="mvlistcard"><h2>What makes a Naruto CCG card valuable</h2>
@@ -751,7 +753,9 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
            if c['s'] in PSA else '<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>')
     art = (f'<img src="{e(img)}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
            if img else f'<div class="noimg"><b>{e(c["n"])}</b><span>{e(c["t"])} · scan coming soon</span></div>')
-    rows = [('Set', f'<a class="stag" href="/set/{set_slug(s)}/">{sym_img(s)}{e(s["name"])}</a> · {e(set_label(s))}{" · " + e(s["rel"]) if s.get("rel") else ""}'),
+    cy = set_year(s)
+    rows = [*([('Year', f'<a href="/year/{cy}/">{cy}</a>')] if cy else []),
+            ('Set', f'<a class="stag" href="/set/{set_slug(s)}/">{sym_img(s)}{e(s["name"])}</a> · {e(set_label(s))}{" · " + e(s["rel"]) if s.get("rel") else ""}'),
             ('Number', e(c['n'])), ('Rarity', e(c['r'])), ('Type', e(c['t'])),
             *[(k, detail_html(f, c[f])) for k, f in (('Element', 'el'), ('Turn cost', 'tc'), ('Hand cost', 'hc'), ('Village', 'vil'))
               if c.get(f) not in (None, '')],   # approved scan details (cards.json el/tc/hc/vil), with the scan-cut icon
@@ -759,13 +763,13 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
             ('Printings', ''.join(f'<span class="pv">{e(v)}</span>' for v in (c.get('v') or [])))]
     cl = char_links_for(c, chars_by_name or {})
     if cl:
-        rows.insert(1, ('Character', cl))
+        rows.insert(2 if cy else 1, ('Character', cl))
         chs = []
         for x in re.split(r'\s*&\s*', c['name']):
             ch = char_of(x, chars_by_name or {})
             if ch and ch['slug'] + ':' + ch['label'] not in chs:
                 chs.append(ch['slug'] + ':' + ch['label'])
-        rows.insert(2, ('Votes', f'<span class="cvotes" data-card="{e(c["s"] + ":" + c["n"])}" data-chars="{e(",".join(chs))}">…</span>'))
+        rows.insert(3 if cy else 2, ('Votes', f'<span class="cvotes" data-card="{e(c["s"] + ":" + c["n"])}" data-chars="{e(",".join(chs))}">…</span>'))
     if c.get('note'):
         rows.append(('Note', e(c['note'])))
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
@@ -1042,6 +1046,15 @@ def main():
     elif os.path.isdir(mvidx):
         shutil.rmtree(mvidx)
     changed += write(os.path.join(ROOT, 'price-guide', 'index.html'), price_guide(d['cards'], sets, sets_by_id, mv_chars))
+    VP.setup(sys.modules[__name__])
+    years = VP.years_of(sets)
+    changed += write(os.path.join(ROOT, VP.GUIDE_SLUG, 'index.html'), VP.guide_page(d['cards'], years, mv_chars, sets_by_id))
+    for y, ysets in years.items():
+        changed += write(os.path.join(ROOT, 'year', y, 'index.html'), VP.year_page(y, ysets, d['cards'], years, chars, sets_by_id))
+    ybase = os.path.join(ROOT, 'year')
+    for name in sorted(os.listdir(ybase)):
+        if name not in years:
+            shutil.rmtree(os.path.join(ybase, name))
     for pg in load_pages():
         changed += write(os.path.join(ROOT, pg['slug'], 'index.html'), plain_page(pg))
     arts = load_news()
@@ -1066,7 +1079,7 @@ def main():
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
     urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/leaderboard/', SITE + '/giveaway/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
-           list_urls + [SITE + '/price-guide/'] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
+           list_urls + [SITE + '/price-guide/', f'{SITE}/{VP.GUIDE_SLUG}/'] + [f'{SITE}/year/{y}/' for y in years] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]
     page_imgs = {f'{SITE}/card/{slug(c)}/': [c['img']] for c in d['cards'] if re.match(r'^https://jonin\.cards/', c.get('img') or '')}
