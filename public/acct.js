@@ -157,6 +157,8 @@
   function freeUI(signedIn){
     var key=signedIn?'in':'out';if(FREE===key||PREM)return;
     var a=document.querySelector('a.pxt'),m=a&&/[?&]card=([^&]+)/.exec(a.getAttribute('href')||'');if(!m)return;
+    // The page already carries the last 5 sales (built in for Google): signed out, keep them as they are.
+    if(!signedIn&&document.querySelector('.pxfree[data-static]')){FREE=key;return}
     FREE=key;each('.pxfree',function(x){x.remove()});
     var box=document.createElement('div');box.className='pxfree';a.parentNode.insertBefore(box,a);
     // Signed out (2026-11-27): the last 5 sales too, to push affiliate purchases, plus a "sign in for more" line.

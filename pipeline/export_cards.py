@@ -233,6 +233,23 @@ def reveal_top_prices(data, sales, fetch=None):
 
 
 ARTICLE_SALES = Path(__file__).resolve().parent / "article_sales.json"
+CARD_SALES = Path(__file__).resolve().parent / "card_recent_sales.json"
+CARD_PAGE_SALES = 5   # PLACEHOLDER (David, 2026-11-27): recent sales built into every card page, so Google sees them
+
+
+def write_card_sales(sales, n=CARD_PAGE_SALES):
+    """{card_id: [[price, version, date, url, source], ...]} newest first, for the static card pages.
+    Kept out of cards.json so the homepage download stays small."""
+    ids = sorted({x.get("card_id") for x in sales if x.get("card_id")})
+    out = {}
+    for cid in ids:
+        rs = recent_sales(sales, cid, None, n)
+        if rs:
+            out[cid] = rs
+    text = json.dumps(out, separators=(",", ":"), sort_keys=True) + "\n"
+    if not CARD_SALES.exists() or CARD_SALES.read_text() != text:
+        CARD_SALES.write_text(text)
+    return len(out)
 VOTES = Path(__file__).resolve().parent / "votes.json"
 
 
@@ -399,6 +416,7 @@ def main():
                      supa.select("card_attrs", {"select": "card_id,field,value,status", "status": "eq.approved"}))
         revealed = reveal_top_prices(data, sales)
         write_article_sales(sales)
+        write_card_sales(sales)
         write_votes(supa.select("card_votes", {"select": "character,card_id,user_id"}))
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),

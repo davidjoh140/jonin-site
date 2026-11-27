@@ -171,6 +171,46 @@ SETS_BY_ID = {}
 BANDS = ['Under $10', '$10–50', '$50–200', '$200+']   # replaced by cards.json "bands" in main()
 
 
+_CARD_SALES = None
+
+
+def card_sales(c):
+    """The card's newest approved sales from pipeline/card_recent_sales.json (export_cards.py), newest first."""
+    global _CARD_SALES
+    if _CARD_SALES is None:
+        f = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'card_recent_sales.json')
+        _CARD_SALES = json.load(open(f)) if os.path.isfile(f) else {}
+    return _CARD_SALES.get(c['s'] + ':' + c['n']) or []
+
+
+def sale_date(d):
+    try:
+        import datetime
+        x = datetime.date.fromisoformat(d[:10])
+        return f'{x.strftime("%b")} {x.day}, {x.year}'
+    except Exception:
+        return d or ''
+
+
+def recent_block(c):
+    """Recent sales built into the page (David, 2026-11-27) so Google sees real prices. Same markup acct.js uses:
+    signed-in members get it swapped for their 10, Jonin Club for the full breakdown."""
+    rs = card_sales(c)
+    if not rs:
+        return ''
+    rows = ''
+    for p, v, d, u, src in rs:
+        ebay = u.startswith('https://') and 'ebay.com' in u
+        href = u + ('&' if '?' in u else '?') + EPN.lstrip('&') if ebay else u
+        tag = (f'a class="pvsr pvfr" href="{e(href)}" target="_blank" rel="{"sponsored " if ebay else ""}noopener"'
+               if u.startswith('https://') else 'span class="pvsr pvfr"')
+        rows += (f'<{tag}><span>{e(sale_date(d))}</span><span class="pvty">{e(v) or "Sale"}</span><b>{money(p)}</b>'
+                 f'<span class="pvl">{"eBay ↗" if ebay else ""}</span></{tag.split()[0]}>')
+    more = ('<a class="pxlock" href="/#signup" data-jt="signup-click" data-jt-from="recent-sales">'
+            '<span>See more recent sales</span><b>Sign in free →</b></a>') if len(rs) >= 5 else ''
+    return f'<div class="pxfree" data-static><h4 class="pxfh">Recent sales</h4><div class="pvsl">{rows}</div>{more}</div>'
+
+
 def price_block(c):
     """Free "Market price": one price band for the whole card. Exact prices by edition, foil and grade,
     and every sold listing, are Jonin Club only."""
@@ -184,11 +224,11 @@ def price_block(c):
         return (f'<section class="px"><h3>Market price<span> typical copy</span></h3>'
                 f'<p class="band">{e(rt)}</p><p class="mt">Typical price for a {"graded" if c.get("prk") == "g" else "raw"} {e(ver_words(c)) or "copy"}{" copy" if ver_words(c) else ""}, from real sales. '
                 f'{"Other versions" if c.get("prk") == "g" else "Foils, 1st Editions and graded copies"} can sell for more.</p>'
-                f'{lock}{guide}</section>')
+                f'{recent_block(c)}{lock}{guide}</section>')
     if pb is None or not 0 <= pb < len(BANDS):
-        return f'<section class="px"><h3>Market price</h3>{lock}{guide}</section>'
+        return f'<section class="px"><h3>Market price</h3>{recent_block(c)}{lock}{guide}</section>'
     return (f'<section class="px"><h3>Market price<span>across all versions</span></h3>'
-            f'<p class="band">{e(BANDS[pb])}</p>{lock}{guide}</section>')
+            f'<p class="band">{e(BANDS[pb])}</p>{recent_block(c)}{lock}{guide}</section>')
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
