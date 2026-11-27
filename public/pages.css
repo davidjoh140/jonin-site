@@ -413,3 +413,5 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .actline{margin:8px 0 2px;font-size:13px;color:var(--mute)}.actline b{color:inherit;font-weight:700}
 .aboutv{margin:14px 0 4px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel)}
 .aboutv h3{margin:0 0 6px;font-size:14px;letter-spacing:.02em}.aboutv p{margin:0;font-size:14px;line-height:1.55}.aboutv a{color:var(--acc)}
+.pstory{margin:14px 0 4px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel)}
+.pstory h3{margin:0 0 6px;font-size:14px;letter-spacing:.02em}.pstory p{margin:0;font-size:14px;line-height:1.55}

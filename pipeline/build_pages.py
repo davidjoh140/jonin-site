@@ -1012,6 +1012,12 @@ def activity_line(c):
     return f'<p class="actline" data-jt="activity-line">{" · ".join(bits)}</p>\n'
 
 
+def price_story(c):
+    """2-3 plain sentences about how this card has sold, written by a scheduled Claude task from approved sales (wording rules are placeholders)."""
+    t = (c.get('ps') or '').strip()
+    return f'<section class="pstory"><h3>Price story</h3><p>{e(t)}</p></section>\n' if t else ''
+
+
 def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None, ranks=None, pops=None):
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
@@ -1069,7 +1075,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 <p class="mt slabname">{e(slab_name(c, s))}</p>
 {quick_links(c, s, set_cards, char_lists or {}, chars_by_name or {})}
 {value_line(c)}{activity_line(c)}{mv_badges(c, ranks, pops)}<div class="fsslot" data-fsslot></div><dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
-{foil_note(c, s)}{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
+{price_story(c)}{foil_note(c, s)}{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="slab">eBay sold · slabs</a>
 <a href="{e(sold(card_q(c), 'raw'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="raw">eBay sold · raw</a>

@@ -471,6 +471,16 @@ def main():
             a = act.get(c["s"] + ":" + c["n"])
             if a and (a["collectors"] or a["votes"]):
                 c["act"] = [a["collectors"], a["haves"], a["wants"], a["slabs"], a["votes"]]
+        # AI price story (card pages, 2026-11-27): written by a scheduled Claude task into card_price_stories; only "live" ones ship.
+        try:
+            st = {r["card_id"]: r["story"] for r in supa.select("card_price_stories", {"select": "card_id,story", "status": "eq.live"})}
+        except Exception as ex:   # table missing or unreachable: build without stories rather than fail the sync
+            print("price stories skipped:", ex)
+            st = {}
+        for c in data["cards"]:
+            t = st.get(c["s"] + ":" + c["n"])
+            if t:
+                c["ps"] = t
         # Grid thumbnails (thumbs.py): "th" for every card whose thumbnail exists, added last like thumbs.py does.
         import thumbs
         for c in data["cards"]:
