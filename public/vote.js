@@ -173,7 +173,9 @@
   // One-click sign-in with Google or Discord; comes back to this character page (a pending vote is kept in this browser).
   ov.addEventListener('click', function (e) {
     var b = e.target.closest('[data-oauth]'); if (!b || !sb) return; e.preventDefault(); b.disabled = true;
-    sb.auth.signInWithOAuth({ provider: b.dataset.oauth, options: { redirectTo: location.origin + location.pathname } }).then(function (r) {
+    // skipBrowserRedirect + top-level redirect: Google/Discord won't load inside the music player's frame
+    sb.auth.signInWithOAuth({ provider: b.dataset.oauth, options: { redirectTo: location.origin + location.pathname, skipBrowserRedirect: true } }).then(function (r) {
+      if (!r.error && r.data && r.data.url) { try { window.top.location.href = r.data.url; } catch (_) { location.href = r.data.url; } return; }
       if (r.error) { b.disabled = false; var er = $('.verr', ov); er.textContent = r.error.message || 'Could not start sign-in.'; er.hidden = false; }
     });
   });

@@ -799,7 +799,8 @@ function paintOauth(){if(!OAUTH_ON)return;document.querySelectorAll('[data-oauth
 new MutationObserver(paintOauth).observe(document.getElementById('authform'),{childList:true});
 // One-click sign-in with Google or Discord (Supabase OAuth). Comes back to the same page; a guest collection merges in as usual.
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-oauth]');if(!b||!sbc())return;e.preventDefault();b.disabled=true;
-  const r=await sb.auth.signInWithOAuth({provider:b.dataset.oauth,options:{redirectTo:location.origin+location.pathname}});
+  const r=await sb.auth.signInWithOAuth({provider:b.dataset.oauth,options:{redirectTo:location.origin+location.pathname,skipBrowserRedirect:true}});
+  if(!r.error&&r.data&&r.data.url){try{window.top.location.href=r.data.url}catch(_){location.href=r.data.url}return}
   if(r.error){b.disabled=false;const m=$('#amsg');if(m)m.textContent=r.error.message||'Could not start sign-in.'}});
 $('#authform').addEventListener('submit',async e=>{e.preventDefault();const f=e.target,mode=f.dataset.mode,m=$('#amsg'),btn=f.querySelector('.go');
   const email=f.email.value.trim(),pw=f.password?f.password.value:'',handle=f.handle?f.handle.value.trim():'';
