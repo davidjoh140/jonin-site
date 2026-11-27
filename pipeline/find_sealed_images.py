@@ -44,9 +44,23 @@ def find():
     with supa.Run("find_sealed_images") as run:
         products = [p for p in supa.select("products") if p.get("public", True)]
         sets = supa.select("sets")
-        have = {}
-        for c in supa.select("sealed_image_candidates", {"select": "product_id,status"}):
+        have, seen = {}, set()
+        for c in supa.select("sealed_image_candidates", {"select": "product_id,status,image_url"}):
             have.setdefault(c["product_id"], []).append(c["status"])
+            seen.add((c["product_id"], c["image_url"]))
+
+        def add(row):
+            """Queue one photo; False if we already have it."""
+            k = (row["product_id"], row["image_url"])
+            if k in seen:
+                return False
+            seen.add(k)
+            try:
+                supa.insert("sealed_image_candidates", [row], returning=False)
+                return True
+            except Exception as e:
+                print("could not queue", k, e)
+                return False
         todo = [p for p in products if not p.get("image_url") and "approved" not in have.get(p["id"], [])
                 and have.get(p["id"], []).count("pending") < PER_PRODUCT]
         only = os.environ.get("PRODUCT_FILTER")
@@ -63,7 +77,7 @@ def find():
                         break
                     hit = sealed.match(it.get("title", ""), products, sets, photo=True)
                     url = big((it.get("image") or {}).get("imageUrl"))
-                    if not hit or hit[0]["id"] != p["id"] or not url:
+                    if not hit or hit[0]["id"] != p["id"] or not url or (p["id"], url) in seen:
                         continue
                     strict = sealed.match(it.get("title", ""), products, sets)
                     note = "" if strict and strict[0]["id"] == p["id"] else "title says opened, empty or similar: photo may show an opened item"
@@ -72,10 +86,8 @@ def find():
                     except Exception as e:
                         print("photo failed", url, e)
                         continue
-                    rows = supa.insert("sealed_image_candidates", [{
-                        "product_id": p["id"], "image_url": url, "source_url": it.get("itemWebUrl"),
-                        "title": it.get("title"), "note": note, "thumb_b64": thumb}], ignore_duplicates=True)
-                    if rows:
+                    if add({"product_id": p["id"], "image_url": url, "source_url": it.get("itemWebUrl"),
+                            "title": it.get("title"), "note": note, "thumb_b64": thumb}):
                         got += 1
                         stats["queued"] += 1
                 if not got and not have.get(p["id"]):
@@ -96,15 +108,15 @@ def find():
                     for it in items:
                         hit = sealed.match(it.get("title", ""), products, sets, photo=True)
                         url = big((it.get("image") or {}).get("imageUrl"))
-                        if not hit or hit[0]["id"] not in missing or not url or per.get(hit[0]["id"], 0) >= PER_PRODUCT:
+                        if not hit or hit[0]["id"] not in missing or not url or per.get(hit[0]["id"], 0) >= PER_PRODUCT \
+                                or (hit[0]["id"], url) in seen:
                             continue
                         try:
                             _, thumb = fetch_image(url)
                         except Exception:
                             continue
-                        if supa.insert("sealed_image_candidates", [{
-                                "product_id": hit[0]["id"], "image_url": url, "source_url": it.get("itemWebUrl"),
-                                "title": it.get("title"), "note": "", "thumb_b64": thumb}], ignore_duplicates=True):
+                        if add({"product_id": hit[0]["id"], "image_url": url, "source_url": it.get("itemWebUrl"),
+                                "title": it.get("title"), "note": "", "thumb_b64": thumb}):
                             per[hit[0]["id"]] = per.get(hit[0]["id"], 0) + 1
                             stats["queued"] += 1
                     if len(items) < 200:
