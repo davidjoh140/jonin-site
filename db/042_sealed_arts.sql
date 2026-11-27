@@ -98,3 +98,11 @@ create policy "own sealed read" on public.collection_sealed for select using (us
 create policy "own sealed insert" on public.collection_sealed for insert with check (user_id = auth.uid());
 create policy "own sealed update" on public.collection_sealed for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own sealed delete" on public.collection_sealed for delete using (user_id = auth.uid());
+
+-- cleaned photos (cut out of the background; the first Path to Hokage photo split into its two arts), served from
+-- jonin.cards/img/sealed/. The picked eBay photos they came from are marked copied so the Sync won't redo them.
+update products p set image_url = 'https://jonin.cards/img/sealed/' || p.id || '.webp', updated_at = now()
+ where p.id in ('1-booster-pack','1-booster-pack-silver-naruto','1-booster-pack-gold-naruto','1-booster-box',
+                '5-booster-pack','5-booster-pack-itachi','8-booster-pack','8-booster-pack-sasuke');
+update sealed_image_candidates c set r2_url = 'https://jonin.cards/img/sealed/' || c.product_id || '.webp'
+ where c.status = 'approved' and c.product_id in ('1-booster-pack','1-booster-box','5-booster-pack','8-booster-pack');
