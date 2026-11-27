@@ -103,7 +103,7 @@ function draw(){th.innerHTML='';files.forEach(function(fl,i){var d=document.crea
 function shrink(fl){return new Promise(function(res){var u=URL.createObjectURL(fl),im=new Image();im.onload=function(){var s=Math.min(1,2000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(function(b){res(b?{blob:b,ext:'jpg',type:'image/jpeg'}:{blob:fl,ext:'jpg',type:fl.type||'image/jpeg'})},'image/jpeg',.85)};im.onerror=function(){var x=(fl.name.split('.').pop()||'jpg').toLowerCase();res({blob:fl,ext:x,type:fl.type||('image/'+x)})};im.src=u})}
 var rid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2));
 async function upload(fl,i){var s=await shrink(fl),path='u/'+rid+'/'+(i+1)+'.'+s.ext;
- var r=await fetch(SUPA+'/storage/v1/object/sell-photos/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':s.type,'x-upsert':'true'},body:s.blob});
+ var r=await fetch(SUPA+'/storage/v1/object/sell-photos/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':s.type},body:s.blob});
  if(!r.ok)throw new Error('photo');return SUPA+'/storage/v1/object/public/sell-photos/'+path}
 function val(n){var e=f.querySelector('[name="'+n+'"]:checked')||f.querySelector('[name="'+n+'"]');return e&&(e.type!=='radio'||e.checked)?e.value.trim():''}
 f.onsubmit=async function(e){e.preventDefault();err.textContent='';
