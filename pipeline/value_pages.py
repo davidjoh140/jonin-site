@@ -159,26 +159,63 @@ def guide_page(cards, years, mv_chars, sets_by_id):
         ('Can I sell my Naruto cards to Jonin?',
          'Yes. <a href="https://sell.jonin.cards">Get an offer</a> for single cards, slabs or a whole collection.'),
     ]
-    steps = f'''<section class="mvlistcard"><h2>How to tell what your Naruto card is worth</h2>
-<p><b>1. Check it's the original Bandai game.</b> Jonin covers the Bandai Naruto CCG, printed 2006–2013. Newer Naruto cards, like Kayou, are a different product.</p>
-<p><b>2. Find the card number and set.</b> Every card has a number like N-934 or J-001. Match it in its set, or start from the year it came out: {yrs}</p>
-<p><b>3. Check the rarity.</b> Look for the dots after the copyright line: none is Common, one Uncommon, two Rare and three Super Rare. Super Rares and promos are the cards most collectors chase.</p>
-<p><b>4. Check the edition and foil.</b> The same card can be 1st Edition or Unlimited, and many came in more than one finish: flat foil, diamond, wavy, spiral or prism (<a href="/articles/naruto-ccg-foil-types/">foil types explained</a>). Each version sells for a different price.</p>
-<p><b>5. Check condition and grading.</b> Graded copies, especially PSA 10s, can sell for many times the price of a raw copy. Every card page links its PSA pop report and eBay sold listings for raw and graded copies.</p>
-<p><b>6. Look up the price.</b> Each card page shows what it sells for, from real sales checked by hand. <a href="/club/">Jonin Club</a> breaks that down by edition, foil and grade, with every sold listing.</p>
-</section>'''
-    body = f'''<nav class="crumb"><a href="/">All cards</a> › Card values</nav>
-<section class="sethead"><h1>What are my Naruto cards worth?</h1>
-<p class="lede">Most original Bandai Naruto CCG cards sell for a few dollars. The money is in Super Rares, promos, 1st Editions, certain foils and graded copies of popular characters. {n} cards have a recorded sale on Jonin so far, and {hi} of them have sold for {e(B.BANDS[-1])}.</p>
+    sets_n = {}
+    for c in cards:
+        sets_n[c['s']] = sets_n.get(c['s'], 0) + 1
+    ytiles = ''.join(
+        f'<a class="ytile" href="/year/{y}/"><b>{y}</b><span>{len(ss)} set{"s" if len(ss) != 1 else ""} · '
+        f'{sum(sets_n.get(s["id"], 0) for s in ss):,} cards</span></a>' for y, ss in years.items())
+    g_game = '<div class="gx gcards" aria-hidden="true"><i></i><i>B</i></div>'
+    g_num = '<div class="gx gnum" aria-hidden="true"><div class="mini"><span class="ln"></span><span class="ln s"></span><em>N-934</em></div></div>'
+    g_rar = ('<div class="gx grar" aria-hidden="true">'
+             '<span><span class="rs rs-C">C</span><small>Common</small></span>'
+             '<span><span class="rs"><i></i></span><small>Uncommon</small></span>'
+             '<span><span class="rs"><i></i><i></i></span><small>Rare</small></span>'
+             '<span><span class="rs rs-SR"><i></i><i></i><i></i></span><small>Super Rare</small></span></div>')
+    g_foil = ('<div class="gx gfoil" aria-hidden="true">'
+              + ''.join(f'<span><span class="fx f-{k}"></span><small>{n}</small></span>' for k, n in
+                        (('flat', 'Flat'), ('diamond', 'Diamond'), ('wavy', 'Wavy'), ('spiral', 'Spiral'), ('prism', 'Prism')))
+              + '</div>')
+    g_grade = ('<div class="gx ggrade" aria-hidden="true"><div class="raw"><small>Raw</small></div><span class="arr">→</span>'
+               '<div class="slab"><b>PSA 10</b><div class="in"></div></div></div>')
+    g_price = '<div class="gx gprice" aria-hidden="true"><span class="pp">$190–$1,300</span><small>from real sales</small></div>'
+    step = lambda i, g, h, p: f'<article class="step"><span class="no">{i}</span>{g}<h3>{h}</h3><p>{p}</p></article>'
+    steps = ('<section class="vsec"><p class="eyebrow">Step by step</p><h2>How to tell what your Naruto card is worth</h2>'
+             '<div class="steps">'
+             + step(1, g_game, "Check it's the original Bandai game",
+                    'Jonin covers the Bandai Naruto CCG, printed 2006–2013. Newer Naruto cards, like Kayou, are a different product.')
+             + step(2, g_num, 'Find the card number and set',
+                    'Every card has a number like N-934 or J-001. Match it in its set, or start from the year it came out (below).')
+             + step(3, g_rar, 'Check the rarity',
+                    'Look for the dots after the copyright line. Super Rares and promos are the cards most collectors chase.')
+             + step(4, g_foil, 'Check the edition and foil',
+                    'The same card can be 1st Edition or Unlimited, and many came in more than one finish. '
+                    'Each version sells for a different price. <a href="/articles/naruto-ccg-foil-types/">Foil types explained</a>')
+             + step(5, g_grade, 'Check condition and grading',
+                    'Graded copies, especially PSA 10s, can sell for many times the price of a raw copy. '
+                    'Every card page links its PSA pop report and eBay sold listings.')
+             + step(6, g_price, 'Look up the price',
+                    'Each card page shows what it sells for, from real sales checked by hand. '
+                    '<a href="/club/">Jonin Club</a> breaks it down by edition, foil and grade.')
+             + '</div></section>')
+    faq = ('<section class="vsec"><p class="eyebrow">Questions</p><h2>Naruto card values, answered</h2><div class="faqs">'
+           + ''.join(f'<details><summary>{e(q)}</summary><p>{a}</p></details>' for q, a in qas) + '</div></section>')
+    body = f"""<div class="vg">
+<nav class="crumb"><a href="/">All cards</a> › Card values</nav>
+<section class="vhero"><p class="eyebrow">Naruto CCG card values</p><h1>What are my Naruto cards worth?</h1>
+<p class="lede">Most original Bandai Naruto CCG cards sell for a few dollars. The money is in Super Rares, promos, 1st Editions, certain foils and graded copies of popular characters.</p>
+<div class="stats"><div><b>{n}</b><span>cards priced from real sales</span></div><div><b>{hi}</b><span>sold for {e(B.BANDS[-1])}</span></div><div><b>6</b><span>checks to value a card</span></div></div>
 <p class="btns"><a class="primary" href="/">Look up your card</a><a class="ghostbtn" href="https://sell.jonin.cards">Get an offer</a></p></section>
 {steps}
-<section class="cgroup"><h2>The most valuable Naruto cards<span>by highest recorded sale</span></h2>
+<section class="vsec"><p class="eyebrow">Start here</p><h2>Find your card by year</h2><div class="ytiles">{ytiles}</div></section>
+<section class="vsec"><p class="eyebrow">By highest recorded sale</p><h2>The most valuable Naruto cards</h2>
 <div class="grid">{"".join(tile_px(c, sets_by_id[c["s"]]) for c in priced[:12])}</div>
-<p class="mt"><a href="/most-valuable/">See the full list →</a> · <a href="/price-guide/">Every priced card →</a></p></section>
-{f'<section class="others"><h2>Most valuable cards by character</h2><div class="chips">{mv}</div></section>' if mv else ''}
-<section class="others"><h2>Naruto CCG cards by year</h2><div class="chips">{yrs}</div></section>
-{faq_html(qas)}
-'''
+<p class="more"><a href="/most-valuable/">See the full list →</a><a href="/price-guide/">Every priced card →</a></p></section>
+{f'<section class="vsec"><p class="eyebrow">By character</p><h2>Most valuable cards by character</h2><div class="chips">{mv}</div></section>' if mv else ''}
+{faq}
+<section class="vsell"><h2>Have Naruto cards to sell?</h2><p>Single cards, slabs or a whole collection.</p><p class="btns"><a class="primary" href="https://sell.jonin.cards">Get an offer</a></p></section>
+</div>
+"""
     img = next((c['img'] for c in priced if re.match(r'^https://', c.get('img') or '')), B.SITE + '/og.png')
     ld = B.ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'WebPage', 'name': title, 'description': desc, 'url': url}, faq_ld(qas),

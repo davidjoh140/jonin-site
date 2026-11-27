@@ -242,3 +242,70 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .tile .tpx{color:var(--acc);font-weight:600}
 .faq h3{font-size:15px;margin:16px 0 4px}.faq h3:first-of-type{margin-top:6px}
 .chips .chip.on{border-color:var(--acc);color:var(--acc)}
+
+/* Card value guide (/what-are-my-naruto-cards-worth/) */
+.vg{max-width:1040px;margin:0 auto}
+.vg .crumb{text-align:center}
+.vg .eyebrow{margin:0 0 6px;font:600 12px/1 Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+.vhero{text-align:center;padding:38px 0 18px}
+.vhero h1{font:800 clamp(34px,6vw,54px)/1.05 "Baloo 2",sans-serif;margin:0 0 14px}
+.vhero .lede{max-width:640px;margin:0 auto 28px;font-size:18px;line-height:1.65;color:var(--mute)}
+.vhero .stats{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin:0 0 28px}
+.vhero .stats div{min-width:170px;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.vhero .stats b{display:block;font:800 34px/1 "Baloo 2",sans-serif;color:var(--acc)}
+.vhero .stats span{display:block;margin-top:6px;font-size:13px;color:var(--mute)}
+.vhero .btns,.vsell .btns{justify-content:center;gap:12px}
+.vsec{margin:72px 0 0;text-align:center}
+.vsec h2,.vsell h2{font:700 clamp(24px,3.4vw,32px)/1.15 "Baloo 2",sans-serif;margin:0 0 28px}
+.vg .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px;text-align:left}
+.vg .step{position:relative;padding:24px 24px 22px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+.vg .step .no{position:absolute;top:18px;right:20px;font:800 30px/1 "Baloo 2",sans-serif;color:var(--line)}
+.vg .step h3{font:700 18px/1.25 "Baloo 2",sans-serif;margin:18px 0 8px}
+.vg .step p{margin:0;color:var(--mute);line-height:1.65;font-size:14.5px}
+.vg .gx{height:92px;display:flex;align-items:center;gap:12px}
+.vg .gx small{display:block;margin-top:6px;font-size:11px;color:var(--mute);text-align:center}
+.gcards{position:relative;width:90px}
+.gcards i{position:absolute;width:50px;height:70px;border-radius:6px;box-shadow:2px 2px 0 #0A080D}
+.gcards i:first-child{left:30px;top:8px;background:var(--acc);transform:rotate(12deg)}
+.gcards i:last-child{left:6px;top:12px;background:var(--red);transform:rotate(-8deg);display:flex;align-items:center;justify-content:center;font:800 24px "Baloo 2",sans-serif;font-style:normal;color:var(--ink)}
+.gnum .mini{position:relative;width:62px;height:86px;border:2px solid var(--edge);border-radius:7px;background:var(--art);padding:10px 8px}
+.gnum .ln{display:block;height:6px;border-radius:3px;background:var(--line);margin-bottom:7px}.gnum .ln.s{width:60%}
+.gnum em{position:absolute;left:30px;bottom:6px;padding:3px 8px;border-radius:6px;background:var(--acc);color:#1b1406;font:700 12px Inter,sans-serif;font-style:normal;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.grar,.gfoil{flex-wrap:wrap;gap:14px}
+.vg .rs{display:inline-flex;align-items:center;justify-content:center;gap:3px;min-width:42px;height:24px;padding:0 6px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font:700 11px/1 Inter,sans-serif;color:var(--ink)}
+.vg .rs i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.vg .rs-C{color:var(--mute)}.vg .rs-SR{color:var(--acc);border-color:var(--accdim)}
+.vg .grar>span,.vg .gfoil>span{display:flex;flex-direction:column;align-items:center}
+.vg .fx{display:inline-block;width:30px;height:30px;background:linear-gradient(135deg,#a3aab5,#f4f6f9 42%,#bfc5ce 58%,#eef1f5);-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
+.vg .f-flat{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='3' width='14' height='18' rx='2.5'/%3E%3Cpath d='M9 15.5 15 8.5'/%3E%3C/svg%3E")}
+.vg .f-diamond{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.5 21.5 12 12 21.5 2.5 12Z' fill='white'/%3E%3C/svg%3E")}
+.vg .f-wavy{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8.5c2.4-3 4.7-3 7.1 0s4.7 3 7.1 0 3.2-2.2 4.8-1.2M2.5 15.5c2.4-3 4.7-3 7.1 0s4.7 3 7.1 0 3.2-2.2 4.8-1.2'/%3E%3C/svg%3E")}
+.vg .f-spiral{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 12.2c0-.9.8-1.4 1.6-1.1 1.3.5 1.5 2.3.6 3.4-1.4 1.6-4 1.3-5.1-.4-1.5-2.3-.4-5.4 2-6.4 3.1-1.3 6.6.6 7.4 3.8.9 3.9-1.9 7.6-5.8 8-4.6.5-8.5-3.1-8.6-7.6'/%3E%3C/svg%3E")}
+.vg .f-prism{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 21.5 20h-19Z' fill='white'/%3E%3C/svg%3E");background:conic-gradient(from 200deg at 50% 70%,#ff5f6d,#ffc371,#f9f871,#5ef0a0,#4cc9f0,#9d6bff,#ff5f6d)}
+.ggrade .raw{width:48px;height:68px;border-radius:5px;background:var(--art);border:2px solid var(--edge);display:flex;align-items:flex-end;justify-content:center}
+.ggrade .raw small{margin:0 0 4px}
+.ggrade .arr{font:700 22px Inter,sans-serif;color:var(--acc)}
+.ggrade .slab{width:62px;height:88px;border-radius:6px;border:2px solid #c9ced6;background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.03));padding:4px}
+.ggrade .slab b{display:block;border-radius:3px;background:var(--red);color:#fff;font:800 10px/16px Inter,sans-serif;text-align:center}
+.ggrade .slab .in{margin:5px auto 0;width:40px;height:52px;border-radius:3px;background:var(--acc)}
+.gprice{flex-direction:column;align-items:flex-start;justify-content:center;gap:0}
+.gprice .pp{padding:8px 16px;border-radius:12px;border:1px solid var(--accdim);background:var(--bg);font:800 26px/1 "Baloo 2",sans-serif;color:var(--acc)}
+.vg .gprice small{text-align:left}
+.vg .ytiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:820px;margin:0 auto}
+.vg .ytile{display:block;padding:20px 12px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink);transition:border-color .15s,transform .15s}
+.vg .ytile:hover{border-color:var(--acc);transform:translateY(-2px)}
+.vg .ytile b{display:block;font:800 30px/1 "Baloo 2",sans-serif;color:var(--ink)}
+.vg .ytile span{display:block;margin-top:8px;font-size:12.5px;color:var(--mute)}
+.vg .grid{text-align:left;gap:20px}
+.vg .more{display:flex;justify-content:center;gap:24px;margin:8px 0 0}
+.vg .chips{justify-content:center;gap:10px}
+.vg .faqs{max-width:760px;margin:0 auto;text-align:left}
+.vg details{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:0 0 12px}
+.vg summary{cursor:pointer;list-style:none;padding:16px 48px 16px 20px;font:600 16px/1.4 Inter,sans-serif;position:relative}
+.vg summary::-webkit-details-marker{display:none}
+.vg summary::after{content:"+";position:absolute;right:20px;top:50%;transform:translateY(-50%);font:600 22px Inter,sans-serif;color:var(--acc)}
+.vg details[open] summary::after{content:"–"}
+.vg details p{margin:0;padding:0 20px 18px;color:var(--mute);line-height:1.7}
+.vsell{margin:80px 0 20px;padding:44px 24px;text-align:center;border:1px solid var(--buyline);border-radius:20px;background:var(--buybg)}
+.vsell h2{margin:0 0 8px}.vsell>p:not(.btns){margin:0 0 20px;color:var(--mute)}
+@media (max-width:600px){.vg .ytiles{grid-template-columns:repeat(2,1fr)}.vsec{margin-top:52px}.vhero{padding-top:20px}.vhero .stats{gap:8px}.vhero .stats div{min-width:0;flex:1 1 0;padding:12px 8px}.vhero .stats b{font-size:26px}.vhero .stats span{font-size:11.5px}}
