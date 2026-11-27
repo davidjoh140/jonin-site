@@ -135,20 +135,13 @@ def year_page(y, ysets, cards, years, chars, sets_by_id):
 def guide_page(cards, years, mv_chars, sets_by_id):
     url = f'{B.SITE}/{GUIDE_SLUG}/'
     priced = sorted([c for c in cards if c.get('pb') is not None and 0 <= c['pb'] < len(B.BANDS)], key=top_order)
-    n = len(priced)
-    hi = sum(1 for c in priced if c['pb'] == len(B.BANDS) - 1)
-    lo = sum(1 for c in priced if c['pb'] == 0)
-    title = 'What are my Naruto cards worth? Naruto CCG card values from real sales | Jonin'
-    desc = ('How to find what your original Bandai Naruto CCG cards (2006–2013) are worth: identify the set, rarity, '
-            'edition and foil, then look up real sold prices for raw and graded copies.')
-    yrs = year_chips(years)
-    mv = ''.join(f'<a class="chip" href="/character/{o["slug"]}/most-valuable/"><img src="/chars/{o["slug"]}.webp" alt="" width="24" height="24" loading="lazy">{e(o["label"])}</a>'
-                 for o in mv_chars)
+    title = 'What are my Naruto cards worth? How to price Naruto CCG cards | Jonin'
+    desc = ('How to find what your original Bandai Naruto CCG cards (2006–2013) are worth: read the card, '
+            'match the exact version, and compare real sold prices for raw and graded copies.')
     qas = [
         ('What are my Naruto cards worth?',
-         f'Most original Naruto CCG commons and uncommons sell for a few dollars. Super Rares, promos, 1st Editions, '
-         f'certain foils and graded copies of popular characters are worth the most. Of the {n} cards with a recorded sale on Jonin, '
-         f'{hi} have sold for {e(B.BANDS[-1])} and {lo} have never sold for more than {e(B.BANDS[0].replace("Under ", ""))}.'),
+         'Most original Naruto CCG commons and uncommons sell for a few dollars. Super Rares, promos, 1st Editions, '
+         'certain foils and graded copies of popular characters are worth the most. Look up your card to see what a typical copy sells for.'),
         ('What is the most valuable Naruto card?',
          'See <a href="/most-valuable/">the most valuable Naruto cards</a>, ranked by the highest real sale and updated as new sales come in.'),
         ('Is my Sasuke card worth money?',
@@ -163,55 +156,64 @@ def guide_page(cards, years, mv_chars, sets_by_id):
     for c in cards:
         sets_n[c['s']] = sets_n.get(c['s'], 0) + 1
     ytiles = ''.join(
-        f'<a class="ytile" href="/year/{y}/"><b>{y}</b><span>{len(ss)} set{"s" if len(ss) != 1 else ""} · '
-        f'{sum(sets_n.get(s["id"], 0) for s in ss):,} cards</span></a>' for y, ss in years.items())
-    g_game = '<div class="gx gcards" aria-hidden="true"><i></i><i>B</i></div>'
-    g_num = '<div class="gx gnum" aria-hidden="true"><div class="mini"><span class="ln"></span><span class="ln s"></span><em>N-934</em></div></div>'
-    g_rar = ('<div class="gx grar" aria-hidden="true">'
-             '<span><span class="rs rs-C">C</span><small>Common</small></span>'
-             '<span><span class="rs"><i></i></span><small>Uncommon</small></span>'
-             '<span><span class="rs"><i></i><i></i></span><small>Rare</small></span>'
-             '<span><span class="rs rs-SR"><i></i><i></i><i></i></span><small>Super Rare</small></span></div>')
-    g_foil = ('<div class="gx gfoil" aria-hidden="true">'
-              + ''.join(f'<span><span class="fx f-{k}"></span><small>{n}</small></span>' for k, n in
-                        (('flat', 'Flat'), ('diamond', 'Diamond'), ('wavy', 'Wavy'), ('spiral', 'Spiral'), ('prism', 'Prism')))
-              + '</div>')
-    g_grade = ('<div class="gx ggrade" aria-hidden="true"><div class="raw"><small>Raw</small></div><span class="arr">→</span>'
-               '<div class="slab"><b>PSA 10</b><div class="in"></div></div></div>')
-    g_price = '<div class="gx gprice" aria-hidden="true"><span class="pp">$190–$1,300</span><small>from real sales</small></div>'
-    step = lambda i, g, h, p: f'<article class="step"><span class="no">{i}</span>{g}<h3>{h}</h3><p>{p}</p></article>'
-    steps = ('<section class="vsec"><p class="eyebrow">Step by step</p><h2>How to tell what your Naruto card is worth</h2>'
-             '<div class="steps">'
-             + step(1, g_game, "Check it's the original Bandai game",
-                    'Jonin covers the Bandai Naruto CCG, printed 2006–2013. Newer Naruto cards, like Kayou, are a different product.')
-             + step(2, g_num, 'Find the card number and set',
-                    'Every card has a number like N-934 or J-001. Match it in its set, or start from the year it came out (below).')
-             + step(3, g_rar, 'Check the rarity',
-                    'Look for the dots after the copyright line. Super Rares and promos are the cards most collectors chase.')
-             + step(4, g_foil, 'Check the edition and foil',
-                    'The same card can be 1st Edition or Unlimited, and many came in more than one finish. '
-                    'Each version sells for a different price. <a href="/articles/naruto-ccg-foil-types/">Foil types explained</a>')
-             + step(5, g_grade, 'Check condition and grading',
-                    'Graded copies, especially PSA 10s, can sell for many times the price of a raw copy. '
-                    'Every card page links its PSA pop report and eBay sold listings.')
-             + step(6, g_price, 'Look up the price',
-                    'Each card page shows what it sells for, from real sales checked by hand. '
-                    '<a href="/club/">Jonin Club</a> breaks it down by edition, foil and grade.')
-             + '</div></section>')
+        f'<a class="ytile" href="/year/{y}/"><b>{y}</b><span>{len(ss)} set{"s" if len(ss) != 1 else ""}</span></a>'
+        for y, ss in years.items())
+    # 1. Read your card: a card diagram with the four things to check beside it
+    card_svg = (
+        '<svg class="cardsvg" viewBox="0 0 220 308" aria-hidden="true">'
+        '<defs><linearGradient id="vgfoil" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/>'
+        '<stop offset=".45" stop-color="#fff" stop-opacity=".28"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>'
+        '<rect x="2" y="2" width="216" height="304" rx="14" class="c-edge"/>'
+        '<rect x="14" y="14" width="192" height="26" rx="6" class="c-bar"/>'
+        '<rect x="22" y="22" width="96" height="10" rx="5" class="c-ink"/>'
+        '<rect x="14" y="48" width="192" height="138" rx="8" class="c-art"/>'
+        '<circle cx="110" cy="112" r="34" class="c-face"/>'
+        '<rect x="14" y="48" width="192" height="138" rx="8" fill="url(#vgfoil)"/>'
+        '<rect x="14" y="196" width="192" height="64" rx="8" class="c-box"/>'
+        '<rect x="24" y="208" width="150" height="7" rx="3.5" class="c-line"/><rect x="24" y="222" width="168" height="7" rx="3.5" class="c-line"/>'
+        '<rect x="24" y="236" width="120" height="7" rx="3.5" class="c-line"/>'
+        '<rect x="14" y="270" width="80" height="22" rx="6" class="c-tag"/><text x="54" y="285.5" class="c-tagt">N-934</text>'
+        '<rect x="104" y="278" width="70" height="6" rx="3" class="c-line"/>'
+        '<circle cx="184" cy="281" r="3.6" class="c-dot"/><circle cx="194" cy="281" r="3.6" class="c-dot"/><circle cx="204" cy="281" r="3.6" class="c-dot"/>'
+        '</svg>')
+    read = f"""<section class="vsec"><p class="eyebrow">Step 1</p><h2>Read your card</h2>
+<p class="sub">Four things decide what a Naruto card is worth.</p>
+<div class="anat">{card_svg}
+<ol class="checks">
+<li><b>Card number</b><span>Like N-934 or J-001. It tells you exactly which card you have.</span></li>
+<li><b>Rarity dots</b><span>After the copyright line. <span class="rs rs-C">C</span> none · <span class="rs"><i></i></span> Uncommon · <span class="rs"><i></i><i></i></span> Rare · <span class="rs rs-SR"><i></i><i></i><i></i></span> Super Rare</span></li>
+<li><b>Edition and foil</b><span>1st Edition or Unlimited, and normal or foil: <span class="fx f-flat"></span><span class="fx f-diamond"></span><span class="fx f-wavy"></span><span class="fx f-spiral"></span><span class="fx f-prism"></span> <a href="/articles/naruto-ccg-foil-types/">Foil types</a></span></li>
+<li><b>Condition</b><span>Raw (ungraded) or graded, like a PSA 10. A high grade can be worth many times a raw copy.</span></li>
+</ol></div></section>"""
+    # 2. How to comp: search -> match the version -> compare sold prices
+    comp = """<section class="vsec"><p class="eyebrow">Step 2</p><h2>How to price it</h2>
+<p class="sub">Compare your card only with sales of the same card, version and condition.</p>
+<div class="flow">
+<div class="fstep"><span class="no">1</span><h3>Find the card</h3>
+<div class="mock msearch"><span class="mag"></span>Sasuke N-934<span class="caret"></span></div>
+<p>Search by name or number, or browse by set or year.</p></div>
+<span class="farr" aria-hidden="true">→</span>
+<div class="fstep"><span class="no">2</span><h3>Match your version</h3>
+<div class="mock mchips"><span class="on">1st Edition</span><span>Unlimited</span><span class="on">Foil</span><span>Normal</span><span class="on">Raw · NM</span><span>PSA 10</span></div>
+<p>A foil 1st Edition and a normal Unlimited are different prices.</p></div>
+<span class="farr" aria-hidden="true">→</span>
+<div class="fstep"><span class="no">3</span><h3>Check sold prices</h3>
+<div class="mock msold"><div><span>Sold · 1st Ed · Foil · Raw</span><b>$•••</b></div><div><span>Sold · 1st Ed · Foil · Raw</span><b>$•••</b></div><div class="x"><span>Listed · PSA 10</span><b>skip</b></div></div>
+<p>Use sold prices, not asking prices, and favor the most recent sales.</p></div>
+</div>
+<p class="btns"><a class="primary" href="/">Look up your card</a></p></section>"""
     faq = ('<section class="vsec"><p class="eyebrow">Questions</p><h2>Naruto card values, answered</h2><div class="faqs">'
            + ''.join(f'<details><summary>{e(q)}</summary><p>{a}</p></details>' for q, a in qas) + '</div></section>')
     body = f"""<div class="vg">
 <nav class="crumb"><a href="/">All cards</a> › Card values</nav>
 <section class="vhero"><p class="eyebrow">Naruto CCG card values</p><h1>What are my Naruto cards worth?</h1>
-<p class="lede">Most original Bandai Naruto CCG cards sell for a few dollars. The money is in Super Rares, promos, 1st Editions, certain foils and graded copies of popular characters.</p>
-<div class="stats"><div><b>{n}</b><span>cards priced from real sales</span></div><div><b>{hi}</b><span>sold for {e(B.BANDS[-1])}</span></div><div><b>6</b><span>checks to value a card</span></div></div>
-<p class="btns"><a class="primary" href="/">Look up your card</a><a class="ghostbtn" href="https://sell.jonin.cards">Get an offer</a></p></section>
-{steps}
-<section class="vsec"><p class="eyebrow">Start here</p><h2>Find your card by year</h2><div class="ytiles">{ytiles}</div></section>
-<section class="vsec"><p class="eyebrow">By highest recorded sale</p><h2>The most valuable Naruto cards</h2>
-<div class="grid">{"".join(tile_px(c, sets_by_id[c["s"]]) for c in priced[:12])}</div>
-<p class="more"><a href="/most-valuable/">See the full list →</a><a href="/price-guide/">Every priced card →</a></p></section>
-{f'<section class="vsec"><p class="eyebrow">By character</p><h2>Most valuable cards by character</h2><div class="chips">{mv}</div></section>' if mv else ''}
+<p class="lede">Most original Bandai Naruto CCG cards sell for a few dollars. The money is in Super Rares, promos, 1st Editions, foils and graded copies of popular characters. Here's how to tell what yours is worth.</p></section>
+{read}
+{comp}
+<section class="vsec"><p class="eyebrow">Browse</p><h2>Find your card by year</h2><div class="ytiles">{ytiles}</div></section>
+<section class="vsec"><p class="eyebrow">For reference</p><h2>The most valuable Naruto cards</h2>
+<div class="grid">{"".join(tile_px(c, sets_by_id[c["s"]]) for c in priced[:6])}</div>
+<p class="more"><a href="/most-valuable/">See the full list →</a><a href="/price-guide/">Price guide →</a></p></section>
 {faq}
 <section class="vsell"><h2>Have Naruto cards to sell?</h2><p>Single cards, slabs or a whole collection.</p><p class="btns"><a class="primary" href="https://sell.jonin.cards">Get an offer</a></p></section>
 </div>
