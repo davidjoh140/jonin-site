@@ -371,6 +371,8 @@ else{var jgo=function(){var jm=location.hash.match(/(?:^#|&)card=([^&]+)/);if(jm
 <main id="main">
   <section id="v-cards">
     <div class="lside">
+    <!-- Daily battle (David, 2026-11-27): /battle.js, db/038_daily_battle.sql -->
+    <div data-battle style="margin-bottom:12px"></div>
     <details class="chars" id="quick" open><summary>Characters <span class="qn" id="qn"></span></summary><div class="clist" id="clist" role="group" aria-label="Filter by character"></div></details>
     <details class="legend" id="legend" open>
       <summary>How it works</summary>
@@ -1221,5 +1223,6 @@ fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promis
 <button class="totop" id="totop" type="button" aria-label="Back to top"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script>(function(){var b=document.getElementById('totop');function u(){b.classList.toggle('on',window.scrollY>500)}addEventListener('scroll',u,{passive:true});u();b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})})})();</script>
 <script src="/feedback.js?v=5e872c82" defer></script>
+<script src="/battle.js" defer></script>
 </body>
 </html>

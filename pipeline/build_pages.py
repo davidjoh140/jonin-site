@@ -633,6 +633,8 @@ def missions_page(chars):
 <article class="mcard" id="m-inv"><div class="mtop"><h2>Invite friends</h2><span class="mxp" data-xp="invite_signup">+📜</span></div>
 <p class="mt">Share your invite link. When a friend signs up through it and adds a card to their collection or casts a vote, you earn scrolls.</p>
 <div class="minv"><p class="mt" style="margin:0">Sign in to get your invite link.</p></div></article>
+<article class="mcard" id="m-battle"><div class="mtop"><h2>Vote in the daily battle</h2><span class="mxp" data-xp="daily_battle">+📜</span></div>
+<p class="mt">Two characters, one fight, a new matchup every day. Pick who wins. <a href="/battle/">Today’s battle →</a></p></article>
 <article class="mcard" id="m-vote"><div class="mtop"><h2>Vote for every character's coolest cards</h2><span class="mxp" data-xp="vote_character">+📜</span></div>
 <p class="mt">Open a character and vote for up to 3 of their best cards. Your first vote on each character earns scrolls, once per character. Moving a vote later keeps your scrolls.</p>
 <div class="mprog"><span class="mbar"><i style="width:0%"></i></span><b class="mcount">0 / {len(chars)}</b></div>
@@ -670,6 +672,25 @@ def leaderboard_page():
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'WebPage', 'name': title, 'description': desc, 'url': url},
         crumbs(('Naruto CCG cards', SITE + '/'), ('Missions', SITE + '/missions/'), ('Leaderboard', url))]})
+    return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
+
+
+def battle_page():
+    """/battle/: the daily 1v1 character battle (David, 2026-11-27). Static shell; /battle.js reads today_battle() and
+    vote_battle() from Supabase (db/038_daily_battle.sql)."""
+    url = f'{SITE}/battle/'
+    title = 'Daily Naruto battle: who wins the 1v1? | Jonin'
+    desc = 'A new Naruto 1v1 every day. Two random characters, one fight: vote for who wins, see what everyone else picked and earn scrolls on Jonin.'
+    body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/missions/">Missions</a> › Daily battle</nav>
+<section class="sethead"><h1>⚔️ Daily battle</h1>
+<p class="lede">Two characters, one fight, a new matchup every day at midnight (New York time). Vote for who wins and earn scrolls.</p></section>
+<div data-battle data-big style="max-width:560px"></div>
+<p class="mt"><a href="/missions/">More ways to earn scrolls →</a></p>
+<script src="/battle.js?v={file_version('battle.js')}" defer></script>
+'''
+    ld = ld_json({'@context': 'https://schema.org', '@graph': [
+        {'@type': 'WebPage', 'name': title, 'description': desc, 'url': url},
+        crumbs(('Naruto CCG cards', SITE + '/'), ('Missions', SITE + '/missions/'), ('Daily battle', url))]})
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
 
 
@@ -1090,6 +1111,7 @@ def main():
     changed += write(os.path.join(ROOT, 'missions', 'index.html'), missions_page(chars))
     changed += write(os.path.join(ROOT, 'giveaway', 'index.html'), giveaway_page())
     changed += write(os.path.join(ROOT, 'leaderboard', 'index.html'), leaderboard_page())
+    changed += write(os.path.join(ROOT, 'battle', 'index.html'), battle_page())
     # Character list for the /welcome/ setup page (same order as the homepage sidebar).
     changed += write(os.path.join(ROOT, 'chars.json'), json.dumps([{'slug': ch['slug'], 'label': ch['label'], 'cards': counts[ch['slug']]} for ch in chars], ensure_ascii=False) + '\n')
     mvidx = os.path.join(ROOT, 'most-valuable')
@@ -1130,7 +1152,7 @@ def main():
     if hs2 == hs and '<!--setlinks-->' not in hs:
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
     changed += write(home, hs2)
-    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/leaderboard/', SITE + '/giveaway/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
+    urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/leaderboard/', SITE + '/battle/', SITE + '/giveaway/', SITE + '/articles/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
            list_urls + [SITE + '/price-guide/', f'{SITE}/{VP.GUIDE_SLUG}/'] + [f'{SITE}/year/{y}/' for y in years] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
            [f'{SITE}/set/{set_slug(s)}/' for s in sets] + \
            [f'{SITE}/card/{slug(c)}/' for s in sets for c in by_set[s['id']]]

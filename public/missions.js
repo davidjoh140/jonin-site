@@ -33,7 +33,7 @@
   function paint(rules, ranks, me) {
     document.querySelectorAll('[data-xp]').forEach(function (el) {
       var n = rules[el.getAttribute('data-xp')];
-      if (n != null) el.textContent = '+' + n + (n===1?' scroll':' scrolls') + ({ vote_character: ' each', invite_signup: ' per friend', cards_100: ' once' }[el.getAttribute('data-xp')] || ' per note');
+      if (n != null) el.textContent = '+' + n + (n===1?' scroll':' scrolls') + ({ vote_character: ' each', invite_signup: ' per friend', cards_100: ' once', daily_battle: ' a day' }[el.getAttribute('data-xp')] || ' per note');
     });
     var xp = me ? me.xp || 0 : 0;
     $('#mladder').innerHTML = ranks.map(function (r, i) {
