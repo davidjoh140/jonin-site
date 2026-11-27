@@ -1108,32 +1108,214 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
                        tw='summary_large_image', ld=ld) + body + FOOT
 
 
+RAR_NAME = {'C': 'Common', 'U': 'Uncommon', 'R': 'Rare', 'SR': 'Super Rare', 'ALT': 'Alt Art /20', 'UR': 'Ultra Rare',
+            'P': 'Promo', 'F': 'Starter', '': 'Unknown'}
+RAR_ORDER = ['C', 'U', 'R', 'SR', 'UR', 'ALT', 'P', 'F', '']
+TYPE_ORDER = ['Ninja', 'Jutsu', 'Mission', 'Client']
+EL_ORDER = ['Fire', 'Water', 'Wind', 'Lightning', 'Earth', 'Void']
+VIL_ICON = {'Leaf': 'leaf', 'Sand': 'sand', 'Sound': 'sound', 'Mist': 'mist', 'Rain': 'rain', 'Rock': 'rock', 'Cloud': 'cloud',
+            'Rogue Ninja': 'rogue'}
+FOIL_KEY = {'Flat foil': 'flat', 'Full foil': 'flat', 'Diamond foil': 'diamond', 'Diamond': 'diamond', 'Wavy foil': 'wavy',
+            'Wavy': 'wavy', 'Prism foil': 'prism', 'Prism': 'prism', 'Spiral foil': 'spiral', 'Spiral': 'spiral',
+            'Diamond-checkered foil': 'prism', 'Diamond-spiral foil': 'spiral', 'Flat': 'flat'}
+
+
+def rs_html(k):
+    n = {'U': 1, 'R': 2, 'SR': 3}.get(k)
+    inner = '<i></i>' * n if n else {'C': 'C', 'ALT': '/20', 'UR': 'UR', 'P': 'PR', 'F': 'ST', '': '?'}.get(k, e(k))
+    return f'<span class="rs rs-{e(k or "X")}" title="{e(RAR_NAME.get(k, k))}">{inner}</span>'
+
+
+def el_icon(v, cls='bi'):
+    return f'<img class="{cls}" src="/icons/el-{e(str(v).lower())}.png" alt="" width="20" height="20">' if v in EL_ORDER else ''
+
+
+def vil_icon(v, cls='bi'):
+    return f'<img class="{cls}" src="/icons/vil-{VIL_ICON[v]}.png" alt="" width="20" height="20">' if v in VIL_ICON else ''
+
+
+def vil_word(v):
+    return 'Rogue' if v == 'Rogue Ninja' else v
+
+
+def bkey(v):
+    return re.sub(r'[^a-z0-9]+', '', str(v).lower()) or 'x'
+
+
+def breakdown(title, key, rows, total, note=''):
+    """One breakdown card: a stacked bar plus a row per value. Rows are (value, label_html, count); each row filters the grid."""
+    if not rows or not total:
+        return ''
+    bar = ''.join(f'<i class="b-{e(key)} b-{e(key)}-{e(bkey(v))}" style="width:{c / total * 100:.2f}%" title="{e(str(v))}: {c}"></i>'
+                  for v, _l, c in rows)
+    lis = ''.join(f'<li><button type="button" class="bdrow" data-f="{e(key)}" data-v="{e(str(v))}" aria-pressed="false">'
+                  f'<span class="bdsw b-{e(key)} b-{e(key)}-{e(bkey(v))}"></span><span class="bdl">{lab}</span>'
+                  f'<span class="bdn">{c}</span><span class="bdp">{round(c / total * 100)}%</span></button></li>'
+                  for v, lab, c in rows)
+    nt = f'<p class="bdnote">{note}</p>' if note else ''
+    return f'<div class="bd"><h3>{e(title)}</h3><div class="bdbar">{bar}</div><ul>{lis}</ul>{nt}</div>'
+
+
+def set_tile(c, s, main=True):
+    img = (f'<img loading="lazy" decoding="async" src="{e(c.get("th") or c["img"])}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
+           if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
+    pr = c.get('pr')
+    px = ''
+    if pr:
+        px = f'<span class="tpx">{e(money(pr[0]) if pr[0] == pr[1] else money(pr[0]) + "–" + money(pr[1]))}</span>'
+    fl = list(dict.fromkeys(FOIL_KEY[v] for v in (c.get('v') or []) if v in FOIL_KEY))
+    foils = ''.join(f'<span class="fx f-{k}" title="{e(k.title())} foil"></span>' for k in fl)
+    attrs = {'card': c['s'] + ':' + c['n'], 'name': (c['name'] + ' ' + c['n']).lower(), 'n': c['n'], 'r': c.get('src') or '',
+             't': c.get('t') or '', 'el': c.get('el') or '', 'vil': c.get('vil') or '',
+             'tc': '' if c.get('tc') is None else c['tc'], 'hc': '' if c.get('hc') is None else c['hc'],
+             'px': pr[1] if pr else '', 'foil': '1' if foils else ''}
+    if not main:   # the Most valuable row: no data-card, so set-progress.js doesn't count these twice
+        attrs = {}
+    da = ' '.join(f'data-{k}="{e(v)}"' for k, v in attrs.items())
+    meta = rs_html(c.get('src') or '') + el_icon(c.get('el'), 'ti') + vil_icon(c.get('vil'), 'ti')
+    if c.get('tc') is not None:
+        meta += f'<span class="tcost" title="Turn cost {c["tc"]}">{c["tc"]}</span>'
+    fc = f'<span class="fchips">{foils}</span>' if foils else ''
+    return (f'<a class="tile st" href="/card/{slug(c)}/" {da}><span class="tart">{img}{fc}</span>'
+            f'<span class="tt">{e(c["name"])}</span><span class="tn">{e(c["n"])} · {e(c.get("t") or "")}</span>'
+            f'<span class="tmeta">{meta}</span>{px}</a>')
+
+
+SET_INTEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'set_intel.json')
+_INTEL = None
+
+
+def set_intel(set_id):
+    """Confirmed intel for a set (pipeline/set_intel.json, exported from Supabase set_intel), grouped by field."""
+    global _INTEL
+    if _INTEL is None:
+        _INTEL = json.load(open(SET_INTEL, encoding='utf-8')) if os.path.exists(SET_INTEL) else {}
+    return _INTEL.get(set_id) or []
+
+
+def intel_block(s):
+    rows = set_intel(s['id'])
+    if not rows:
+        return ''
+    groups = {}
+    for r in rows:
+        groups.setdefault(r.get('field') or 'Notes', []).append(r)
+    out = ''
+    for f, rs in groups.items():
+        items = ''
+        for r in rs:
+            src = ''
+            if r.get('source_name'):
+                nm = e(r['source_name'])
+                src = (f'<a href="{e(r["source_url"])}" target="_blank" rel="noopener">{nm}</a>'
+                       if re.match(r'^https://', r.get('source_url') or '') else nm)
+                src = f'<span class="isrc">Source: {src}</span>'
+            items += f'<li><b>{e(r["topic"])}</b><p>{e(r["detail"])}</p>{src}</li>'
+        out += f'<div class="ig"><h3>{e(f)}</h3><ul>{items}</ul></div>'
+    return (f'<section class="setsec" id="intel"><div class="sechd"><h2>Set intel</h2>'
+            f'<span class="mt0">Confirmed by Jonin from collectors and trade sources. Know something we don\u2019t? '
+            f'<button type="button" class="linkbtn" data-fb>Tell us</button></span></div><div class="igrid">{out}</div></section>')
+
+
+def set_prints(cards):
+    return sum(max(1, len(c.get('v') or [])) * max(1, len([x for x in (c.get('ed') or []) if x])) for c in cards)
+
+
 def set_page(s, cards):
     url = f'{SITE}/set/{set_slug(s)}/'
     title = f"{s['name']} card list · Naruto CCG {set_label(s)} | Jonin"
-    rar = ', '.join(f'{v} {k}' for k, v in (s.get('rar') or {}).items())
+    n = len(cards)
+
+    def cnt(key):
+        out = {}
+        for c in cards:
+            v = c.get(key) or ''
+            out[v] = out.get(v, 0) + 1
+        return out
+
+    rc = cnt('src')
+    rar_rows = [(k, f'{rs_html(k)} {e(RAR_NAME.get(k, k))}', rc[k]) for k in RAR_ORDER if rc.get(k)]
+    rar_txt = ', '.join(f'{c} {RAR_NAME.get(k, k)}' for k, _l, c in rar_rows)
     desc = (f"Every card in {s['name']} ({set_label(s)}{', ' + s['rel'] if s.get('rel') else ''}) for the Bandai Naruto CCG: "
-            f"{len(cards)} cards{', ' + rar if rar else ''}. Printings, foils and 1st Editions.")
-    facts = [('Released', e(s.get('rel') or '—')), ('Cards', str(len(cards))),
-             ('1st Edition', e(s.get('first') or '—')), ('Unlimited', e(s.get('unl') or '—')),
-             ('Foils', e(', '.join(s.get('foils') or []) or '—'))]
-    if rar:
-        facts.append(('Rarities', e(rar)))
-    grid = ''.join(
-        f'<a class="tile" href="/card/{slug(c)}/" data-card="{e(c["s"] + ":" + c["n"])}">'
-        + (f'<img loading="lazy" decoding="async" src="{e(c.get("th") or c["img"])}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
-           if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
-        + f'<span class="tt">{e(c["name"])}</span><span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])}</span></a>' for c in cards)
-    sym = f'<img class="sym" src="{e(s["symbol"])}?v={SYMV}" alt="">' if s.get('symbol') else ''
-    body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/#sets">Sets</a> › {e(s["name"])}</nav>
-<section class="sethead"><h1>{sym}{e(s["name"])}</h1>
-<dl class="inline">{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in facts)}</dl>
-{f'<p class="note">{e(s["notes"])}</p>' if s.get('notes') else ''}
-<p class="btns"><a class="primary" href="/#set={quote(s['id'])}">Browse and filter this set</a>{SP.set_link(s['id'])}</p></section>
-{newbie('set')}<section class="spx" id="set-progress" data-set="{e(s['id'])}" data-total="{len(cards)}" data-prints="{sum(max(1, len(c.get('v') or [])) * max(1, len([x for x in (c.get('ed') or []) if x])) for c in cards)}" aria-live="polite"></section>
-<section class="grid">{grid}</section>
-<script src="/set-progress.js?v={file_version('set-progress.js')}" defer></script>
-'''
+            f"{n} cards{', ' + rar_txt if rar_txt else ''}. Sealed products, element and village breakdowns, foils and 1st Editions.")
+    tcn = cnt('t')
+    type_rows = [(k, e(k), tcn[k]) for k in TYPE_ORDER if tcn.get(k)] + \
+                [(k, e(k), v) for k, v in tcn.items() if k and k not in TYPE_ORDER]
+    ec = cnt('el')
+    el_rows = [(k, el_icon(k) + e(k), ec[k]) for k in EL_ORDER if ec.get(k)]
+    el_known = sum(x[2] for x in el_rows)
+    vc = cnt('vil')
+    vil_rows = sorted([(k, vil_icon(k) + e(vil_word(k)), v) for k, v in vc.items() if k], key=lambda x: -x[2])
+    ninjas = tcn.get('Ninja', 0)
+    vil_known = sum(x[2] for x in vil_rows)
+    el_note = f'{el_known} of {n} cards read so far' if el_known < n else ''
+    vil_note = (f'Ninja cards · {vil_known} of {ninjas} read so far' if vil_known < ninjas else 'Ninja cards')
+    bds = (breakdown('Rarity', 'r', rar_rows, n) + breakdown('Card type', 't', type_rows, n)
+           + breakdown('Element', 'el', el_rows, el_known, el_note) + breakdown('Village', 'vil', vil_rows, vil_known, vil_note))
+
+    foils = s.get('foils') or []
+    foil_html = ''.join(f'<span class="hfoil"><span class="fx f-{FOIL_KEY.get(f, "flat")}"></span>{e(f)}</span>' for f in foils) or '—'
+    eds = [x[0] for x in (('1st Edition', s.get('first')), ('Unlimited', s.get('unl'))) if x[1] and x[1] != 'No']
+    prints = set_prints(cards)
+    facts = [('Released', e(s.get('rel') or '—')), ('Cards', str(n)), ('Editions', ' · '.join(e(x) for x in eds) or '—'),
+             ('Master set', f'{prints:,} printings'), ('Foils', foil_html)]
+    priced = [c for c in cards if c.get('pr')]
+    top = sorted([c for c in cards if c.get('top') and c.get('pr')], key=lambda c: c['top'][0])[:5]
+    top_html = ''
+    if top:
+        top_html = ('<section class="setsec" id="top"><div class="sechd"><h2>Most valuable in this set</h2>'
+                    '<a class="seclink" href="#cards" data-sortjump="px">Sort the whole set by price →</a></div>'
+                    f'<div class="grid setgrid topgrid">{"".join(set_tile(c, s, False) for c in top)}</div></section>')
+    sym = f'<img class="hsym" src="{e(s["symbol"])}?v={SYMV}" alt="{e(s["name"])} set symbol">' if s.get('symbol') else ''
+    kicker = f'{e(set_label(s))}{" · " + e(s["code"]) if s.get("code") else ""} · Bandai Naruto CCG'
+    sealed = SP.set_block(s['id'], s['name'])
+    intel = intel_block(s)
+    jumps = [('intel', 'Set intel', bool(intel)), ('sealed', 'Sealed', bool(sealed)), ('breakdown', 'Breakdown', True), ('top', 'Most valuable', bool(top)),
+             ('cards', f'All {n} cards', True)]
+    jump = ''.join(f'<a href="#{h}">{t}</a>' for h, t, ok in jumps if ok)
+    rar_chips = ''.join(f'<button type="button" class="chip fc" data-f="r" data-v="{e(k)}" aria-pressed="false">{rs_html(k)}'
+                        f'<span>{e(RAR_NAME.get(k, k))}</span></button>' for k, _l, _c in rar_rows)
+    type_chips = ''.join(f'<button type="button" class="chip fc" data-f="t" data-v="{e(k)}" aria-pressed="false"><span>{e(k)}</span></button>'
+                         for k, _l, _c in type_rows)
+    foil_chip = ('<button type="button" class="chip fc" data-f="foil" data-v="1" aria-pressed="false">'
+                 '<span class="fx f-diamond"></span><span>Has foils</span></button>') if any(c.get('v') and any(v in FOIL_KEY for v in c['v']) for c in cards) else ''
+    el_opts = ''.join(f'<option value="{e(k)}">{e(k)} ({c})</option>' for k, _l, c in el_rows)
+    vil_opts = ''.join(f'<option value="{e(k)}">{e(vil_word(k))} ({c})</option>' for k, _l, c in vil_rows)
+    sorts = [('num', 'Set number'), ('name', 'Name A–Z'), ('rar-d', 'Rarity: high to low'), ('rar', 'Rarity: low to high')]
+    if priced:
+        sorts += [('px', 'Price: high to low'), ('px-a', 'Price: low to high')]
+    if any(c.get('tc') is not None for c in cards):
+        sorts += [('tc', 'Turn cost: low to high'), ('tc-d', 'Turn cost: high to low')]
+    if el_rows:
+        sorts.append(('el', 'Element'))
+    if vil_rows:
+        sorts.append(('vil', 'Village'))
+    sort_opts = ''.join(f'<option value="{k}">{v}</option>' for k, v in sorts)
+    el_sel = f'<select id="sel-el" aria-label="Element"><option value="">Any element</option>{el_opts}</select>' if el_rows else ''
+    vil_sel = f'<select id="sel-vil" aria-label="Village"><option value="">Any village</option>{vil_opts}</select>' if vil_rows else ''
+    grid = ''.join(set_tile(c, s) for c in cards)
+    note = f'<p class="hnote">{e(s["notes"])}</p>' if s.get('notes') else ''
+    fact_html = ''.join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in facts)
+    body = (
+        f'<div class="sx"><nav class="crumb"><a href="/">All cards</a> › <a href="/#sets">Sets</a> › {e(s["name"])}</nav>\n'
+        f'<section class="sethero"><div class="hsymw">{sym}</div><div class="htxt"><p class="kick">{kicker}</p><h1>{e(s["name"])}</h1>'
+        f'{note}<dl class="hfacts">{fact_html}</dl><nav class="jump" aria-label="On this page">{jump}</nav></div></section>\n'
+        f'{newbie("set")}<section class="spx" id="set-progress" data-set="{e(s["id"])}" data-total="{n}" data-prints="{prints}" aria-live="polite"></section>\n'
+        f'{intel}{sealed}\n'
+        f'<section class="setsec" id="breakdown"><div class="sechd"><h2>What’s in {e(s["name"])}</h2>'
+        f'<span class="mt0">Tap a row to filter the cards</span></div><div class="bds">{bds}</div></section>\n'
+        f'{top_html}\n'
+        f'<section class="setsec" id="cards"><div class="sechd"><h2>All {n} cards</h2>'
+        f'<a class="seclink" href="/#set={quote(s["id"])}">Open in the full database →</a></div>\n'
+        f'<div class="sbar" id="setfilters"><input type="search" id="sq" placeholder="Search this set: name or number" aria-label="Search this set" autocomplete="off">'
+        f'{el_sel}{vil_sel}<select id="sel-sort" aria-label="Sort">{sort_opts}</select></div>\n'
+        f'<div class="chips fchipsrow" role="group" aria-label="Rarity">{rar_chips}</div>\n'
+        f'<div class="chips fchipsrow" role="group" aria-label="Card type">{type_chips}{foil_chip}</div>\n'
+        f'<p class="scount" aria-live="polite"><span id="scount">{n} cards</span> <button type="button" class="linkbtn" id="sclear" hidden>Clear filters</button></p>\n'
+        f'<section class="grid setgrid" id="setgrid">{grid}</section>\n'
+        f'<p class="none" id="snone" hidden>No cards match. <button type="button" class="linkbtn" data-clear>Clear filters</button></p></section></div>\n'
+        f'<script src="/set-progress.js?v={file_version("set-progress.js")}" defer></script>\n'
+        f'<script src="/set-page.js?v={file_version("set-page.js")}" defer></script>\n')
     ld = ld_json({'@context': 'https://schema.org', '@graph': [
         {'@type': 'CollectionPage', 'name': title, 'description': desc, 'url': url},
         crumbs(('Naruto CCG cards', SITE + '/'), ('Sets', SITE + '/#sets'), (s['name'], url))]})
@@ -1302,6 +1484,7 @@ def main():
     chars = load_chars()
     chars_by_name = {nm: ch for ch in chars for nm in ch['names'] + ch['extra']}
     AB.setup(sys.modules[__name__])
+    SP.setup(sys.modules[__name__])   # set pages show each set's sealed products
     AB.load_sales()
     articles = AB.load_articles()
     cards_by_key = {c['s'] + ':' + c['n']: c for c in d['cards']}
