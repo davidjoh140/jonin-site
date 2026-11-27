@@ -1,0 +1,4 @@
+-- Approved by David 2026-11-27. Applied to Supabase as migration "clear_photos_when_done".
+-- Sale / scan-candidate thumbnails are cleared once decided; cutting-queue photos once cut, skipped or superseded.
+-- sale_scan_queue.photo_small marks photos re-saved smaller by pipeline/shrink_queue_photos.py.
+-- See the migration in Supabase for the full trigger code (clear_sale_thumb, clear_queue_photo).

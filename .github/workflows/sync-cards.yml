@@ -23,6 +23,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: cd pipeline && python drain_uploads.py
+      - name: Re-save waiting sold-listing photos smaller (cutting queue)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: cd pipeline && python shrink_queue_photos.py || echo "photo shrink skipped"
       - name: Copy card images to the site (served by Cloudflare, not Supabase)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
