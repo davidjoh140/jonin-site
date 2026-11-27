@@ -21,7 +21,10 @@ import supa
 from find_scans import EBAY, Budget, OutOfCalls, big, ebay_token, fetch_image
 
 PER_PRODUCT = 4        # PLACEHOLDER: photos queued per product
-MAX_CALLS = 150        # PLACEHOLDER: eBay calls per run (one per product)
+MAX_CALLS = 150        # PLACEHOLDER: eBay calls per run (one per product, then the broad searches)
+BROAD = ["naruto ccg theme deck", "naruto ccg starter deck", "naruto card game theme deck bandai",
+         "naruto ccg booster box", "naruto ccg booster pack", "naruto ccg tin"]   # PLACEHOLDER
+BROAD_PAGES = 3
 
 
 def query(p):
@@ -77,6 +80,37 @@ def find():
                         stats["queued"] += 1
                 if not got and not have.get(p["id"]):
                     stats["none_found"].append(p["id"])
+            # 2. broad searches for whatever is still missing (rare decks are rarely titled the way we search)
+            missing = {pid for pid in stats["none_found"]}
+            per = {}
+            for q in BROAD:
+                if not missing:
+                    break
+                for page in range(BROAD_PAGES):
+                    budget.spend()
+                    r = requests.get(f"{EBAY}/buy/browse/v1/item_summary/search",
+                                     params={"q": q, "limit": 200, "offset": page * 200},
+                                     headers={"Authorization": f"Bearer {tok}", "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"}, timeout=60)
+                    r.raise_for_status()
+                    items = r.json().get("itemSummaries", [])
+                    for it in items:
+                        hit = sealed.match(it.get("title", ""), products, sets, photo=True)
+                        url = big((it.get("image") or {}).get("imageUrl"))
+                        if not hit or hit[0]["id"] not in missing or not url or per.get(hit[0]["id"], 0) >= PER_PRODUCT:
+                            continue
+                        try:
+                            _, thumb = fetch_image(url)
+                        except Exception:
+                            continue
+                        if supa.insert("sealed_image_candidates", [{
+                                "product_id": hit[0]["id"], "image_url": url, "source_url": it.get("itemWebUrl"),
+                                "title": it.get("title"), "note": "", "thumb_b64": thumb}], ignore_duplicates=True):
+                            per[hit[0]["id"]] = per.get(hit[0]["id"], 0) + 1
+                            stats["queued"] += 1
+                    if len(items) < 200:
+                        break
+            stats["found_by_broad"] = sorted(per)
+            stats["none_found"] = [x for x in stats["none_found"] if x not in per]
         except OutOfCalls:
             stats["stopped"] = "call budget used up"
         stats["calls_left"] = budget.left
