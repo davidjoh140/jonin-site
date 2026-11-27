@@ -344,11 +344,17 @@ def mv_badges(c, ranks, pops=None):
                     f'<a class="mvbadge" href="/character/{ch["slug"]}/most-popular/">⭐ #{r} most popular {e(ch["label"])} card</a>')
                    for ch, r in pops or [])
     out += ''.join(f'<a class="mvbadge art" href="/articles/{sl}/">📰 {e(t)}</a>' for sl, t in arts)
-    ph, t = sale_photo(c), c.get('top') or []
-    if ph and len(t) > 4 and t[4]:
-        out += (f'<figure class="soldslab"><img loading="lazy" src="{e(ph)}" alt="{e(c["name"])} {e(c["n"])} {e(t[2])} Naruto card that sold for {money(t[4])}" width="600" height="1000">'
-                f'<figcaption>Its record sale: <b>{money(t[4])}</b> · {e(t[2])}{" · " + e(t[3]) if t[3] else ""}</figcaption></figure>')
     return f'<div class="mvbadges">{out}</div>'
+
+
+def sold_slab(c):
+    """The record sale with the photo of the copy that sold. Lives in the price row under the card (2026-11-26, David:
+    the top-right spot goes to the active listings instead, to push buying through our affiliate links)."""
+    ph, t = sale_photo(c), c.get('top') or []
+    if not (ph and len(t) > 4 and t[4]):
+        return ''
+    return (f'<figure class="soldslab"><img loading="lazy" src="{e(ph)}" alt="{e(c["name"])} {e(c["n"])} {e(t[2])} Naruto card that sold for {money(t[4])}" width="600" height="1000">'
+            f'<figcaption>Its record sale: <b>{money(t[4])}</b> · {e(t[2])}{" · " + e(t[3]) if t[3] else ""}</figcaption></figure>')
 
 
 def mv_page(ch, ranked, sets_by_id, mv_chars):
@@ -729,7 +735,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 <h1>{e(c["name"])}</h1>
 <p class="mt">{e(s["name"])} · {e(c["n"])} · {e(c["r"])}</p>
 {quick_links(c, s, set_cards, char_lists or {}, chars_by_name or {})}
-{mv_badges(c, ranks, pops)}<dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
+{mv_badges(c, ranks, pops)}<div class="fsslot" data-fsslot></div><dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
 {('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="slab">eBay sold · slabs</a>
@@ -741,7 +747,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 {newbie('card')}
 </div>
 </article>
-<div class="market">{price_block(c)}</div>
+<div class="market{'' if sold_slab(c) else ' one'}">{sold_slab(c)}{price_block(c)}</div>
 {nt_html}
 <nav class="prevnext">{nav}</nav>
 {related_rows(c, s, set_cards, char_lists or {}, chars_by_name or {}, nt_cards)}

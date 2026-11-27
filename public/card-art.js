@@ -16,7 +16,7 @@
 })();
 
 /* "For sale now" (2026-11-26): active eBay listings for this card, free for everyone, cheapest first,
-   placed above the price/sold-listings section. Data: card_listings() RPC (db/032_card_listings.sql), filled by the
+   placed top right on the card page (was above the price/sold-listings section). Data: card_listings() RPC (db/032_card_listings.sql), filled by the
    collect-sales workflow every ~15 minutes. PLACEHOLDERS for David: 5 shown before "Show all", the empty-state text,
    the "Offers OK" label and the affiliate note wording. */
 (function(){
@@ -31,7 +31,9 @@
   function type(x){if(x.kind==='AUCTION')return 'Auction · '+(x.ends_at?left(x.ends_at)+' · ':'')+x.bids+' bid'+(x.bids===1?'':'s');return 'Buy It Now'+(x.best_offer?' · Offers OK':'')}
   var sec=document.createElement('section');sec.className='fs';sec.innerHTML='<h3>For sale now</h3><p class="none">Loading listings…</p>';
   // 2026-11-26 cleanup: full-width .market row under the card, For sale now on the left, price estimate on the right.
-  var px=info.querySelector('section.px');if(px)info.insertBefore(sec,px);else info.appendChild(sec);
+  // 2026-11-26 (David): listings go top right, under the card name, where the record sale used to be; it moved down to the price row.
+  var slot=document.querySelector('[data-fsslot]');
+  if(slot)slot.appendChild(sec);else{var px=info.querySelector('section.px');if(px)info.insertBefore(sec,px);else info.appendChild(sec)}
   fetch(SUPA+'/rest/v1/rpc/card_listings',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({p_card_id:id})})
     .then(function(r){return r.ok?r.json():[]}).catch(function(){return []}).then(function(rows){
       rows=(rows||[]).filter(function(x){return /^\d{9,13}$/.test(x.item_id||'')});
