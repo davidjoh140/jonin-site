@@ -1251,8 +1251,12 @@ def lastmods(urls):
     return new
 
 
-def set_links(sets):
-    """Plain set links for the homepage, so search engines find every set page without running JavaScript."""
+HOME_TOP_CARDS = 24   # PLACEHOLDER: how many of the most valuable cards get a plain link on the homepage
+
+
+def set_links(sets, chars=(), top_cards=()):
+    """Plain links for the homepage (sets, characters, most valuable cards), so search engines reach
+    them in one click without running JavaScript."""
     groups, order = {}, []
     for s in sets:
         k = s.get('kind') or 'Other'
@@ -1264,6 +1268,9 @@ def set_links(sets):
     return ('<!--setlinks--><nav class="setlinks" aria-label="All sets"><h2>All Naruto CCG sets</h2>'
             + ''.join(f'<p><b>{e(names.get(k, k))}</b> {" · ".join(groups[k])}</p>' for k in order)
             + '<p><b>Sealed product</b> <a href="/sealed/">Booster boxes, packs, theme decks and tins, with prices</a></p>'
+            + (f'<p><b>Characters</b> {" · ".join(f"<a href=\"/character/{ch["slug"]}/\">{e(ch["label"])} cards</a>" for ch in chars)}</p>' if chars else '')
+            + (f'<p><b>Most valuable cards</b> {" · ".join(f"<a href=\"/card/{slug(c)}/\">{e(c["name"])} {e(c["n"])}</a>" for c in top_cards)}'
+               ' · <a href="/price-guide/">Full price guide</a></p>' if top_cards else '')
             + '</nav><!--/setlinks-->')
 
 
@@ -1392,9 +1399,11 @@ def main():
                 removed += 1
     home = os.path.join(ROOT, 'index.html')
     hs = open(home, encoding='utf-8').read()
-    hs2 = re.sub(r'<!--setlinks-->.*?<!--/setlinks-->', lambda m: set_links(sets), hs, flags=re.S)
+    top_cards = sorted([c for c in d['cards'] if c.get('top') and slug(c) in keep_c], key=lambda c: c['top'][0])[:HOME_TOP_CARDS]
+    links = set_links(sets, chars, top_cards)
+    hs2 = re.sub(r'<!--setlinks-->.*?<!--/setlinks-->', lambda m: links, hs, flags=re.S)
     if hs2 == hs and '<!--setlinks-->' not in hs:
-        hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
+        hs2 = hs.replace('</main>', links + '\n</main>', 1)
     # Homepage app code lives in /home.js (audit fix 2026-11-27); keep its ?v= in step so browsers never run a stale copy.
     hs2 = re.sub(r'/home\.js\?v=[0-9a-f]+', '/home.js?v=' + file_version('home.js'), hs2)
     changed += write(home, hs2)
