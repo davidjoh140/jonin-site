@@ -158,33 +158,28 @@ def guide_page(cards, years, mv_chars, sets_by_id):
     ytiles = ''.join(
         f'<a class="ytile" href="/year/{y}/"><b>{y}</b><span>{len(ss)} set{"s" if len(ss) != 1 else ""}</span></a>'
         for y, ss in years.items())
-    # 1. Read your card: a card diagram with the four things to check beside it
-    card_svg = (
-        '<svg class="cardsvg" viewBox="0 0 220 308" aria-hidden="true">'
-        '<defs><linearGradient id="vgfoil" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/>'
-        '<stop offset=".45" stop-color="#fff" stop-opacity=".28"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>'
-        '<rect x="2" y="2" width="216" height="304" rx="14" class="c-edge"/>'
-        '<rect x="14" y="14" width="192" height="26" rx="6" class="c-bar"/>'
-        '<rect x="22" y="22" width="96" height="10" rx="5" class="c-ink"/>'
-        '<rect x="14" y="48" width="192" height="138" rx="8" class="c-art"/>'
-        '<circle cx="110" cy="112" r="34" class="c-face"/>'
-        '<rect x="14" y="48" width="192" height="138" rx="8" fill="url(#vgfoil)"/>'
-        '<rect x="14" y="196" width="192" height="64" rx="8" class="c-box"/>'
-        '<rect x="24" y="208" width="150" height="7" rx="3.5" class="c-line"/><rect x="24" y="222" width="168" height="7" rx="3.5" class="c-line"/>'
-        '<rect x="24" y="236" width="120" height="7" rx="3.5" class="c-line"/>'
-        '<rect x="14" y="270" width="80" height="22" rx="6" class="c-tag"/><text x="54" y="285.5" class="c-tagt">N-934</text>'
-        '<rect x="104" y="278" width="70" height="6" rx="3" class="c-line"/>'
-        '<circle cx="184" cy="281" r="3.6" class="c-dot"/><circle cx="194" cy="281" r="3.6" class="c-dot"/><circle cx="204" cy="281" r="3.6" class="c-dot"/>'
-        '</svg>')
+    # 1. Read your card: a real card (Naruto N-085, Curse of the Sand, Super Rare foil) with numbered pins
+    pin = lambda n, x, y: f'<span class="pin" style="left:{x}%;top:{y}%">{n}</span>'
     read = f"""<section class="vsec"><p class="eyebrow">Step 1</p><h2>Read your card</h2>
-<p class="sub">Check these 4 things.</p>
-<div class="anat">{card_svg}
+<p class="sub">Here's where to look, on a real card.</p>
+<div class="anat">
+<figure class="sample">
+<div class="shot"><img src="/img/guide/naruto-n-085-sample.webp" width="500" height="700" alt="Naruto Uzumaki N-085 Naruto CCG card, Curse of the Sand, Super Rare foil, with its parts labeled">
+{pin(1, 27, 5)}{pin(5, 72, 28)}</div>
+<div class="strip"><img src="/img/guide/naruto-n-085-strip.webp" width="1000" height="104" alt="Close-up of the bottom of the card: card number 085, set symbol, copyright line and three rarity dots">
+{pin(2, 16.5, 50)}{pin(3, 25.8, 50)}{pin(4, 89.5, 50)}</div>
+<figcaption>Bottom of the card, zoomed in</figcaption>
+</figure>
 <ol class="checks">
-<li><b>Card number</b><span>Like N-934. It tells you which card you have.</span></li>
-<li><b>Rarity dots</b><span>The dots after the copyright line.</span><span class="rar"><em><span class="rs rs-C">C</span>Common</em><em><span class="rs"><i></i></span>Uncommon</em><em><span class="rs"><i></i><i></i></span>Rare</em><em><span class="rs rs-SR"><i></i><i></i><i></i></span>Super Rare</em></span></li>
-<li><b>Edition and foil</b><span>1st Edition or Unlimited. Foil or not. Each version has its own price.</span><span class="rar"><em><span class="fx f-flat"></span>Flat</em><em><span class="fx f-diamond"></span>Diamond</em><em><span class="fx f-wavy"></span>Wavy</em><em><span class="fx f-spiral"></span>Spiral</em><em><span class="fx f-prism"></span>Prism</em></span></li>
-<li><b>Condition</b><span>Raw (not graded) or graded, like PSA 10. High grades sell for much more.</span></li>
-</ol></div></section>"""
+<li><b>Card type</b><span>Top left: Ninja, Jutsu or Mission. It's the N, J or M in the card number.</span></li>
+<li><b>Card number</b><span>Bottom left. This one is 085, so it's N-085.</span></li>
+<li><b>Set symbol</b><span>Right after the number. Each set has its own. This gourd means Curse of the Sand.</span></li>
+<li><b>Rarity dots</b><span>After the copyright line.</span><span class="rar"><em><span class="rs rs-C">C</span>Common</em><em><span class="rs"><i></i></span>Uncommon</em><em><span class="rs"><i></i><i></i></span>Rare</em><em><span class="rs rs-SR"><i></i><i></i><i></i></span>Super Rare</em></span></li>
+<li><b>Foil</b><span>Does it shine? Foils sell for more than normal copies.</span><span class="rar"><em><span class="fx f-flat"></span>Flat</em><em><span class="fx f-diamond"></span>Diamond</em><em><span class="fx f-wavy"></span>Wavy</em><em><span class="fx f-spiral"></span>Spiral</em><em><span class="fx f-prism"></span>Prism</em></span></li>
+</ol></div>
+<div class="also"><div><b>Edition</b><span>1st Edition or Unlimited. Each card page shows which editions it came in.</span></div>
+<div><b>Condition</b><span>Raw (not graded) or graded, like PSA 10. High grades sell for much more.</span></div></div>
+</section>"""
     # 2. How to comp: search -> match the version -> compare sold prices
     comp = """<section class="vsec"><p class="eyebrow">Step 2</p><h2>How to price it</h2>
 <p class="sub">Only compare with sales of the exact same version.</p>
