@@ -123,7 +123,7 @@ def year_page(y, ysets, cards, years, chars, sets_by_id):
 {"".join(sections)}
 {faq_html(qas)}
 <section class="others"><h2>Naruto CCG cards by year</h2><div class="chips">{year_chips(years, y)}</div>
-<p class="btns" style="margin-top:12px"><a class="primary" href="/{GUIDE_SLUG}/">What are my Naruto cards worth?</a><a class="ghostbtn" href="/price-guide/">Price guide</a><a class="ghostbtn" href="https://sell.jonin.cards">Sell your cards</a></p></section>
+<p class="btns" style="margin-top:12px"><a class="primary" href="/{GUIDE_SLUG}/">What are my Naruto cards worth?</a><a class="ghostbtn" href="/price-guide/">Price guide</a><a class="ghostbtn" href="/sell/">Sell your cards</a></p></section>
 '''
     img = next((c['img'] for c in priced if re.match(r'^https://', c.get('img') or '')), B.SITE + '/og.png')
     ld = B.ld_json({'@context': 'https://schema.org', '@graph': [
@@ -150,7 +150,7 @@ def guide_page(cards, years, mv_chars, sets_by_id):
         ('Are Kayou Naruto cards covered?',
          'No. Jonin covers the original Bandai Naruto cards from 2006–2013. Kayou cards are a different game.'),
         ('Can I sell my Naruto cards to Jonin?',
-         'Yes. Sell to Jonin or a trusted buyer: <a href="https://sell.jonin.cards">get an offer</a> for single cards, slabs or a whole collection.'),
+         'Yes. Sell to Jonin or a trusted buyer: <a href="/sell/">get an offer</a> for single cards, slabs or a whole collection.'),
     ]
     sets_n = {}
     for c in cards:
@@ -210,7 +210,7 @@ def guide_page(cards, years, mv_chars, sets_by_id):
 <div class="grid">{"".join(tile_px(c, sets_by_id[c["s"]]) for c in priced[:6])}</div>
 <p class="more"><a href="/most-valuable/">See the full list →</a><a href="/price-guide/">Price guide →</a></p></section>
 {faq}
-<section class="vsell"><h2>Have Naruto cards to sell?</h2><p>Sell to Jonin or a trusted buyer. Single cards, slabs or a whole collection.</p><p class="btns"><a class="primary" href="https://sell.jonin.cards">Get an offer</a></p></section>
+<section class="vsell"><h2>Have Naruto cards to sell?</h2><p>Sell to Jonin or a trusted buyer. Single cards, slabs or a whole collection.</p><p class="btns"><a class="primary" href="/sell/">Get an offer</a></p></section>
 </div>
 """
     img = next((c['img'] for c in priced if re.match(r'^https://', c.get('img') or '')), B.SITE + '/og.png')
