@@ -1,0 +1,27 @@
+# Puts enhanced scans David approved in the Buying Desk onto jonin.cards (500px site version in R2 +
+# a public scans row). Every 30 minutes and on demand.
+name: Publish approved enhanced scans
+on:
+  schedule: [{ cron: "*/30 * * * *" }]
+  workflow_dispatch:
+concurrency: { group: publish-enhanced, cancel-in-progress: false }
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q pillow boto3 requests
+      - name: Publish
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://f6d20bce1fc2f76725b857ef0fed6d10.r2.cloudflarestorage.com
+          R2_BUCKET: jonin-scans
+        run: cd pipeline/enhance && python publish.py
