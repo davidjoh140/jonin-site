@@ -4,7 +4,10 @@ name: Text scans
 on:
   schedule: [{ cron: "7,37 * * * *" }]
   workflow_dispatch:
-concurrency: { group: text-scans, cancel-in-progress: false }
+  workflow_run:   # backup in case GitHub skips the schedule: also after each 15-minute card sync
+    workflows: ["Sync card list from Supabase"]
+    types: [completed]
+concurrency: { group: text-scans, cancel-in-progress: true }
 permissions:
   contents: write
 jobs:
