@@ -436,7 +436,7 @@ const PSA_POP='https://www.psacard.com/pop/tcg-cards/',PSA={"1": "2006/naruto-cc
 // Jump to the card on PSA's set page: a browser text fragment that highlights and scrolls to the card number
 // (PSA style, e.g. N259 / NUS017) and the card name. Browsers without text fragments just open the set page.
 const psaFrag=c=>{const num=c.n.replace(/-/g,''),nm=c.name.replace(/\s*[\[(].*?[\])]\s*/g,' ').trim();const f=t=>'text='+encodeURIComponent(t).replace(/-/g,'%2D');return '#:~:'+f(num)+'&'+f(nm)};
-const TYPES=['','Ninja','Jutsu','Mission','Client','Promo'];
+const TYPES=['','Ninja','Jutsu','Mission','Client'];
 const RARS=[['','All rarities'],['C','Common'],['U','Uncommon'],['R','Rare'],['SR','Super Rare'],['ALT','Alt Art /20'],['P','Promo']];
 // PLACEHOLDER character list (fan favorites that have cards); David to confirm. 'A|B' = either name, e.g. Minato also printed as The Fourth Hokage
 const S0=()=>({q:'',set:'',type:'',chars:[],rars:[],sort:''});
