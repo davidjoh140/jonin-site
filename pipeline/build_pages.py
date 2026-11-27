@@ -716,10 +716,11 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 {psa}
 <a href="/club/?card={quote(c['s'] + ':' + c['n'])}&amp;name={quote(c['name'])}" data-jt="alerts-click">🔔 Alerts for this card</a>
 </div>
-{nt_html}{newbie('card')}
+{newbie('card')}
 </div>
 </article>
 <div class="market">{price_block(c)}</div>
+{nt_html}
 <nav class="prevnext">{nav}</nav>
 {related_rows(c, s, set_cards, char_lists or {}, chars_by_name or {}, nt_cards)}
 '''
