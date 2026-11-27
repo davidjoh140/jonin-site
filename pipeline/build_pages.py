@@ -678,6 +678,8 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
            if img else f'<div class="noimg"><b>{e(c["n"])}</b><span>{e(c["t"])} · scan coming soon</span></div>')
     rows = [('Set', f'<a class="stag" href="/set/{set_slug(s)}/">{sym_img(s)}{e(s["name"])}</a> · {e(set_label(s))}{" · " + e(s["rel"]) if s.get("rel") else ""}'),
             ('Number', e(c['n'])), ('Rarity', e(c['r'])), ('Type', e(c['t'])),
+            *[(k, e(str(c[f]))) for k, f in (('Element', 'el'), ('Turn cost', 'tc'), ('Hand cost', 'hc'), ('Village', 'vil'))
+              if c.get(f) not in (None, '')],   # approved scan details (cards.json el/tc/hc/vil), same as the old popup showed
             ('Editions', e(', '.join(eds) or '—')),
             ('Printings', ''.join(f'<span class="pv">{e(v)}</span>' for v in (c.get('v') or [])))]
     cl = char_links_for(c, chars_by_name or {})
@@ -702,20 +704,22 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
     nt_html, nt_cards = near_top(c, s, set_cards, char_lists or {}, chars_by_name or {})
     body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/set/{set_slug(s)}/">{e(s["name"])}</a> › {e(c["n"])}</nav>
 <article class="cardpage">
-<div class="art" data-card="{e(c["s"] + ":" + c["n"])}" data-alt="{e(card_alt(c, s))}">{art}</div><script src="/card-art.js?v={file_version('card-art.js')}" defer></script>
+<div class="side"><div class="art" data-card="{e(c["s"] + ":" + c["n"])}" data-alt="{e(card_alt(c, s))}">{art}</div><script src="/card-art.js?v={file_version('card-art.js')}" defer></script>
+<section class="coll" id="coll" data-card="{e(c["s"] + ":" + c["n"])}" data-name="{e(c["name"] + " · " + c["n"])}"><h4>Your collection</h4><p class="mt">Mark what you have and want, add slabs. No account needed to start.</p><button type="button" class="primary" data-collgo data-jt="track-click">＋ Add to your collection</button></section><script src="/card-coll.js?v={file_version('card-coll.js')}" defer></script></div>
 <div class="info">
+<div class="cnav">{f'<a href="/card/{slug(prev)}/" aria-label="Previous card: {e(prev["name"])} {e(prev["n"])}" data-key="prev">‹</a>' if prev else ''}{f'<a href="/card/{slug(nxt)}/" aria-label="Next card: {e(nxt["name"])} {e(nxt["n"])}" data-key="next">›</a>' if nxt else ''}</div>
 <h1>{e(c["name"])}</h1>
 <p class="mt">{e(s["name"])} · {e(c["n"])} · {e(c["r"])}</p>
 {quick_links(c, s, set_cards, char_lists or {}, chars_by_name or {})}
 {mv_badges(c, ranks, pops)}<dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
 {('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
-<a class="primary" href="/#card={quote(c['s'] + ':' + c['n'])}" data-jt="track-click">Track it in your collection</a>
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="slab">eBay sold · slabs</a>
 <a href="{e(sold(card_q(c), 'raw'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="raw">eBay sold · raw</a>
 {psa}
 <a href="/club/?card={quote(c['s'] + ':' + c['n'])}&amp;name={quote(c['name'])}" data-jt="alerts-click">🔔 Alerts for this card</a>
 </div>
+<button type="button" class="fbcard" data-fb data-fbcard>✎ Something wrong or missing on this card? Tell us</button>
 {newbie('card')}
 </div>
 </article>

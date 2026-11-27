@@ -332,8 +332,20 @@ header .pn>.pnb{height:30px;padding:0 12px 0 10px;font-size:14px}
   .picks{grid-template-columns:1fr;gap:10px}
 }
 .fbrank{align-items:center;flex-wrap:wrap;gap:8px}.fbrank b{font:800 18px "Baloo 2",sans-serif;color:#F2C14E}.fbbar{display:inline-block;width:120px;height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}.fbbar i{display:block;height:100%;background:#F2C14E}
+
+/* Card pages embed this page as their "Your collection" panel (/?embed=coll&card=ID, 2026-11-26): only the panel and its
+   sign-in overlay show; toasts are moved onto the card page itself. */
+html.embed,html.embed body{background:transparent!important;min-height:0!important;overflow:hidden}
+html.embed body::before,html.embed body::after{display:none!important}
+html.embed body>*{display:none!important}
+html.embed body>#embedroot{display:block!important}
+html.embed body>.ov:not([hidden]){display:flex!important}
+#embedroot{padding:2px}#embedroot .mycoll{margin:0}
+a.card{color:inherit;text-decoration:none}
 </style>
-<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=509f4248"><script src="/theme.js?v=7"></script><script src="/acct.js?v=e12f9d2e"></script>
+<link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=509f4248"><script>if(/[?&]embed=coll(&|$)/.test(location.search))document.documentElement.classList.add('embed');
+/* Old /#card=ID links (shared links, admin) now go straight to that card's page. */
+else{var jgo=function(){var jm=location.hash.match(/(?:^#|&)card=([^&]+)/);if(jm){var jid=decodeURIComponent(jm[1]);if(/^[^:]+:[^:]+$/.test(jid))location.replace('/card/'+encodeURIComponent(jid.replace(':','-').toLowerCase())+'/')}};jgo();addEventListener('hashchange',jgo)}</script><script src="/theme.js?v=8"></script><script src="/acct.js?v=80cf22be"></script>
 </head>
 <body>
 <header><div class="hw">
@@ -510,8 +522,11 @@ function estCond(card,printing,edition,cond){const r=(ESTC.get(card)||[]).find(x
 function cardComps(id){if(!MEMBER||!sbc())return Promise.resolve([]);if(COMPS.has(id))return COMPS.get(id);
   const p=sb.rpc('member_card_comps',{p_card_id:id}).then(r=>r.error?sb.rpc('member_card_sales',{p_card_id:id}).then(r2=>r2.error?[]:(r2.data||[])):(r.data||[])).catch(()=>[]).then(v=>{p.v=v;return v});COMPS.set(id,p);return p}
 const compsFor=(list,p,e,cond)=>list.filter(x=>(x.grader||'Raw')==='Raw'&&x.printing===p&&edK(x.edition)===edK(e)&&x.condition===cond);
+const cardUrl=c=>'/card/'+encodeURIComponent((c.s+'-'+c.n).toLowerCase())+'/';
+// Back from a card page puts the grid back where it was (2026-11-26): search/filters live in the hash, scroll + how many were shown here.
+function saveGrid(){try{sessionStorage.setItem('jgrid',JSON.stringify({h:location.hash,y:scrollY,n:shown,v:VIEW}))}catch(_){}}
 function tile(c,i,extra){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c);
-  return `<button class="card in" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div>${tpx(c)}<div class="nm">${esc(c.name)}</div><div class="mt">${setTag(c.s)}</div><div class="mt">${esc(c.n)} · ${rsym(c.src)}</div>${extra||''}</button>`}
+  return `<a class="card in" href="${cardUrl(c)}" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div>${tpx(c)}<div class="nm">${esc(c.name)}</div><div class="mt">${setTag(c.s)}</div><div class="mt">${esc(c.n)} · ${rsym(c.src)}</div>${extra||''}</a>`}
 // Sort options. PLACEHOLDER choices for David to confirm: rarity order (UR > SR > R > U > C, then Promo, Starter, unknown),
 // "Newest sets first" = main sets 28 down to 1, then packs/tins/promos; "market value" = the price band (free data only); cards with no sales always go last.
 const SORTS=[['','Set & number'],['name','Name A–Z'],['name-d','Name Z–A'],['rar-d','Rarity: high to low'],['rar','Rarity: low to high'],['px-d','Market value: high to low'],['px','Market value: low to high'],['set-d','Newest sets first']];
@@ -559,40 +574,14 @@ function view(v){const was=VIEW;VIEW=v;if(v==='sets'&&D)renderSets();$('#v-cards
 const money=v=>'$'+(v>=100?Math.round(v).toLocaleString():(+v).toFixed(2).replace(/\.00$/,''));
 // Jonin Club members: exact price ranges by edition, foil and grade, read live from Supabase (members-only access).
 const shortDate=d=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-const pxRows=(c,rows)=>{const eds=(c.ed||[]).filter(Boolean).length>1,prs=(c.v||[]).length>1;return rows.map(r=>`<tr><td>${[eds&&r.edition?(r.edition==='1st Edition'?'1st Ed':r.edition):'',prs?r.printing:'',r.grader==='Raw'||!r.grader?'Raw':r.grader+' '+(r.grade||'')].filter(Boolean).map(esc).join(' · ')}</td><td><b>${money(+r.estimate)}</b><small>${r.sales_count} sale${r.sales_count>1?'s':''} · last ${money(+r.last_price)}${r.last_sold_at?' on '+esc(shortDate(r.last_sold_at)):''}</small></td></tr>`).join('')};
 const vkey=r=>[r.printing||'',r.edition||'',r.grader||'Raw',r.grade||''].join('|');
-const saleLinks=list=>list.length?`<tr class="sl"><td colspan="2">${list.map(x=>{const t=`${money(+x.price)} · ${esc(shortDate(x.sold_at))}${x.condition?' · '+esc(x.condition):''}`;
-  return /^https:\/\//.test(x.url||'')?`<a href="${esc(x.url)}${x.url.includes('?')?'&amp;':'?'}${EPN}" target="_blank" rel="sponsored noopener" title="Open this sale on eBay">${t} ↗</a>`:`<a>${t}</a>`}).join('')}</td></tr>`:'';
-async function loadExact(c){if(!MEMBER)return;const box=$('#pxexact');if(!box)return;const id=c.s+':'+c.n;
-  const salesP=cardComps(id);
-  if(!EST)await loadEstimates();const b=$('#pxexact');if(!b||sel<0||list[sel]!==c)return;
-  if(!EST){b.innerHTML='<p class="none">Could not load price estimates.</p>';return}
-  const rows=(EST.get(id)||[]).slice().sort((a,b)=>(a.edition!=='1st Edition')-(b.edition!=='1st Edition')||String(a.printing).localeCompare(b.printing)||(a.grader!=='Raw')-(b.grader!=='Raw')||(parseFloat(b.grade)||0)-(parseFloat(a.grade)||0));
-  if(!rows.length){b.closest('.px').remove();return}
-  const sales=await salesP,by=new Map();sales.forEach(x=>{const k=vkey(x);if(!by.has(k))by.set(k,[]);by.get(k).push(x)});
-  const b2=$('#pxexact');if(!b2||sel<0||list[sel]!==c)return;
-  b2.innerHTML=`<table>${rows.map(r=>pxRows(c,[r])+saleLinks(by.get(vkey(r))||[])).join('')}</table><p class="none" style="margin-top:6px">Estimates lean on the newest sales. Tap a sale to open it on eBay.</p>`}
 // Free view: one price band per card. Exact prices by edition, foil and grade, and sold listings, are Jonin Club only.
 // eBay Partner Network tracking (campaign 5339262225). customid shows which part of the site the click came from.
 const EPN='mkevt=1&amp;mkcid=1&amp;mkrid=711-53200-19255-0&amp;campid=5339262225&amp;toolid=10001&amp;customid=jonin-site';
-function priceBlock(c){const bd=band(c);
-  if(MEMBER)return `<div class="px"><h3>Price estimate<span><svg class="jstar" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.5l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg> Jonin Club · by version</span></h3><div id="pxexact"><p class="none">Loading price estimates…</p></div></div>`;
-  const lock=`<a class="pxt" href="/club/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}" aria-label="See exact prices and sold listings with Jonin Club"><div class="rows" aria-hidden="true"><div><span>1st Edition · Foil · PSA 9</span><b>$000.00</b></div><div><span>Unlimited · Raw · NM</span><b>$00.00</b></div><div><span>1st Edition · Raw · LP</span><b>$00.00</b></div></div><span class="cta"><span><svg class="lk" viewBox="0 0 14 17" aria-hidden="true"><defs><linearGradient id="lkt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE99A"/><stop offset=".45" stop-color="#F2C14E"/><stop offset="1" stop-color="#B07A1C"/></linearGradient></defs><g class="lift"><path class="sh" d="M4 8.5V5.5a3 3 0 0 1 6 0v3" fill="none" stroke="#E0B045" stroke-width="2.1" stroke-linecap="round"/></g><g class="bd"><rect x="1" y="8" width="12" height="9" rx="2.2" fill="url(#lkt)" stroke="#8C5F14" stroke-width=".6"/><circle cx="7" cy="11.7" r="1.35" fill="#5C3D0A"/><rect x="6.4" y="12" width="1.2" height="2.6" rx=".55" fill="#5C3D0A"/></g></svg>Exact prices &amp; sold listings</span><small>Every sale by edition, foil and grade</small></span></a>`;
-  if(!bd)return `<div class="px"><h3>Market price</h3>${lock}</div>`;
-  return `<div class="px"><h3>Market price<span>across all versions</span></h3><p class="band">${esc(bd)}</p>${lock}</div>`}
 // Phone back-swipe (feedback #9, 2026-11-26): an open card gets its own history entry, so Back closes the card instead of leaving the page.
 let CARDH=0,POPSKIP=null;
-function openCard(i){sel=i;const c=list[i];if(!c)return;if($('#ov').hidden&&!CARDH){try{history.pushState({jcard:1},'',location.href);CARDH=1}catch(_){}}const s=D.byId[c.s]||{};const q=encodeURIComponent('naruto ccg '+c.name+' '+c.n.replace(/-/g,''));
-  $('#panel').innerHTML=`<div class="nav3"><button class="ib" data-step="-1" aria-label="Previous card">‹</button><button class="ib" data-step="1" aria-label="Next card">›</button><span></span><button class="ib" data-close aria-label="Close">✕</button></div><div class="pvwrap"><div class="pvart">${/^https:\/\//.test(c.img||'')?`<div class="art big"><img src="${esc(c.img)}" alt="${esc(c.name)} card scan"></div>`:`<div class="art big"><span class="num" style="font-size:34px">${esc(c.n)}</span><span class="ty">${esc(c.t)} · scan coming soon</span></div>`}</div><div class="pvinfo">
-  <div><h2>${esc(c.name)}</h2><div class="mt">${esc(s.name||c.s)} · ${esc(c.n)} · ${esc(c.r)}</div></div>
-  <div class="facts"><div><div>Set</div><div>${setTag(s.id)}<br><span class="mt">${esc(setLabel(s))}${s.rel?' · '+esc(s.rel):''}</span></div></div><div><div>Rarity</div><div>${rsym(c.src)} ${esc(c.r)}</div></div><div><div>Type</div><div>${esc(c.t)}</div></div>${c.el?`<div><div>Element</div><div>${esc(c.el)}</div></div>`:''}${c.tc!=null?`<div><div>Turn cost</div><div>${esc(c.tc)}</div></div>`:''}${c.hc!=null?`<div><div>Hand cost</div><div>${esc(c.hc)}</div></div>`:''}${c.vil?`<div><div>Village</div><div>${esc(c.vil)}</div></div>`:''}<div><div>Editions</div><div>${esc((c.ed||[]).filter(Boolean).join(', ')||'—')}</div></div><div style="grid-column:1/-1"><div>Printings</div><div class="pv">${(c.v||[]).map(v=>{const f=FOILS[v];return `<span>${f?`<span class="fx f-${f[0]}" aria-hidden="true"></span>`:''}${esc(v)}</span>`}).join('')}</div></div>${c.note?`<div style="grid-column:1/-1"><div>Note</div><div>${esc(c.note)}</div></div>`:''}</div>
-  ${priceBlock(c)}
-  <div class="mycoll" id="mycoll"></div>
-  <div class="links"><a href="/card/${encodeURIComponent((c.s+'-'+c.n).toLowerCase())}/">Card page · share link</a><a href="https://www.ebay.com/sch/i.html?_nkw=${q}&amp;${EPN}" target="_blank" rel="sponsored noopener">See listings on eBay</a>${PSA[c.s]?`<a href="${PSA_POP+PSA[c.s]+psaFrag(c)}" target="_blank" rel="noopener">PSA pop report · ${esc(setLabel(s))}</a>`:c.s==='P'?`<span class="psay"><span class="mt">PSA pop report:</span> ${PSA_PROMO.map(([y,u])=>`<a href="${PSA_POP+u+psaFrag(c)}" target="_blank" rel="noopener">${y}</a>`).join('')}</span>`:'<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>'}</div>
-  <a class="alert" href="/club/?card=${encodeURIComponent(c.s+':'+c.n)}&name=${encodeURIComponent(c.name)}"><span aria-hidden="true">🔔</span><span><b>Get alerts for this card</b><span>New listings and buy/sell posts, sent to Discord.</span></span><span class="go" aria-hidden="true">→</span></a>
-  <button class="fbcard" data-fb data-fbcard>✎ Something wrong or missing on this card? Tell us</button>
-  <div class="buy"><b>Have this card? We buy collections.</b><span>Local pickup around NJ / NY / PA, or ship it in.</span><a href="https://sell.jonin.cards">Get an offer →</a></div></div></div>`;
-  $('#ov').hidden=false;renderMyColl(c);loadExact(c);track('card',{card_id:(c.s+':'+c.n).slice(0,24)});$('#panel').querySelector('[data-close]').focus()}
+// One card view only (2026-11-26): opening a card goes to its card page (the old popup is gone).
+function openCard(i){const c=list[i];if(!c)return;saveGrid();location.href=cardUrl(c)}
 // Feedback widget (/feedback.js) asks which card is open, so card notes carry the card id.
 window.joninFbCard=()=>sel>=0&&list[sel]?{id:list[sel].s+':'+list[sel].n,name:list[sel].name+' · '+list[sel].n}:null;
 window.joninFbUser=()=>ME&&ME.email||null;
@@ -621,7 +610,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t
   else if(t.dataset.ty!=null){S.type=t.dataset.ty&&S.type!==t.dataset.ty?t.dataset.ty:'';writeHash();renderCards(true);pop(t)}
   else if(t.dataset.r!=null){S.rars=t.dataset.r?tog(S.rars,t.dataset.r):[];writeHash();renderCards(true);pop(t)}
   else if(t.id==='clear'||t.dataset.clear!=null){S=S0();writeHash();renderCards(true)}
-  else if(t.dataset.i!=null)openCard(+t.dataset.i);
+  else if(t.dataset.i!=null){if(t.tagName==="A"){saveGrid();return}openCard(+t.dataset.i)}
   else if(t.dataset.step){openCard((sel+ +t.dataset.step+list.length)%list.length)}
   else if(t.dataset.close!=null||t.id==='ovbg')close();
   else if(t.dataset.set){const ps=VIEW!=='cards';S=Object.assign(S0(),{set:t.dataset.set});view('cards');if(ps)history.pushState(null,'',location.href);writeHash();renderCards(true);scrollTo(0,0)}
@@ -741,7 +730,6 @@ async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{ite
     // One-time setup page after sign-up (favorite characters, a few questions, theme). Finishing or skipping sets setup_done_at.
     if(MYP&&!MYP.setup_done_at){try{sessionStorage.setItem('jret',location.pathname+location.hash)}catch(_){}location.href='/welcome/';return}}else gLoad();
   EST=null;if(MEMBER)await loadEstimates();if(VIEW==='cards'&&D&&D.byId)renderCards(true);
-  if(sel>=0&&list[sel]){const px=$('#panel .px');if(px)px.outerHTML=priceBlock(list[sel]);loadExact(list[sel])}
   paintAcct();favFirst();refreshMarks();if(sel>=0&&list[sel])renderMyColl(list[sel]);if(VIEW==='mine'){if(ME||gCount())renderMine();else{history.replaceState(null,'',location.pathname);view('cards')}}}
 let AUTHREADY=false;
 function hasSession(){if(ME)return true;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^sb-.*-auth-token$/.test(k)&&(!AUTHREADY||!sb))return true}}catch(_){}return false}
@@ -1094,6 +1082,37 @@ if(!sbc())AUTHREADY=true;paintAcct();loadFounding();loadTick();
 if(location.hash==='#signup'||location.hash==='#signin'){const m=location.hash==='#signin'?'in':'up';history.replaceState(null,'',location.pathname);setTimeout(()=>{if(!ME&&!hasSession())openAuth(m)},300)}
 const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url',{headers:{apikey:SUPA_KEY,Range:`${i*1000}-${i*1000+999}`}}).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>a.flat());
 // Live list only fills cards that have no image in cards.json yet (images are served from jonin.cards; see pipeline/mirror_images.py)
+// Back from a card page: same search/filters (hash), render as many cards as before, then scroll back.
+function restoreGrid(v){let g=null;try{g=JSON.parse(sessionStorage.getItem('jgrid')||'null');sessionStorage.removeItem('jgrid')}catch(_){}
+  if(!g||g.h!==location.hash||g.v!==v)return;if(v==='cards')while(shown<Math.min(g.n||0,list.length))renderCards(false);
+  const go=()=>scrollTo(0,g.y||0);go();requestAnimationFrame(go);setTimeout(go,300)}
+// Embedded "Your collection" panel for card pages (/?embed=coll&card=ID). The same collection editor as before, so slabs,
+// conditions, lists, scrolls and prompts all keep working. The frame sizes itself to the panel; the sign-in overlay
+// takes the whole screen while open; toasts and prompts are moved onto the card page.
+const EMBED=document.documentElement.classList.contains('embed');
+function embedBoot(){const id=new URLSearchParams(location.search).get('card')||'',c=D.cards.find(x=>x.s+':'+x.n===id);
+  const fr=window.frameElement,top=fr&&fr.ownerDocument;
+  const root=document.createElement('div');root.id='embedroot';root.innerHTML=c?'<div class="mycoll" id="mycoll"></div>':'<p class="mt">Card not found.</p>';document.body.appendChild(root);
+  {const b=document.createElement('base');b.target='_top';document.head.appendChild(b)}
+  if(window.parent!==window&&parent.jtrack)window.jtrack=(n,d)=>parent.jtrack(n,d);
+  if(!c||!fr)return;list=[c];sel=0;renderMyColl(c);
+  const su=setUser;setUser=async u=>{await su(u);if(list[0]===c){sel=0;renderMyColl(c)}};
+  const size=()=>{if(!fr.classList.contains('full'))fr.style.height=Math.ceil(root.getBoundingClientRect().height+4)+'px'};
+  new ResizeObserver(size).observe(root);size();
+  // Toast CSS (and the pill buttons inside them) copied onto the card page once.
+  let cssDone=false;const copyCss=()=>{if(cssDone)return;cssDone=true;let out='';
+    for(const sh of document.styleSheets){let rs;try{rs=sh.cssRules}catch(_){continue}for(const r of rs){const t=r.cssText;
+      if(/gtoast|ptoast|sellask|slabask|\.mile|pbar/.test(t))out+=t+'\n';else if(r.selectorText&&/^\.pill\b/.test(r.selectorText))out+=r.cssText.replace(r.selectorText,r.selectorText.split(',').map(x=>'.gtoast '+x.trim()).join(','))+'\n'}}
+    const st=top.createElement('style');st.textContent=out;top.head.appendChild(st)};
+  const sync=()=>{const full=!!document.querySelector('body>.ov:not([hidden])');if(full!==fr.classList.contains('full')){fr.classList.toggle('full',full);root.style.visibility=full?'hidden':'';if(!full)size()}
+    document.querySelectorAll('body>.gtoast').forEach(t=>{copyCss();top.querySelectorAll('body>.gtoast').forEach(x=>x.remove());
+      t.addEventListener('click',e=>{const a=e.target.closest('[data-auth]');if(a){e.preventDefault();openAuth(a.dataset.auth)}
+        if(e.target.closest('[data-sellgo]')){sellSet('done');const l=sellList();if(l&&navigator.clipboard)navigator.clipboard.writeText('My Jonin collection ('+plural(sellCount(),'card')+'):\n'+l).catch(()=>{})}});
+      top.body.appendChild(t)})};
+  new MutationObserver(sync).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});sync();
+  // ← → still flip cards when focus is inside the panel.
+  document.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey||e.shiftKey||!$('#authov').hidden)return;const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+    const k=e.key==='ArrowLeft'?'prev':e.key==='ArrowRight'?'next':'';const a=k&&top.querySelector('.cnav a[data-key="'+k+'"]');if(a){e.preventDefault();top.defaultView.location.href=a.href}})}
 function applyLive(rows){if(!D||!rows||!rows.length)return false;const m={};rows.forEach(r=>{if(r&&r.url)m[r.card_id]=r.url});let n=0;D.cards.forEach(c=>{const u=m[c.s+':'+c.n];if(u&&/^https:\/\//.test(u)&&!c.img){c.img=u;n++}});return n>0}
 fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promise.race([LIVE,new Promise(r=>setTimeout(()=>r(null),2500))]);if(live)applyLive(live);else LIVE.then(rows=>{if(applyLive(rows))renderCards(true)});D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
   $('#qn').textContent='('+QUICK.length+')';favFirst();
@@ -1101,7 +1120,7 @@ fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promis
   {const d=$('#quick');d.addEventListener('toggle',()=>{try{localStorage.setItem('jq',d.open?'0':'1')}catch(_){}})}
   $('#rars').innerHTML=RARS.map(([k,l])=>`<button class="pill" data-r="${k}" aria-pressed="false">${k?rsym(k)+' ':''}${l}</button>`).join('');$('#types').innerHTML=TYPES.map(k=>`<button class="pill" data-ty="${k}" aria-pressed="false">${k||'All types'}</button>`).join('');
   $('#sortsel').innerHTML=SORTS.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');buildSetList();buildDetails();
-  renderSets();const v=readHash();view(v);renderCards(true);{const m=location.hash.match(/(?:^#|&)card=([^&]+)/);if(m){const k=decodeURIComponent(m[1]),i=list.findIndex(c=>c.s+':'+c.n===k);if(i>=0)openCard(i);history.replaceState(null,'',location.pathname)}}let rf='';try{rf=document.referrer?new URL(document.referrer).hostname:''}catch(_){}track('view',{page:v,ref:rf.slice(0,80)||null})}).catch(()=>{$('#count').textContent='Could not load cards'});
+  if(EMBED){embedBoot();return}renderSets();const v=readHash();view(v);renderCards(true);restoreGrid(v);let rf='';try{rf=document.referrer?new URL(document.referrer).hostname:''}catch(_){}track('view',{page:v,ref:rf.slice(0,80)||null})}).catch(()=>{$('#count').textContent='Could not load cards'});
 }
 </script>
 <button class="totop" id="totop" type="button" aria-label="Back to top"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
