@@ -28,7 +28,15 @@ def main():
             continue
         if cid not in pick or (pick[cid]["tag"] and not r["tag"]):
             pick[cid] = r
-    todo = list(pick.values())[:BATCH]
+    by_set = {}
+    for r in pick.values():   # round-robin across sets so both card-text tasks (sets 1-14 / the rest) always have work
+        by_set.setdefault(r["card_id"].split(":")[0], []).append(r)
+    todo, queues = [], list(by_set.values())
+    while queues and len(todo) < BATCH:
+        for q in queues:
+            if q and len(todo) < BATCH:
+                todo.append(q.pop(0))
+        queues = [q for q in queues if q]
     print(f"{len(done)} cards have text, {len(pick)} enhanced cards waiting, exporting {len(todo)}", flush=True)
     s3 = boto3.client("s3", endpoint_url=os.environ["R2_ENDPOINT"], region_name="auto",
                       aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
