@@ -307,6 +307,10 @@ h1.ph{display:flex;align-items:center;gap:12px}h1.ph img.avatar{border:2px solid
 .spc{display:grid;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}.spc.on{border-color:var(--acc)}.sp .spc>button[data-set]{border:0;border-radius:0}
 .sp .msb{all:unset;cursor:pointer;border-top:1px solid var(--line);padding:7px 12px;font-size:12.5px;color:var(--acc)}.sp .msb:hover{background:var(--line2)}.sp .msb.done{cursor:default;color:var(--mute)}
 .misshead{align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+.cfbar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-end;margin:18px 0 0}.cfbar input{flex:1 1 220px;min-width:0;height:40px;background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:0 14px;color:var(--ink);font:15px Inter,sans-serif;outline:none}.cfbar input:focus{border-color:var(--acc)}
+.cfsel{display:grid;gap:3px;flex:0 1 auto;min-width:0}.cfsel>span{font:600 11px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}.cfbar .cfsel select{flex:none;height:40px;min-height:40px;max-width:230px;font:600 13px Inter,sans-serif;border-radius:10px;padding:0 34px 0 12px;background-position:right 12px center}.cfsel.on select{border-color:var(--acc)}
+.cfn{align-self:center;font-size:13px}.cfbar>.clear{align-self:center}
+@media (max-width:620px){.cfbar{display:grid;grid-template-columns:1fr 1fr}.cfbar input{grid-column:1/-1}.cfbar .cfsel select{max-width:none;width:100%}.cfsort{grid-column:1/-1}.cfbar>.clear{justify-self:end}}
 .sellslim{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;padding:7px 14px;margin:0 0 12px;border-radius:999px;font-size:12.5px;color:var(--mute);background:color-mix(in srgb,#E53935 8%,var(--panel));border:1px solid color-mix(in srgb,#E53935 30%,transparent)}.sellslim b{color:var(--ink)}.sellslim a{margin-left:auto;color:#FF6B5E;font-weight:600;text-decoration:none;white-space:nowrap}.sellslim a:hover{text-decoration:underline}
 .mhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin-bottom:6px}.mhead h1{margin:0}
 .macts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.macts .pill{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink)}.macts .sellbtn{border-color:color-mix(in srgb,#E53935 60%,transparent)}.macts .pill[aria-expanded=true]{border-color:var(--acc);color:var(--acc)}
@@ -913,6 +917,50 @@ function cardsWith(kind,src){const ids=new Set();for(const k of src.keys()){cons
 function progress(src){const have=new Set();for(const k of src.keys()){const a=k.split('|');if(a[3]==='have')have.add(a[0])}
   return D.sets.map(s=>{const n=D.cards.filter(c=>c.s===s.id&&have.has(cid(c))).length;return {s,n}}).filter(x=>x.n)}
 let MISS='',LAST=null;
+// My collection sort & filter (2026-11-27). PLACEHOLDER choices for David: default sort is Set & number (binder order);
+// filters are search, set, rarity, card type, plus version (foil / 1st Edition) on Haves & Wants and grader on Slabs.
+// Set and rarity menus only list what's in the tab. Choices stay put while you move around the site, until a reload.
+let CF={q:'',set:'',rar:'',type:'',ver:'',sort:'',tab:''},MCTX=null;
+const CVER=[['fo','Foil'],['nf','Non-foil'],['st','1st Edition'],['un','Unlimited']];
+function cfSorts(){const a=[['','Set & number'],['px-d','Market value: high to low'],['px','Market value: low to high'],['name','Name A–Z'],['name-d','Name Z–A'],['rar-d','Rarity: high to low'],['rar','Rarity: low to high'],['set-d','Newest sets first']];
+  if(MTAB==='have')a.push(['qty-d','Most copies']);if(MTAB==='slab')a.push(['grade-d','Highest grade']);return a}
+function cfInfo(src){const kind=MTAB==='want'?'want':'have',m=new Map();for(const [k,q] of src){const a=k.split('|');if(a[3]!==kind||(kind==='have'&&!q))continue;
+  const o=m.get(a[0])||{fo:0,nf:0,st:0,un:0,q:0},n=kind==='have'?q:1;if(/foil|Super Rare|Gold/i.test(a[1]))o.fo+=n;else o.nf+=n;if(/1st/.test(a[2]))o.st+=n;else o.un+=n;o.q+=n;m.set(a[0],o)}return m}
+const gradeNum=g=>{const v=parseFloat(String(g||'').replace(/[^\d.]/g,''));return isNaN(v)?-1:v};
+function cfApply(items,src,SL){const f=CF,info=MTAB==='slab'?null:cfInfo(src);const ws=f.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  let out=items.filter(c=>{if(f.set&&c.s!==f.set)return false;if(f.rar&&c.src!==f.rar)return false;if(f.type&&c.t!==f.type)return false;
+    if(f.ver){if(MTAB==='slab'){if(!SL.some(x=>x.card_id===cid(c)&&x.grader===f.ver))return false}else{const o=info.get(cid(c));if(!o||!o[f.ver])return false}}
+    if(ws.length){const h=hayOf(c);if(!ws.every(w=>numHit(w,c.n)||h.includes(w)))return false}return true});
+  const k=f.sort;if(!k)return out;
+  if(k==='qty-d'){const ix=new Map(out.map((c,i)=>[c,i]));return out.slice().sort((x,y)=>((info.get(cid(y))||{}).q||0)-((info.get(cid(x))||{}).q||0)||ix.get(x)-ix.get(y))}
+  if(k==='grade-d'){const best=new Map();SL.forEach(x=>best.set(x.card_id,Math.max(best.get(x.card_id)??-1,gradeNum(x.grade))));const ix=new Map(out.map((c,i)=>[c,i]));return out.slice().sort((x,y)=>(best.get(cid(y))??-1)-(best.get(cid(x))??-1)||ix.get(x)-ix.get(y))}
+  const keep=S.sort;S.sort=k;try{out=sorted(out)}finally{S.sort=keep}return out}
+function cfBar(base,SL){if(MTAB==='lists'||base.length<2&&!cfOn())return '';
+  const cnt=(f)=>{const m=new Map();base.forEach(c=>{const v=f(c);if(v)m.set(v,(m.get(v)||0)+1)});return m};
+  const sets=cnt(c=>c.s),rars=cnt(c=>c.src),types=cnt(c=>c.t);
+  const opt=(v,l,on)=>`<option value="${esc(v)}"${on===v?' selected':''}>${esc(l)}</option>`;
+  const sel=(k,lbl,all,opts)=>`<label class="cfsel${CF[k]?' on':''}"><span>${lbl}</span><select data-cf="${k}">${opt('',all,CF[k])}${opts.join('')}</select></label>`;
+  const setOpts=D.sets.filter(s=>sets.has(s.id)).map(s=>opt(s.id,setLabel(s)+' · '+s.name+' ('+sets.get(s.id)+')',CF.set));
+  const rarOpts=Object.keys(RORD).sort((a,b)=>RORD[b]-RORD[a]).filter(r=>rars.has(r)).map(r=>opt(r,(RNAME[r]||r)+' ('+rars.get(r)+')',CF.rar));
+  const typeOpts=TYPE_ORD.filter(t=>types.has(t)).map(t=>opt(t,t+' ('+types.get(t)+')',CF.type));
+  const verOpts=MTAB==='slab'?GRADERS.filter(g=>SL.some(x=>x.grader===g)).map(g=>opt(g,g,CF.ver)):CVER.map(([v,l])=>opt(v,l,CF.ver));
+  return `<div class="cfbar"><input id="cfq" type="search" placeholder="Search your ${MTAB==='slab'?'slabs':MTAB==='want'?'wants':'cards'}" value="${esc(CF.q)}" autocomplete="off" aria-label="Search this tab">
+  ${sel('set','Set','All sets',setOpts)}${sel('rar','Rarity','All rarities',rarOpts)}${types.size>1||CF.type?sel('type','Type','All types',typeOpts):''}${sel('ver',MTAB==='slab'?'Grader':'Version',MTAB==='slab'?'All graders':'All versions',verOpts)}
+  <label class="cfsel cfsort"><span>Sort</span><select data-cf="sort">${cfSorts().map(([v,l])=>opt(v,l,CF.sort)).join('')}</select></label>
+  <span class="cfn mt" id="cfn">${cfCount()}</span>${cfOn()?'<button type="button" class="clear" data-cfreset>Clear</button>':''}</div>`}
+const cfOn=()=>!!(CF.q.trim()||CF.set||CF.rar||CF.type||CF.ver);
+const cfCount=()=>cfOn()&&MCTX?`Showing ${list.length.toLocaleString()} of ${MCTX.n.toLocaleString()}`:'';
+function mGrid(items,SL,ro,total){if(!cfOn())total=0;return items.length?items.map((c,i)=>(()=>{if(MTAB!=='slab')return tile(c,i);const mine=SL.filter(x=>x.card_id===cid(c)),ph=mine.map(x=>ro?x.front:x.psa_front).find(u=>/^https:\/\//.test(u||''));
+    return tile(ph?Object.assign({},c,{img:ph}):c,i,`<div class="slg">${mine.map(x=>esc(x.grader+' '+x.grade)+((ro?x.verified:x.psa_status==='verified')?' ✓':'')).join(' · ')}</div>`)})()).join(''):total?`<p class="empty">No cards match these filters. <button type="button" class="clear" data-cfreset>Clear filters</button></p>`:`<p class="empty">${ro?'Nothing here yet.':MTAB==='slab'?'No slabs yet. Open any card and tap + Add a slab.':MTAB==='have'?'No cards yet. Open any card and use + to add the printings you have.':'No wants yet. Open any card and tap ♡ Want.'}</p>`}
+function cfGridOnly(){if(!MCTX||!LAST)return;const el=$("#mgrid");if(!el)return listView(...LAST);
+  const ids=new Set(MCTX.SL.map(x=>x.card_id));const base=MTAB==='slab'?D.cards.filter(c=>ids.has(cid(c))):cardsWith(MTAB,MCTX.src);
+  list=cfApply(base,MCTX.src,MCTX.SL);el.innerHTML=mGrid(list,MCTX.SL,MCTX.ro,base.length);const n=$('#cfn');if(n)n.textContent=cfCount();
+  const bar=document.querySelector('.cfbar');if(bar){const has=bar.querySelector('[data-cfreset]');if(cfOn()&&!has)bar.insertAdjacentHTML('beforeend','<button type="button" class="clear" data-cfreset>Clear</button>');else if(!cfOn()&&has)has.remove()}}
+let CFT=0;
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='cfq'){CF.q=e.target.value;clearTimeout(CFT);CFT=setTimeout(cfGridOnly,120)}});
+document.addEventListener('change',e=>{const k=e.target&&e.target.dataset&&e.target.dataset.cf;if(!k||!LAST)return;CF[k]=e.target.value;listView(...LAST)});
+document.addEventListener('click',e=>{if(e.target.closest('[data-cfreset]')){CF=Object.assign(CF,{q:'',set:'',rar:'',type:'',ver:''});if(LAST)listView(...LAST)}});
+
 // Jonin Club collection tools (David, 2026-11-26): collection value, spreadsheet export, profile badge.
 // Value: each have is priced by the Raw estimate of its exact version (printing + edition); if that version has no
 //   estimate, the same printing in any edition is used (PLACEHOLDER fallback). Slabs use the same grader + grade, exact
@@ -941,7 +989,7 @@ function collStats(src){let copies=0,first=0,foil=0;const have=new Set(),want=ne
   return {have,want,copies,first,foil,per,done:per.filter(x=>x.n>=x.t).length}}
 function listView(el,title,src,ro){LAST=[el,title,src,ro];const st=collStats(src);const ms=MISS&&MTAB==='have'?st.per.find(x=>x.s.id===MISS):null;if(!ms)MISS='';
   const SL=ro?VSLABS:SLABS;if(ro&&(MTAB==='lists'||(MTAB==='slab'&&!SL.length)))MTAB='have';const slabIds=new Set(SL.map(x=>x.card_id));
-  const items=ms?ms.miss:MTAB==='slab'?D.cards.filter(c=>slabIds.has(cid(c))):cardsWith(MTAB,src);list=items;
+  if(CF.tab!==MTAB){CF.tab=MTAB;CF.ver='';if(/qty|grade/.test(CF.sort))CF.sort=''}const base=ms?ms.miss:MTAB==='slab'?D.cards.filter(c=>slabIds.has(cid(c))):cardsWith(MTAB,src);const items=ms||MTAB==='lists'?base:cfApply(base,src,SL);list=items;MCTX={src,SL,ro,n:base.length};
   const stat=(n,l)=>`<div><b>${n.toLocaleString()}</b><span>${l}</span></div>`;const cv=!ro&&MEMBER&&EST?collValue(src):null;
   el.innerHTML=`${title}
   <div class="row"><button class="pill" data-mtab="have" aria-pressed="${MTAB==='have'}">Haves · ${st.have.size}</button><button class="pill" data-mtab="want" aria-pressed="${MTAB==='want'}">Wants · ${st.want.size}</button>${ro?(SL.length?`<button class="pill" data-mtab="slab" aria-pressed="${MTAB==='slab'}">Slabs · ${SL.length}</button>`:''):`<button class="pill" data-mtab="slab" aria-pressed="${MTAB==='slab'}">Slabs · ${SLABS.length}</button><button class="pill" data-mtab="lists" aria-pressed="${MTAB==='lists'}">Lists${ME?' · '+LISTS.length:''}</button>${ME?(MEMBER?'<button type="button" class="clear mexp" data-export title="Haves, wants and slabs with versions, grades and estimated values. Opens in Excel or Google Sheets.">⤓ Download CSV</button>':'<a class="clear mexp" href="/club/"><svg class="jstar" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.5l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg> Export CSV with Jonin Club</a>'):''}`}</div>${MTAB==='lists'&&!ro?listsPane():''}
@@ -950,8 +998,7 @@ function listView(el,title,src,ro){LAST=[el,title,src,ro];const st=collStats(src
   ${MTAB==='have'&&st.have.size?`<div class="cstats">${stat(st.have.size,'different cards')}${stat(st.copies,'total copies')}${stat(st.first,'1st Edition copies')}${stat(st.foil,'foil copies')}${stat(st.per.length,'sets started')}${stat(st.done,'sets complete')}${ro?'':MEMBER&&EST?`<div class="vstat" title="Estimated from recent sales. ${cv.rawN} of ${cv.rawAll} copies have a price."><b>≈ ${money(cv.raw)}</b><span>estimated value · ${cv.rawN} of ${cv.rawAll} copies priced</span></div>`:lockStat('Collection value')}</div>`:''}
   ${MTAB==='have'&&st.per.length?`<div class="sp">${st.per.map(({s,n,t,miss})=>`<div class="spc${MISS===s.id?' on':''}"><button data-set="${esc(s.id)}" title="Browse this set"><span><b>${esc(setLabel(s))}</b> · ${esc(s.name)}</span><span class="mt">${n} / ${t} cards · ${Math.floor(n/t*100)}%</span><span class="bar2"><i style="width:${Math.min(100,n/t*100)}%"></i></span></button>${miss.length?`<button class="msb" data-miss="${esc(s.id)}" aria-pressed="${MISS===s.id}">${MISS===s.id?'Hide missing':'Missing · '+miss.length}</button>`:'<span class="msb done">Complete ✓</span>'}</div>`).join('')}</div>`:''}
   ${ms?`<div class="row misshead"><b>Missing from ${esc(setLabel(ms.s))} · ${esc(ms.s.name)}: ${ms.miss.length} cards</b><button class="clear" data-copy="${esc(ms.miss.map(c=>c.n+'  '+c.name).join('\n'))}">Copy list</button>${ro?'':'<span class="mt">Open a card and tap ♡ Want to add it to your wants.</span>'}<button class="clear" data-miss="${esc(ms.s.id)}">Back to my haves</button></div>`:''}
-  ${MTAB==='lists'&&!ro?'':`<div class="grid">${items.length?items.map((c,i)=>(()=>{if(MTAB!=='slab')return tile(c,i);const mine=SL.filter(x=>x.card_id===cid(c)),ph=mine.map(x=>ro?x.front:x.psa_front).find(u=>/^https:\/\//.test(u||''));
-    return tile(ph?Object.assign({},c,{img:ph}):c,i,`<div class="slg">${mine.map(x=>esc(x.grader+' '+x.grade)+((ro?x.verified:x.psa_status==='verified')?' ✓':'')).join(' · ')}</div>`)})()).join(''):`<p class="empty">${ro?'Nothing here yet.':MTAB==='slab'?'No slabs yet. Open any card and tap + Add a slab.':MTAB==='have'?'No cards yet. Open any card and use + to add the printings you have.':'No wants yet. Open any card and tap ♡ Want.'}</p>`}</div>`}`}
+  ${MTAB==='lists'&&!ro?'':`${ms?'':cfBar(base,SL)}<div class="grid" id="mgrid">${mGrid(items,SL,ro,base.length)}</div>`}`}
 // Scrolls (stored as xp, 2026-11-26): from accepted feedback notes and first votes per character; amounts and ranks are placeholders set in Supabase xp_rules()/xp_rank().
 let FBPTS=null;
 function loadFbPts(){if(!ME||!sbc())return;sb.rpc('my_xp').then(r=>{if(!r.error&&r.data){FBPTS=r.data;paintAcct();const el=$('#v-mine');if(el&&el.innerHTML)renderMine()}}).catch(()=>{})}
