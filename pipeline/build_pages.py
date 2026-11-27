@@ -1012,6 +1012,19 @@ def activity_line(c):
     return f'<p class="actline" data-jt="activity-line">{" · ".join(bits)}</p>\n'
 
 
+def card_text(c):
+    """The card's printed text, typed from the scan (card_text table). Trait line, ability name, rules text, flavor quote."""
+    t = c.get('tx')
+    if not t:
+        return ''
+    traits, ability, body, flavor = (list(t) + [''] * 4)[:4]
+    lines = ''.join(f'<p>{re.sub(r"^(Valid|Requirements|Target|Effect|Continuous|Instant|Trigger|Cost):", r"<b>\1:</b>", e(x))}</p>' for x in body.split('\n') if x.strip())
+    return ('<section class="ctext"><h3>Card text</h3>'
+            + (f'<p class="tr">{e(traits)}</p>' if traits else '')
+            + (f'<p class="ab">[{e(ability)}]</p>' if ability else '')
+            + lines + (f'<p class="fl">{e(flavor)}</p>' if flavor else '') + '</section>\n')
+
+
 def price_story(c):
     """2-3 plain sentences about how this card has sold, written by a scheduled Claude task from approved sales (wording rules are placeholders)."""
     t = (c.get('ps') or '').strip()
@@ -1075,7 +1088,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 <p class="mt slabname">{e(slab_name(c, s))}</p>
 {quick_links(c, s, set_cards, char_lists or {}, chars_by_name or {})}
 {value_line(c)}{activity_line(c)}{mv_badges(c, ranks, pops)}<div class="fsslot" data-fsslot></div><dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
-{price_story(c)}{foil_note(c, s)}{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
+{card_text(c)}{price_story(c)}{foil_note(c, s)}{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="slab">eBay sold · slabs</a>
 <a href="{e(sold(card_q(c), 'raw'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="raw">eBay sold · raw</a>

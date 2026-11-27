@@ -481,6 +481,16 @@ def main():
             t = st.get(c["s"] + ":" + c["n"])
             if t:
                 c["ps"] = t
+        # Printed card text (card pages, 2026-11-27): typed from scans by a scheduled Claude task; only "live" rows ship.
+        try:
+            tx = {r["card_id"]: r for r in supa.select("card_text", {"select": "card_id,traits,ability,body,flavor", "status": "eq.live"})}
+        except Exception as ex:
+            print("card text skipped:", ex)
+            tx = {}
+        for c in data["cards"]:
+            r = tx.get(c["s"] + ":" + c["n"])
+            if r:
+                c["tx"] = [r.get("traits") or "", r.get("ability") or "", r["body"], r.get("flavor") or ""]
         # Grid thumbnails (thumbs.py): "th" for every card whose thumbnail exists, added last like thumbs.py does.
         import thumbs
         for c in data["cards"]:

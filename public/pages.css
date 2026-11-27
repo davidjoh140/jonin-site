@@ -415,3 +415,6 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .aboutv h3{margin:0 0 6px;font-size:14px;letter-spacing:.02em}.aboutv p{margin:0;font-size:14px;line-height:1.55}.aboutv a{color:var(--acc)}
 .pstory{margin:14px 0 4px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel)}
 .pstory h3{margin:0 0 6px;font-size:14px;letter-spacing:.02em}.pstory p{margin:0;font-size:14px;line-height:1.55}
+.ctext{margin:14px 0 4px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel)}
+.ctext h3{margin:0 0 6px;font-size:14px;letter-spacing:.02em}.ctext p{margin:0 0 6px;font-size:14px;line-height:1.55}.ctext p:last-child{margin:0}
+.ctext .tr{font-size:13px;color:var(--mute)}.ctext .ab{font-weight:700}.ctext .fl{font-style:italic;color:var(--mute)}
