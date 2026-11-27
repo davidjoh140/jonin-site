@@ -14,20 +14,48 @@ import numpy as np
 import cv2
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
-_SESSION = None
+_SESSIONS = {}
+
+
+def _raw_mask(img, model):
+    from rembg import new_session, remove
+    if model not in _SESSIONS:
+        _SESSIONS[model] = new_session(model)
+    a = np.array(remove(img, session=_SESSIONS[model], only_mask=True, post_process_mask=True))
+    return (a > 128).astype(np.uint8) * 255
+
+
+def _edges_touched(m, pad=3):
+    return sum(bool(x.any()) for x in (m[:pad], m[-pad:], m[:, :pad], m[:, -pad:]))
 
 
 def _mask(img):
-    global _SESSION
-    from rembg import new_session, remove
-    _SESSION = _SESSION or new_session("isnet-general-use")
-    a = np.array(remove(img, session=_SESSION, only_mask=True, post_process_mask=True))
-    m = (a > 128).astype(np.uint8) * 255
+    m = _raw_mask(img, "isnet-general-use")
+    if _edges_touched(m) >= 3:                      # the background came along (a colored board behind the item):
+        alt = _raw_mask(img, "u2net")               # the other model often gets it; keep whichever touches fewer edges
+        if _edges_touched(alt) < _edges_touched(m):
+            m = alt
     m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25)))
     cs, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     filled = np.zeros_like(m)
     cv2.drawContours(filled, [c for c in cs if cv2.contourArea(c) > 0.02 * m.size], -1, 255, thickness=cv2.FILLED)
     return cv2.morphologyEx(filled, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+
+
+def _trim_stand(alpha):
+    """Drop a display stand under the item: the rows at the bottom that are much narrower than the item itself."""
+    w = (alpha > 128).sum(1)
+    rows = np.nonzero(w)[0]
+    if len(rows) < 20:
+        return alpha
+    body = np.median(w[rows])
+    last = rows[-1]
+    while last > rows[0] and w[last] < 0.75 * body:
+        last -= 1
+    if rows[-1] - last > 4:
+        alpha = alpha.copy()
+        alpha[last + 2:] = 0
+    return alpha
 
 
 def _hull(alpha):
@@ -43,7 +71,7 @@ def _finish(rgb, alpha, size=1200):
     im = ImageOps.autocontrast(Image.fromarray(rgb), cutoff=0.5)
     im = ImageEnhance.Color(im).enhance(1.05).filter(ImageFilter.UnsharpMask(radius=1.6, percent=60, threshold=3))
     out = im.convert("RGBA")
-    out.putalpha(Image.fromarray(_hull(alpha)))
+    out.putalpha(Image.fromarray(_hull(_trim_stand(alpha))))
     out = out.crop(out.getbbox())
     out.thumbnail((size, size), Image.LANCZOS)
     return out
