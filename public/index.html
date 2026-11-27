@@ -1095,7 +1095,8 @@ function embedBoot(){const id=new URLSearchParams(location.search).get('card')||
   const root=document.createElement('div');root.id='embedroot';root.innerHTML=c?'<div class="mycoll" id="mycoll"></div>':'<p class="mt">Card not found.</p>';document.body.appendChild(root);
   {const b=document.createElement('base');b.target='_top';document.head.appendChild(b)}
   if(window.parent!==window&&parent.jtrack)window.jtrack=(n,d)=>parent.jtrack(n,d);
-  if(!c||!fr)return;list=[c];sel=0;renderMyColl(c);
+  if(!c||!fr)return;renderCards=()=>{};renderSets=()=>{};renderMine=()=>{};renderUser=()=>{};listView=()=>{};   // no grid here: grid refreshes (e.g. when member prices load) would swap the card being edited
+  list=[c];sel=0;renderMyColl(c);
   const su=setUser;setUser=async u=>{await su(u);if(list[0]===c){sel=0;renderMyColl(c)}};
   const size=()=>{if(!fr.classList.contains('full'))fr.style.height=Math.ceil(root.getBoundingClientRect().height+4)+'px'};
   new ResizeObserver(size).observe(root);size();
