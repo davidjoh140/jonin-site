@@ -485,7 +485,7 @@ function dIcon(k,v,cls){cls=cls||'dic';if(v==null||v==='')return '';
   if((k==='tc'||k==='hc')&&ICON_HAVE[k].includes(+v))return `<img class="${cls}" src="/icons/${k}-${+v}.png" alt="" width="22" height="22">`;
   if(k==='tc'||k==='hc')return `<span class="${cls} dnum ${k}">${esc(String(v))}</span>`;return ''}
 const dLabel=(k,v)=>k==='tc'||k==='hc'?(v===''?'Any':String(v)):(v||'Any');
-function buildDetails(){const box=$('#details');if(!box)return;box.innerHTML=DETAILS.map(([k,l])=>{const cnt=new Map();D.cards.forEach(c=>{const v=c[k];if(v!=null&&v!=='')cnt.set(v,(cnt.get(v)||0)+1)});if(!cnt.size)return '';
+function buildDetails(){const box=$('#details');if(!box||document.documentElement.classList.contains('embed'))return;box.innerHTML=DETAILS.map(([k,l])=>{const cnt=new Map();D.cards.forEach(c=>{const v=c[k];if(v!=null&&v!=='')cnt.set(v,(cnt.get(v)||0)+1)});if(!cnt.size)return '';
   const vals=[...cnt.keys()].sort((a,b)=>k==='el'?EL_ORDER.indexOf(a)-EL_ORDER.indexOf(b):typeof a==='number'?a-b:String(a).localeCompare(String(b)));
   return `<div class="dd" data-dk="${k}"><button type="button" class="pill ddb" aria-haspopup="listbox" aria-expanded="false"><span class="ddl">${l}</span><span class="ddv"></span><span class="chev" aria-hidden="true">▾</span></button>
   <ul class="ddp" role="listbox" aria-label="${l}" hidden><li role="option" class="ddo" data-v=""><span class="dic dany">✕</span><span>Any ${l.toLowerCase()}</span></li>${vals.map(v=>`<li role="option" class="ddo" data-v="${esc(String(v))}">${dIcon(k,v)}<span>${k==='tc'?'Turn cost '+v:k==='hc'?'Hand cost '+v:esc(String(v))}</span><span class="ddn">${cnt.get(v).toLocaleString()}</span></li>`).join('')}</ul></div>`}).join('');
@@ -561,9 +561,13 @@ let EST=null;
 function tileEst(c){const rows=(EST&&EST.get(c.s+':'+c.n)||[]).filter(r=>(r.grader||'Raw')==='Raw');if(!rows.length)return null;
   return rows.slice().sort((a,b)=>b.sales_count-a.sales_count||(a.edition!=='Unlimited')-(b.edition!=='Unlimited')||(a.printing!=='Normal')-(b.printing!=='Normal'))[0]}
 async function loadEstimates(){if(!MEMBER||!sbc()){EST=null;return}
-  const r=await sb.from('price_estimates').select('card_id,printing,edition,grader,grade,estimate,sales_count,last_sold_at,last_price').limit(20000);
+  // Card-page collection frame: only this card's estimates (audit fix 2026-11-27), not every card's.
+  const one=document.documentElement.classList.contains('embed')?new URLSearchParams(location.search).get('card'):null;
+  let qe=sb.from('price_estimates').select('card_id,printing,edition,grader,grade,estimate,sales_count,last_sold_at,last_price');if(one)qe=qe.eq('card_id',one);
+  const r=await qe.limit(20000);
   if(r.error||!MEMBER){EST=null;return}EST=new Map();(r.data||[]).forEach(x=>{if(!EST.has(x.card_id))EST.set(x.card_id,[]);EST.get(x.card_id).push(x)});
-  const rc=await sb.from('price_estimates_cond').select('card_id,printing,edition,condition,estimate,sales_count,last_sold_at,last_price').limit(20000);
+  let qc=sb.from('price_estimates_cond').select('card_id,printing,edition,condition,estimate,sales_count,last_sold_at,last_price');if(one)qc=qc.eq('card_id',one);
+  const rc=await qc.limit(20000);
   ESTC=new Map();if(!rc.error)(rc.data||[]).forEach(x=>{if(!ESTC.has(x.card_id))ESTC.set(x.card_id,[]);ESTC.get(x.card_id).push(x)})}
 // Conditional pricing: the RAW estimate of this exact version in this condition, from price-check sales with that condition.
 // David (2026-11-26): only condition-specific estimates. No sales in that condition = no price (the copy counts as unpriced).
@@ -799,7 +803,7 @@ function paintAcct(){const n=ME?0:gCount(),el=$('#acct');if(el&&window.JoninAcct
   // wait until we know whether they're signed in, so signed-in people never see a sign-up banner flash
   b.hidden=!!ME||off||hasSession();if(b.hidden)return;
   b.innerHTML=ctaHTML(n,offerOpen())}
-function openAuth(mode,msg,prog){const up=mode==='up',reset=mode==='reset';
+function openAuth(mode,msg,prog){const up=mode==='up',reset=mode==='reset';if(typeof getOauth==='function')getOauth();
   if(up&&!msg){const p=sentGet();if(p){showSent(p.email);$('#authov').hidden=false;return}}
   $('#authform').innerHTML=`<h2>${reset?'Reset password':up?'Create your Jonin account':'Sign in'}</h2>
   <p class="mt" style="margin:0">${reset?'We will email you a link to set a new password.':up&&gCount()?`Save the ${plural(gCount(),'card')} you’ve marked so you don’t lose ${gCount()===1?'it':'them'}. It’s free.`:'Track your haves, wants and slabs, vote for the coolest cards, and share your list. It’s free.'}</p>
@@ -813,7 +817,9 @@ function openAuth(mode,msg,prog){const up=mode==='up',reset=mode==='reset';
   <div class="tabs">${up?'<button type="button" class="clear" data-auth="in">I already have an account</button>':'<button type="button" class="clear" data-auth="up">Create an account</button>'}${up||reset?'':'<button type="button" class="clear" data-auth="reset">Forgot password?</button>'}</div>`;
   $('#authform').dataset.mode=mode;$('#authov').hidden=false;const f=$('#authform').querySelector('input');if(f)f.focus()}
 // Show only the one-click buttons whose provider is switched on in Supabase (checked once, then every sign-in box uses it).
-let OAUTH_ON=null;fetch(SUPA+'/auth/v1/settings',{headers:{apikey:SUPA_KEY}}).then(r=>r.json()).then(j=>{OAUTH_ON=j.external||{};paintOauth()}).catch(()=>{OAUTH_ON={}});
+let OAUTH_ON=null,OAUTH_ASKED=false;function getOauth(){if(OAUTH_ASKED)return;OAUTH_ASKED=true;fetch(SUPA+'/auth/v1/settings',{headers:{apikey:SUPA_KEY}}).then(r=>r.json()).then(j=>{OAUTH_ON=j.external||{};paintOauth()}).catch(()=>{OAUTH_ON={}})}
+// The card-page collection frame asks only when its sign-in box opens.
+if(!document.documentElement.classList.contains('embed'))getOauth();
 function paintOauth(){if(!OAUTH_ON)return;document.querySelectorAll('[data-oauth]').forEach(b=>{b.hidden=!OAUTH_ON[b.dataset.oauth]});document.querySelectorAll('.oauth').forEach(o=>{const any=[...o.querySelectorAll('[data-oauth]')].some(b=>!b.hidden);o.hidden=!any;const l=o.nextElementSibling;if(l&&l.classList.contains('orline'))l.hidden=!any})}
 new MutationObserver(paintOauth).observe(document.getElementById('authform'),{childList:true});
 // One-click sign-in with Google or Discord (Supabase OAuth). Comes back to the same page; a guest collection merges in as usual.

@@ -18,7 +18,11 @@
     f.addEventListener('load',function(){var l=box.querySelector('.cload');if(l)l.remove()});
   }
   if(box){
-    if(has('sb-cfzpayanhvvqtkuqfgof-auth-token')||guest())load();
+    // Starts when the box is near the screen (audit fix 2026-11-27): on phones it sits below the card image, so the page
+    // shows first and the collection box loads as you scroll toward it.
+    if(has('sb-cfzpayanhvvqtkuqfgof-auth-token')||guest()){
+      if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){if(es.some(function(x){return x.isIntersecting})){io.disconnect();load()}},{rootMargin:'400px 0px'});io.observe(box)}
+      else load()}
     box.addEventListener('click',function(e){if(e.target.closest('[data-collgo]'))load()});
   }
   // ← → flip to the previous / next card (not while typing).
