@@ -6,3 +6,6 @@
 # Card scans and grid thumbnails moved to R2 (audit fix 2026-11-27); old links and Google Images go to the new address.
 /img/scans/* https://img.jonin.cards/site/scans/:splat 301
 /img/t/* https://img.jonin.cards/site/t/:splat 301
+# Hebi Sasuke promo was filed as PR067; it's really PR068 (shared with Killer Bee), now PR068B (2026-11-27).
+/card/p-pr067/ /card/p-pr068b/ 301
+/card/p-pr067 /card/p-pr068b/ 301
