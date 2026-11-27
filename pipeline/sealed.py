@@ -38,14 +38,21 @@ def norm(s):
     return " " + re.sub(r"\s+", " ", s).strip() + " "
 
 
+# How sellers actually write some set names (2026-11-27: "Shattered Truth" titles matched nothing)
+SET_ALIASES = {"21": ["shattered truth"], "16": ["broken promise"], "25": ["kage summit", "kages summit"],
+               "26": ["avengers wrath", "avenger wrath"], "10": ["lineage of legends", "lineage of the legend"],
+               "28": ["ultimate ninja storm", "ninja storm 3"], "5": ["the dream legacy"], "11": ["approaching winds"]}
+
+
 def set_keys(sets):
     """[(normalized set name, set id)] longest first, 'the' dropped ('The Chosen' -> 'chosen')."""
     out = []
     for s in sets:
         if s.get("kind") != "Main":
             continue
-        n = norm(s["name"]).replace(" the ", " ").strip()
-        out.append((" " + n + " ", s["id"]))
+        for name in [s["name"]] + SET_ALIASES.get(str(s["id"]), []):
+            n = norm(name).replace(" the ", " ").strip()
+            out.append((" " + n + " ", s["id"]))
     return sorted(out, key=lambda x: -len(x[0]))
 
 
@@ -147,10 +154,16 @@ def match(title, products, sets, photo=False):
             return None
         kind = kinds.pop()
     in_set = [p for p in by_kind(kind) if p["set_id"] == sid]
+    if not in_set and kind in ("theme", "starter"):  # sellers call theme decks "starter decks" and vice versa
+        other = "starter" if kind == "theme" else "theme"
+        if [p for p in by_kind(other) if p["set_id"] == sid]:
+            kind = other
+            in_set = [p for p in by_kind(kind) if p["set_id"] == sid]
     cands = [p for p in in_set if not p.get("parent_id")]          # set-level entries (and decks without a parent)
     bare = t.replace(" naruto ", " ", 1)            # the brand word isn't the Naruto deck's/art's name
     # a bare "naruto" (the Naruto theme deck) must survive the brand word; "naruto art" etc. can be looked up as is
-    said = lambda w: norm(w) in (bare if norm(w) == " naruto " else t)
+    nw = lambda w: norm(w).replace(" the ", " ")    # same "the" rule as the title ("spiral of the fury")
+    said = lambda w: nw(w) in (bare if nw(w) == " naruto " else t)
     named = lambda ps: [p for p in ps if any(said(w) for w in p.get("match_words") or [])]
     if len(cands) > 1:                              # several decks in one set: the deck's own name decides
         hit = named(cands)

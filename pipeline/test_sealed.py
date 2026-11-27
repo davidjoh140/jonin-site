@@ -2,7 +2,8 @@ from datetime import datetime, timedelta, timezone
 
 import sealed
 
-SETS = [{"id": "1", "name": "The Path to Hokage", "kind": "Main"}, {"id": "9", "name": "The Chosen", "kind": "Main"},
+SETS = [{"id": "21", "name": "Shattered Truths", "kind": "Main"}, {"id": "15", "name": "Foretold Prophecy", "kind": "Main"},
+        {"id": "1", "name": "The Path to Hokage", "kind": "Main"}, {"id": "9", "name": "The Chosen", "kind": "Main"},
         {"id": "25", "name": "Kage's Summit", "kind": "Main"}, {"id": "4", "name": "Revenge and Rebirth", "kind": "Main"},
         {"id": "12", "name": "A New Chronicle", "kind": "Main"}, {"id": "3", "name": "Curse of the Sand", "kind": "Main"},
         {"id": "T3", "name": "Ultimate Battle (tin)", "kind": "Tin"}, {"id": "TP1", "name": "Tournament Pack 1", "kind": "Tournament pack"}]
@@ -75,6 +76,14 @@ def test_arts_blisters_and_decks():
     assert apid("Naruto CCG TCG The Path to Hokage Sasuke Uchiha Starter Deck sealed") == "1-starter-sasuke"
     assert apid("Naruto CCG TCG The Path to Hokage Naruto Uzumaki Starter Deck sealed") == "1-starter-naruto"
     assert apid("Naruto Path to Hokage starter deck sealed") == "1-starter"                           # deck not named
+
+
+def test_seller_spellings():
+    ps = P + [{"id": "21-blister-pack", "set_id": "21", "kind": "blister_pack", "match_words": []},
+              {"id": "15-fury", "set_id": "15", "kind": "theme", "match_words": ["spiral of the fury"]}]
+    m = lambda t: (sealed.match(t, ps, SETS) or [{}])[0].get("id")
+    assert m("Shattered Truth Blister Pack Sealed-Bandai Naruto Ccg") == "21-blister-pack"
+    assert m("Naruto Shippuden CCG Foretold Prophecy Spiral of the Fury Starter Deck Sealed") == "15-fury"
 
 
 def test_not_sealed():
