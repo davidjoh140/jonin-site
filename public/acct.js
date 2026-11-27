@@ -135,6 +135,7 @@
   var EPN='mkevt=1&mkcid=1&mkrid=711-53200-19255-0&campid=5339262225&toolid=10001&customid=jonin-site';
   var PREM='';
   function money(v){v=+v;return '$'+(v>=100?Math.round(v).toLocaleString('en-US'):v.toFixed(2).replace(/\.00$/,''))}
+  function lDate(d){try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}catch(_){return ''}}
   function sDate(d){try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch(_){return ''}}
   function premUI(b){
     var on=b==='founding'||b==='premium',key=on?b:'';if(key===PREM)return;var was=PREM;PREM=key;
@@ -167,13 +168,21 @@
       var vk=function(x){return [x.printing||'',x.edition||'',x.grader||'Raw',x.grade||''].join('|')},by={};
       sales.forEach(function(x){var k=vk(x);(by[k]=by[k]||[]).push(x)});
       rows.sort(function(a,b){return (a.edition!=='1st Edition')-(b.edition!=='1st Edition')||String(a.printing).localeCompare(String(b.printing))||((a.grader||'Raw')!=='Raw')-((b.grader||'Raw')!=='Raw')||(parseFloat(b.grade)||0)-(parseFloat(a.grade)||0)});
-      box.innerHTML='<table>'+rows.map(function(x){
+      // Sold listings by version (2026-11-26): one box per version (tags + estimate), then a fixed-column table
+      // (date · type · price · eBay) so every version lines up. PLACEHOLDERS: 5 shown before "Show all", type labels.
+      var SHOW=5,TYPE={best_offer:'Best offer',auction:'Auction',buy_it_now:'Buy It Now',private:'Private sale'};
+      box.innerHTML=rows.map(function(x){
         var g=!x.grader||x.grader==='Raw'?'Raw':x.grader+' '+(x.grade||'');
-        var lab=[x.edition==='1st Edition'?'1st Ed':x.edition,x.printing,g].filter(Boolean).map(esc).join(' · ');
-        var sl=(by[vk(x)]||[]).map(function(y){var t=money(y.price)+' · '+esc(sDate(y.sold_at));
-          return /^https:\/\//.test(y.url||'')?'<a href="'+esc(y.url+(y.url.indexOf('?')>-1?'&':'?')+EPN)+'" target="_blank" rel="sponsored noopener">'+t+' ↗</a>':'<a>'+t+'</a>'}).join('');
-        return '<tr><td>'+lab+'</td><td><b>'+money(x.estimate)+'</b><small>'+x.sales_count+' sale'+(x.sales_count>1?'s':'')+' · last '+money(x.last_price)+(x.last_sold_at?' on '+esc(sDate(x.last_sold_at)):'')+'</small></td></tr>'+
-          (sl?'<tr class="sl"><td colspan="2">'+sl+'</td></tr>':'')}).join('')+'</table><p class="none">Estimates lean on the newest sales. Tap a sale to open it on eBay.</p>';
+        var tags=[x.edition==='1st Edition'?'1st Edition':x.edition,x.printing].filter(Boolean).map(function(t){return '<span class="pvt">'+esc(t)+'</span>'}).join('')+'<span class="pvt pvg'+(g==='Raw'?'':' slab')+'">'+esc(g)+'</span>';
+        var list=by[vk(x)]||[];
+        var trs=list.map(function(y,i){var link=/^https:\/\//.test(y.url||'')?'<a href="'+esc(y.url+(y.url.indexOf('?')>-1?'&':'?')+EPN)+'" target="_blank" rel="sponsored noopener">eBay ↗</a>':'';
+          return '<tr'+(i>=SHOW?' class="pvx" hidden':'')+'><td>'+esc(lDate(y.sold_at))+'</td><td>'+esc(TYPE[y.sale_type]||'Sale')+'</td><td class="pvp">'+money(y.price)+'</td><td class="pvl">'+link+'</td></tr>'}).join('');
+        return '<section class="pvbox"><div class="pvh"><div class="pvtags">'+tags+'</div><div class="pve"><b>'+money(x.estimate)+'</b><small>estimate</small></div></div>'+
+          '<p class="pvm">'+x.sales_count+' sale'+(x.sales_count>1?'s':'')+(x.last_sold_at?' · last sold '+money(x.last_price)+' on '+esc(lDate(x.last_sold_at)):'')+'</p>'+
+          (trs?'<table class="pvs"><thead><tr><th>Sold</th><th>Type</th><th class="pvp">Price</th><th class="pvl"></th></tr></thead><tbody>'+trs+'</tbody></table>':'')+
+          (list.length>SHOW?'<button class="pvmore" type="button">Show all '+list.length+' sales</button>':'')+'</section>'}).join('')+
+        '<p class="none">Estimates lean on the newest sales. Best offer prices are the accepted offer.</p>';
+      each('.pxreal .pvmore',function(b){b.onclick=function(){[].forEach.call(b.parentNode.querySelectorAll('.pvx'),function(t){t.hidden=false});b.remove()}});
     });
   }
   var LAST='';
