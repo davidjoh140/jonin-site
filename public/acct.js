@@ -59,7 +59,7 @@
   // s = {home, user, handle, fav, avatar, badge:'founding'|'premium'|null, pts:{xp,rank,next,next_at,prev_at}|null (from my_xp), guest}
   function html(s){
     if(s&&s.user&&s.pts&&s.home)introMaybe(s);
-    try{if(!s||!s.user)premUI(null);else if(s.badge)premUI(s.badge)}catch(_){}
+    try{if(!s||!s.user){premUI(null);freeUI(false)}else if(s.badge)premUI(s.badge)}catch(_){}
     var mine=s.home?'href="#mine" data-v="mine"':'href="/#mine"';
     var up=s.home?'<button type="button" class="jab jsu" data-auth="up"':'<a class="jab jsu" href="/#signup"';
     var upEnd=s.home?'</button>':'</a>';
@@ -149,6 +149,29 @@
       a.href=art.getAttribute('href');a.innerHTML='<span>Every sale of this card, by edition, foil and grade</span><b>See sales →</b>';a.setAttribute('data-unlocked','')});
     each('a.pxt',unlockCard);
   }
+  // ---- Recent sales for signed-in free members (David, 2026-11-27) ----
+  // Card pages keep the free price range. Signed in (not Club): the newest sales of the card, any version, show under it,
+  // linked to eBay. Signed out: a one-line "Sign in to see recent sales" prompt instead. Club members get the full
+  // breakdown from unlockCard, which removes this box. PLACEHOLDERS for David: 10 sales (db/034), wording.
+  var FREE='';
+  function freeUI(signedIn){
+    var key=signedIn?'in':'out';if(FREE===key||PREM)return;
+    var a=document.querySelector('a.pxt'),m=a&&/[?&]card=([^&]+)/.exec(a.getAttribute('href')||'');if(!m)return;
+    FREE=key;each('.pxfree',function(x){x.remove()});
+    var box=document.createElement('div');box.className='pxfree';a.parentNode.insertBefore(box,a);
+    if(!signedIn){box.innerHTML='<a class="pxlock" href="/#signup" data-jt="signup-click" data-jt-from="recent-sales"><span>See this card’s recent sales</span><b>Sign in free →</b></a>';return}
+    var s=session();if(!s){box.remove();FREE='';return}
+    box.innerHTML='<p class="none">Loading recent sales…</p>';
+    var TYPE={best_offer:'Best offer',auction:'Auction',buy_it_now:'Buy It Now',private:'Private sale'};
+    rest('/rest/v1/rpc/recent_card_sales',s.access_token,{p_card_id:decodeURIComponent(m[1])}).then(function(rows){
+      if(!rows||!rows.length){box.innerHTML='<p class="none">No sales logged for this card yet.</p>';return}
+      box.innerHTML='<h4 class="pxfh">Recent sales</h4><div class="pvsl">'+rows.map(function(y){
+        var g=!y.grader||y.grader==='Raw'?'Raw':y.grader+' '+(y.grade||'');
+        var ver=[y.edition,y.printing].filter(Boolean).concat([g]).map(esc).join(' · ');
+        var ok=/^https:\/\//.test(y.url||''),href=ok?esc(y.url+(y.url.indexOf('?')>-1?'&':'?')+EPN):'';
+        return '<'+(ok?'a href="'+href+'" target="_blank" rel="sponsored noopener"':'span')+' class="pvsr pvfr"><span>'+esc(lDate(y.sold_at))+'</span><span class="pvty">'+ver+' · '+esc(TYPE[y.sale_type]||'Sale')+'</span><b>'+money(y.price)+'</b><span class="pvl">'+(ok?'eBay ↗':'')+'</span></'+(ok?'a':'span')+'>'}).join('')+'</div>';
+    }).catch(function(){box.innerHTML='<p class="none">Could not load recent sales. Refresh to try again.</p>'});
+  }
   function each(sel,f){[].forEach.call(document.querySelectorAll(sel),f)}
   function unlockCard(a){
     var m=/[?&]card=([^&]+)/.exec(a.getAttribute('href')||''),s=session();if(!m||!s)return;
@@ -156,6 +179,7 @@
     box.className='pxreal';box.setAttribute('data-unlocked','');box.innerHTML='<p class="none">Loading prices…</p>';
     a.replaceWith(box);
     var sec=box.closest('.px'),h=sec&&sec.querySelector('h3');
+    each('.pxfree',function(x){x.remove()});FREE='';
     if(h)h.innerHTML='Price estimate<span><svg class="jstar" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.5l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg> Jonin Club</span>';
     var band=sec&&sec.querySelector('.band');if(band)band.remove();
     Promise.all([
@@ -202,7 +226,7 @@
       if(p){base.handle=p.handle||base.handle;base.fav=p.fav_character||null;base.avatar=p.avatar||null}
       var on=false;if(r[1]){on=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));base.badge=on?(m.founding?'founding':'premium'):null}
       if(r[2])base.pts=r[2];
-      paint(base);cache(base);if(!(on&&m.upgrade_notice&&upgradeShow(m.upgrade_notice,tok)))introMaybe(base);
+      paint(base);cache(base);if(r[1]&&!on)freeUI(true);if(!(on&&m.upgrade_notice&&upgradeShow(m.upgrade_notice,tok)))introMaybe(base);
     });
   }
   function signOut(){
