@@ -149,27 +149,28 @@
       a.href=art.getAttribute('href');a.innerHTML='<span>Every sale of this card, by edition, foil and grade</span><b>See sales →</b>';a.setAttribute('data-unlocked','')});
     each('a.pxt',unlockCard);
   }
-  // ---- Recent sales for signed-in free members (David, 2026-11-27) ----
+  // ---- Recent sales for everyone who isn't in Jonin Club (David, 2026-11-27) ----
   // Card pages keep the free price range. Signed in (not Club): the newest sales of the card, any version, show under it,
-  // linked to eBay. Signed out: a one-line "Sign in to see recent sales" prompt instead. Club members get the full
-  // breakdown from unlockCard, which removes this box. PLACEHOLDERS for David: 10 sales (db/034), wording.
+  // linked to eBay. Signed out: the last 5 (db/035) plus a "See more recent sales" sign-in line. Club members get the full
+  // breakdown from unlockCard, which removes this box. PLACEHOLDERS for David: 5 / 10 sales (db/035), wording.
   var FREE='';
   function freeUI(signedIn){
     var key=signedIn?'in':'out';if(FREE===key||PREM)return;
     var a=document.querySelector('a.pxt'),m=a&&/[?&]card=([^&]+)/.exec(a.getAttribute('href')||'');if(!m)return;
     FREE=key;each('.pxfree',function(x){x.remove()});
     var box=document.createElement('div');box.className='pxfree';a.parentNode.insertBefore(box,a);
-    if(!signedIn){box.innerHTML='<a class="pxlock" href="/#signup" data-jt="signup-click" data-jt-from="recent-sales"><span>See this card’s recent sales</span><b>Sign in free →</b></a>';return}
-    var s=session();if(!s){box.remove();FREE='';return}
+    // Signed out (2026-11-27): the last 5 sales too, to push affiliate purchases, plus a "sign in for more" line.
+    var s=signedIn?session():null;if(signedIn&&!s){box.remove();FREE='';return}
+    var more=signedIn?'':'<a class="pxlock" href="/#signup" data-jt="signup-click" data-jt-from="recent-sales"><span>See more recent sales</span><b>Sign in free →</b></a>';
     box.innerHTML='<p class="none">Loading recent sales…</p>';
     var TYPE={best_offer:'Best offer',auction:'Auction',buy_it_now:'Buy It Now',private:'Private sale'};
-    rest('/rest/v1/rpc/recent_card_sales',s.access_token,{p_card_id:decodeURIComponent(m[1])}).then(function(rows){
+    (s?rest('/rest/v1/rpc/recent_card_sales',s.access_token,{p_card_id:decodeURIComponent(m[1])}):fetch(SUPA+'/rest/v1/rpc/recent_card_sales',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({p_card_id:decodeURIComponent(m[1])})}).then(function(r){if(!r.ok)throw r.status;return r.json()})).then(function(rows){
       if(!rows||!rows.length){box.innerHTML='<p class="none">No sales logged for this card yet.</p>';return}
       box.innerHTML='<h4 class="pxfh">Recent sales</h4><div class="pvsl">'+rows.map(function(y){
         var g=!y.grader||y.grader==='Raw'?'Raw':y.grader+' '+(y.grade||'');
         var ver=[y.edition,y.printing].filter(Boolean).concat([g]).map(esc).join(' · ');
         var ok=/^https:\/\//.test(y.url||''),href=ok?esc(y.url+(y.url.indexOf('?')>-1?'&':'?')+EPN):'';
-        return '<'+(ok?'a href="'+href+'" target="_blank" rel="sponsored noopener"':'span')+' class="pvsr pvfr"><span>'+esc(lDate(y.sold_at))+'</span><span class="pvty">'+ver+' · '+esc(TYPE[y.sale_type]||'Sale')+'</span><b>'+money(y.price)+'</b><span class="pvl">'+(ok?'eBay ↗':'')+'</span></'+(ok?'a':'span')+'>'}).join('')+'</div>';
+        return '<'+(ok?'a href="'+href+'" target="_blank" rel="sponsored noopener"':'span')+' class="pvsr pvfr"><span>'+esc(lDate(y.sold_at))+'</span><span class="pvty">'+ver+' · '+esc(TYPE[y.sale_type]||'Sale')+'</span><b>'+money(y.price)+'</b><span class="pvl">'+(ok?'eBay ↗':'')+'</span></'+(ok?'a':'span')+'>'}).join('')+'</div>'+(rows.length>=5?more:'');
     }).catch(function(){box.innerHTML='<p class="none">Could not load recent sales. Refresh to try again.</p>'});
   }
   function each(sel,f){[].forEach.call(document.querySelectorAll(sel),f)}
