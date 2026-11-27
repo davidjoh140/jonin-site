@@ -211,8 +211,13 @@ def history_block(c):
     h = card_history(c)
     if not h or len(h.get('s') or []) < 2:
         return ''
+    return price_chart(h['s'], f'Price history of {c["name"]} {c["n"]}, {h["v"]}', h['v'])
+
+
+def price_chart(series, what, sub):
+    """Static price history chart (shared by card and sealed pages): series = [[date, price], ...] oldest first."""
     import datetime
-    pts = [(datetime.date.fromisoformat(d), float(p)) for d, p in h['s']]
+    pts = [(datetime.date.fromisoformat(d), float(p)) for d, p in series]
     d0, d1 = pts[0][0], pts[-1][0]
     span = max((d1 - d0).days, 1)
     lo, hi = min(p for _, p in pts), max(p for _, p in pts)
@@ -243,8 +248,8 @@ def history_block(c):
     dots = ''.join(f'<span class="phd" style="left:{X(d):.2f}%;top:{Y(p):.2f}%" title="{e(sale_date(d.isoformat()))} · {money(p)}"></span>'
                    for d, p in pts)
     rows = ''.join(f'<tr><td>{e(sale_date(d.isoformat()))}</td><td>{money(p)}</td></tr>' for d, p in reversed(pts))
-    label = f'Price history of {c["name"]} {c["n"]}, {h["v"]}: {len(pts)} sales from {sale_date(d0.isoformat())} to {sale_date(d1.isoformat())}'
-    return (f'<section class="ph"><h3>Price history<span>{e(h["v"])} · {len(pts)} sales</span></h3>'
+    label = f'{what}: {len(pts)} sales from {sale_date(d0.isoformat())} to {sale_date(d1.isoformat())}'
+    return (f'<section class="ph"><h3>Price history<span>{e(sub)} · {len(pts)} sales</span></h3>'
             f'<div class="phc" role="img" aria-label="{e(label)}"><div class="php">{grid}'
             f'<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="{path}" class="phl"/></svg>{dots}</div>{xl}</div>'
             f'<details class="phn"><summary>See the numbers</summary><table><tr><th>Sold</th><th>Price</th></tr>{rows}</table></details></section>')

@@ -220,6 +220,55 @@ def price_block(p):
             '<p class="mt pgl sellnote"><a href="/sell/" data-jt="sell-click" data-jt-from="sealed-page">Have this sealed? Sell to Jonin or a trusted buyer →</a></p></section>')
 
 
+WHAT = {'booster_box': 'A sealed display box of booster packs from {set}.',
+        'booster_pack': 'One sealed booster pack of random cards from {set}.',
+        'blister_pack': 'One booster pack from {set}, sold in a retail blister (a plastic shell on a card backing).',
+        'blister_3pack': 'Three booster packs from {set} in one retail blister.',
+        'blister_box': 'A display box of {set} blister packs, as shipped to stores.',
+        'theme': 'A ready-to-play theme deck built around cards from {set}.',
+        'starter': 'A ready-to-play starter deck from {set}.',
+        'tin': 'A collector tin with packs and exclusive promo cards.',
+        'tournament_pack': 'A pack given out at official tournaments.'}   # PLACEHOLDER copy for David
+
+
+def stats_block(p):
+    """Headline sale numbers (approved sales only, every edition)."""
+    s = p.get('stats')
+    if not s:
+        return ''
+    cells = [('Sales recorded', str(s['n'])), ('Average', B.money(s['avg'])),
+             ('Last sold', B.money(s['last'][0]) + (f'<small>{e(B.sale_date(s["last"][1]))}</small>' if s['last'][1] else '')),
+             ('Highest', B.money(s['high'])), ('Lowest', B.money(s['low']))]
+    return ('<section class="sstats" aria-label="Sale numbers">'
+            + ''.join(f'<div><span>{k}</span><b>{v}</b></div>' for k, v in cells) + '</section>')
+
+
+def chart_block(p):
+    h = p.get('hist') or []
+    if len(h) < 2:
+        return ''
+    return B.price_chart([[d, pr] for d, pr, _ in h], f'Price history of {p["name"]} (sealed)', 'every edition')
+
+
+def about_block(p, s, ps):
+    """What the product is, where it fits, and links to its set and cards."""
+    rows = []
+    what = WHAT.get(p['kind'])
+    if what:
+        rows.append(('What it is', e(what.format(set=p.get('set_name') or 'this set'))))
+    if p.get('art'):
+        rows.append(('Pack art', e(p['art'])))
+    if s and s.get('count'):
+        rows.append(('Cards in the set', f'{s["count"]} in <a href="/set/{e(B.set_slug(s))}/">{e(s["name"])}</a>'))
+    kin = [x for x in ps if x['set'] == p['set'] and x['kind'] == p['kind'] and x['id'] != p['id']]
+    if kin and p['kind'] in ('booster_pack', 'blister_pack'):
+        rows.append(('Other versions', ', '.join(f'<a href="/sealed/{e(x["slug"])}/">{e(short(x))}</a>' for x in kin[:6])))
+    body = ''.join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in rows)
+    links = (f'<p class="btns"><a class="ghostbtn" href="/set/{e(B.set_slug(s))}/">Every card in {e(s["name"])} →</a>'
+             f'<a class="ghostbtn" href="/sealed/#set-{e(p["set"].lower())}">All {e(s["name"])} sealed →</a></p>') if s else ''
+    return f'<section class="others sabout"><h2>About this product</h2><dl class="sfacts">{body}</dl>{links}</section>'
+
+
 def product_page(p, ps, sets_by_id):
     url = f'{B.SITE}/sealed/{p["slug"]}/'
     s = sets_by_id.get(p['set'])
@@ -265,9 +314,11 @@ def product_page(p, ps, sets_by_id):
 {val}<dl class="sfacts">{facts_html}</dl>{note}
 <section class="scoll" id="scoll" data-product="{e(p["id"])}" data-name="{e(p["name"])}"><h4>Your sealed collection</h4><p class="mt">Sign in to mark this as one you have or want.</p></section>
 {live_block(p)}</div></section>
+{stats_block(p)}
 <section class="market one">{price_block(p)}</section>
+{chart_block(p)}
 {family}
-{f'<p class="btns"><a class="ghostbtn" href="/set/{e(B.set_slug(s))}/">Every card in {e(s["name"])} →</a></p>' if s else ''}
+{about_block(p, s, ps)}
 {others}
 <section class="others"><h2>All sealed</h2><p class="mt"><a href="/sealed/">Every Naruto CCG sealed product and its price →</a></p></section>
 '''

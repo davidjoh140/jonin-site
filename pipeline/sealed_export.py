@@ -11,6 +11,15 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent / "sealed.json"
 RECENT = 5           # last sold shown on each product page (same five as card pages for free visitors)
 LIVE = 12            # PLACEHOLDER: current listings kept per product
+HIST = 200           # sales kept for each product's price history chart (oldest first)
+
+
+def stats(ss):
+    """Headline numbers for a product page: approved sales count, average, high, low, last sale [price, date]."""
+    if not ss:
+        return None
+    ps = [x[0] for x in ss]
+    return {"n": len(ps), "avg": round(sum(ps) / len(ps), 2), "high": max(ps), "low": min(ps), "last": [ss[0][0], ss[0][2]]}
 
 
 def build(products, sets, ranges, sales, listings, now=None):
@@ -50,7 +59,9 @@ def build(products, sets, ranges, sales, listings, now=None):
                     "confirmed": bool(p.get("confirmed")), "img": img, "credit": credit,
                     "art": p.get("art") or "", "parent": p.get("parent_id") or "",
                     "ranges": sorted(rng.get(p["id"], []), key=lambda r: r["ed"]),
-                    "recent": [x[:5] for x in ss[:RECENT]], "live": ll[:LIVE], "live_n": len(ll)})
+                    "recent": [x[:5] for x in ss[:RECENT]], "live": ll[:LIVE], "live_n": len(ll),
+                    "hist": [[x[2], x[0], x[1]] for x in reversed(ss[:HIST]) if x[2]],
+                    "stats": stats(ss)})
     return {"products": out}
 
 
