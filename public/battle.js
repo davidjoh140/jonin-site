@@ -4,6 +4,8 @@
    midnight New York time, sign in to vote, results after you vote, wording. */
 (function(){
   var SUPA='https://cfzpayanhvvqtkuqfgof.supabase.co',KEY='sb_publishable_ZR1zggWL9FxxwfwoIASwSg_YDV3Nvfe',TK='sb-cfzpayanhvvqtkuqfgof-auth-token';
+  // Card pages embed the homepage for their collection box: no battle there (saves a call per card page view).
+  if(document.documentElement.classList.contains('embed'))return;
   var els=[].slice.call(document.querySelectorAll('[data-battle]'));if(!els.length)return;
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function session(){try{var s=JSON.parse(localStorage.getItem(TK)||'null');if(s&&s.currentSession)s=s.currentSession;return s&&s.access_token&&s.user&&(!s.expires_at||s.expires_at*1000>Date.now())?s:null}catch(_){return null}}
@@ -23,11 +25,23 @@
     '.jbt .f.done{cursor:default;transform:none}.jbt .f.mine{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}.jbt .f.done:not(.mine){opacity:.75}'+
     '.jbt .jbar{height:6px;width:100%;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.jbt .jbar i{display:block;height:100%;background:var(--acc)}'+
     '.jbt .f em{font:700 13px Inter,sans-serif;font-style:normal;color:var(--acc)}.jbt .sk{margin:0;font-size:12px;color:var(--ink)}.jbt .sk b{color:var(--acc)}.jbt .ft{margin:0;font-size:12px;color:var(--mute)}.jbt .ft a{color:var(--acc)}'+
+    // Phones (David, 2026-11-27): the homepage box is hidden; a small floating battle button opens /battle/ instead,
+    // and it disappears once you've voted today, until the next battle. 900px = where the homepage sidebar stacks.
+    '@media(max-width:900px){[data-battle]:not([data-big]){display:none!important}}'+
+    '.jbt-fab{display:none}@media(max-width:900px){.jbt-fab{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:calc(max(18px,env(safe-area-inset-bottom)) + 64px);z-index:9;width:52px;height:52px;border-radius:50%;'+
+    'background:var(--panel);border:1px solid var(--acc);box-shadow:0 4px 14px rgba(0,0,0,.45);display:grid;place-items:center;font-size:24px;line-height:1;text-decoration:none;animation:jbtpop .35s ease-out}'+
+    '.jbt-fab i{position:absolute;top:3px;right:3px;width:11px;height:11px;border-radius:50%;background:var(--acc);border:2px solid var(--panel)}.jbt-fab[hidden]{display:none}}'+
+    '@keyframes jbtpop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}@media (prefers-reduced-motion:reduce){.jbt-fab{animation:none}}'+
     '.jbt.big{padding:18px;gap:14px}.jbt.big h3{font-size:24px}.jbt.big .f>span.nm{font-size:20px}.jbt.big .vs{gap:14px}';
   var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 
   var D=null,busy=false;
-  function render(){els.forEach(function(el){
+  // Floating button only where the box is the small homepage one (not on /battle/ itself).
+  var fab=null;
+  if(els.some(function(el){return !el.hasAttribute('data-big')})){fab=document.createElement('a');fab.className='jbt-fab';fab.href='/battle/';fab.hidden=true;
+    fab.setAttribute('aria-label','Daily battle: vote who wins');fab.title='Daily battle';fab.innerHTML='<span aria-hidden="true">⚔️</span><i aria-hidden="true"></i>';
+    fab.addEventListener('click',function(){if(window.jtrack)jtrack('battle-fab',{})});document.body.appendChild(fab)}
+  function render(){if(fab)fab.hidden=!D||!!D.mine;els.forEach(function(el){
     var big=el.hasAttribute('data-big');el.className=(el.className.replace(/\bjbt\b|\bbig\b/g,'')+' jbt'+(big?' big':'')).trim();
     if(!D){el.innerHTML='<h3>⚔️ Daily battle</h3><p class="q">Loading today’s battle…</p>';return}
     var voted=!!D.mine,t=D.votes?D.votes.a+D.votes.b:0,s=D.scrolls||0;

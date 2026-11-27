@@ -1161,19 +1161,19 @@ new MutationObserver(()=>{if($('#ov').hidden&&LDIRTY&&VIEW==='mine'){LDIRTY=fals
 document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='lname'&&/^Arrow/.test(e.key))e.stopImmediatePropagation()},true);
 gLoad();if(sbc()){sb.auth.getSession().then(async({data})=>{await setUser(data.session?data.session.user:null);AUTHREADY=true;paintAcct()}).catch(()=>{AUTHREADY=true;paintAcct()});sb.auth.onAuthStateChange((ev,ses)=>{setUser(ses?ses.user:null);if(ev==='PASSWORD_RECOVERY'){const pw=prompt('Choose a new password (at least 8 characters)');if(pw&&pw.length>=8)sb.auth.updateUser({password:pw})}})}
 // Cards tracked ticker (homepage): every have, want and slab saved to an account adds 1. Count comes from
-// cards_tracked() in Supabase (db/017_cards_tracked.sql). Rolls up when it changes; re-checks every 30s while the tab is open.
+// cards_tracked() in Supabase (db/017_cards_tracked.sql). Rolls up when it changes; re-checks every 5 minutes while the tab is open, and when you return to the tab.
 let TICK=null;
 function paintTick(n,c){const el=$('#tick'),tn=$('#tickn');if(!el||!tn)return;const old=TICK,str=n.toLocaleString('en-US'),prev=old===null?'':old.toLocaleString('en-US');
   if(old===null||(str.length!==prev.length))tn.innerHTML=[...str].map(d=>'<span'+(old!==null?' class="up"':'')+'>'+d+'</span>').join('');
   else tn.innerHTML=[...str].map((d,i)=>'<span'+(d!==prev[i]?' class="up"':'')+'>'+d+'</span>').join('');
   $('#tickc').textContent=plural(c,'collector');el.hidden=false;
   if(old!==null&&n>old){el.classList.add('bump');setTimeout(()=>el.classList.remove('bump'),900)}TICK=n}
-function loadTick(){if(!sbc()||!$('#tick'))return;sb.rpc('cards_tracked').then(r=>{const d=r&&r.data;if(!r.error&&d&&typeof d.cards==='number'){
+function loadTick(){if(!sbc()||!$('#tick')||document.documentElement.classList.contains('embed'))return;sb.rpc('cards_tracked').then(r=>{const d=r&&r.data;if(!r.error&&d&&typeof d.cards==='number'){
   const to=d.cards,from=TICK===null?Math.max(0,to-Math.min(to,40)):TICK;if(to===TICK)return;
   // First paint counts up from a little below; later changes roll straight to the new number.
   if(TICK===null&&to>from&&!matchMedia('(prefers-reduced-motion:reduce)').matches){let i=from;TICK=null;paintTick(i,d.collectors);const st=setInterval(()=>{i+=Math.max(1,Math.ceil((to-i)/8));if(i>=to){i=to;clearInterval(st)}paintTick(i,d.collectors)},45)}
   else paintTick(to,d.collectors)}}).catch(()=>{})}
-setInterval(()=>{if(!document.hidden)loadTick()},30000);
+setInterval(()=>{if(!document.hidden)loadTick()},300000);   // every 5 minutes (David OK'd, 2026-11-27); also refreshes when you come back to the tab
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadTick()});
 if(!sbc())AUTHREADY=true;paintAcct();loadFounding();loadTick();
 if(location.hash==='#signup'||location.hash==='#signin'){const m=location.hash==='#signin'?'in':'up';history.replaceState(null,'',location.pathname);setTimeout(()=>{if(!ME&&!hasSession())openAuth(m)},300)}
@@ -1224,6 +1224,6 @@ fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promis
 <button class="totop" id="totop" type="button" aria-label="Back to top"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script>(function(){var b=document.getElementById('totop');function u(){b.classList.toggle('on',window.scrollY>500)}addEventListener('scroll',u,{passive:true});u();b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})})})();</script>
 <script src="/feedback.js?v=5e872c82" defer></script>
-<script src="/battle.js?v=4" defer></script>
+<script src="/battle.js?v=5" defer></script>
 </body>
 </html>
