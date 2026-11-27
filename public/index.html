@@ -357,7 +357,7 @@ html.embed body>.ov:not([hidden]){display:flex!important}
 #embedroot{padding:2px}#embedroot .mycoll{margin:0}
 a.card{color:inherit;text-decoration:none}
 @media(max-width:600px){header nav{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);padding-right:28px}}
-#more[hidden]{display:none!important}
+#more[hidden]{display:none!important}#grid>.empty{grid-column:1/-1}
 </style>
 <link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=f0c908cc"><script>if(/[?&]embed=coll(&|$)/.test(location.search))document.documentElement.classList.add('embed');
 /* Old /#card=ID links (shared links, admin) now go straight to that card's page. */
@@ -536,7 +536,7 @@ let PH={q:null,k:'',on:false};
 const phraseOn=()=>{if(PH.q!==S.q){const k=qNorm(S.q.toLowerCase()).replace(/[\s'’.-]/g,'');PH={q:S.q,k,on:k.length>2&&D.cards.some(c=>flatC(c).includes(k))}}return PH.on};
 // Typo help (audit fix 2026-11-27): when a search finds nothing, each word of 4+ letters that appears in no card is swapped
 // for the closest word from card, character and set names (1 letter off, or 2 for longer words), e.g. "kakshi" → "kakashi".
-let SUGG=null,VOCAB=null;
+let SUGG=null,VOCAB=null;const tcase=t=>t.replace(/\b[a-z]/g,m=>m.toUpperCase());
 function editDist(a,b,max){if(Math.abs(a.length-b.length)>max)return max+1;let p=Array.from({length:b.length+1},(_,j)=>j);
   for(let i=1;i<=a.length;i++){const c=[i];let lo=i;for(let j=1;j<=b.length;j++){c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));if(c[j]<lo)lo=c[j]}if(lo>max)return max+1;p=c}return p[b.length]}
 function typoFix(q){if(!VOCAB){const v=new Set();D.cards.forEach(c=>(c.name+' '+setName(c.s)).toLowerCase().split(/[^a-z0-9']+/).forEach(w=>{w=w.replace(/'/g,'');if(w.length>=4)v.add(w)}));VOCAB=[...v]}
@@ -618,7 +618,7 @@ function renderCards(reset){
   const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
   {const ct=$('#count'),txt=list.length.toLocaleString()+' cards';if(ct.textContent!==txt){ct.textContent=txt;if(reset){ct.classList.remove('bump');void ct.offsetWidth;ct.classList.add('bump')}}}$('#more').hidden=shown>=list.length;
   $('#clear').hidden=!active();
-  if(reset&&SUGG)$('#grid').insertAdjacentHTML('afterbegin',`<p class="empty sugg" style="grid-column:1/-1;margin:0 0 4px">No cards for “${esc(S.q)}”. Showing <b>${esc(SUGG)}</b> instead. <button class="clear" data-usesugg="${esc(SUGG)}">Search ${esc(SUGG)}</button></p>`);
+  if(reset&&SUGG)$('#grid').insertAdjacentHTML('afterbegin',`<p class="empty sugg" style="grid-column:1/-1;margin:0 0 4px">No cards for “${esc(S.q)}”. Showing <b>${esc(tcase(SUGG))}</b> instead. <button class="clear" data-usesugg="${esc(SUGG)}">Search “${esc(tcase(SUGG))}”</button></p>`);
   if(!list.length){const fk=S.rars.length+(S.type?1:0)+DETAILS.filter(([d])=>S[d]).length+(S.set?1:0)+S.chars.length;
     $('#grid').innerHTML=`<p class="empty">No cards match${S.q?' “'+esc(S.q)+'”':''}${fk?' with the '+fk+' filter'+(fk===1?'':'s')+' you have on':''}. ${fk&&S.q?'<button class="clear" data-keepq>Clear filters, keep search</button> ':''}<button class="clear" data-clear>↺ Reset</button></p>`}
   if(reset)paintChars();

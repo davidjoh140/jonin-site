@@ -762,13 +762,13 @@ def not_found_page(chars):
     PLACEHOLDER copy for David to edit."""
     title = 'Page not found | Jonin'
     desc = 'That page does not exist on Jonin. Search the Naruto CCG card database instead.'
-    pills = ''.join(f'<a class="pill" href="/character/{e(ch["slug"])}/">{e(ch["label"])}</a>' for ch in chars[:12])
+    pills = ''.join(f'<a class="qlink" href="/character/{e(ch["slug"])}/"><img src="/chars/{e(ch["slug"])}.webp" alt="" width="22" height="22">{e(ch["label"])}</a>' for ch in chars[:12])
     body = f'''<section class="sethead"><h1>Page not found</h1>
 <p class="lede">That page doesn’t exist, or the link is out of date. Search for the card instead.</p></section>
 <form class="nfq" action="/" onsubmit="event.preventDefault();var q=this.q.value.trim();location.href='/'+(q?'#q='+encodeURIComponent(q):'')">
 <input name="q" type="search" placeholder="Card, character or number, e.g. Kakashi or N-001" aria-label="Search cards" autofocus>
-<button class="pill" type="submit">Search</button></form>
-<h2>Popular characters</h2><p class="nfp">{pills}</p>
+<button class="ghostbtn" type="submit">Search</button></form>
+<h2>Popular characters</h2><p class="qlinks nfp">{pills}</p>
 <p class="mt"><a href="/">Browse all cards →</a> · <a href="/#sets">All sets →</a> · <a href="/lists/">Lists →</a></p>
 <style>.nfq{{display:flex;gap:8px;max-width:560px;margin:8px 0 20px}}.nfq input{{flex:1;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:inherit;font:inherit}}.nfp{{display:flex;flex-wrap:wrap;gap:8px}}</style>
 '''
