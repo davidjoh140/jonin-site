@@ -142,7 +142,7 @@
     if(!on&&was&&document.querySelector('[data-unlocked]')){location.reload();return}
     document.documentElement.classList.toggle('jmem',on);
     each('.pn>.pnb',function(a){if(a.dataset.orig==null)a.dataset.orig=a.innerHTML;
-      a.innerHTML=on?'<span aria-hidden="true">⭐</span>'+(b==='founding'?'Founder':'Jonin Club'):a.dataset.orig;a.classList.toggle('mem',on)});
+      a.innerHTML=on?'<svg class="jstar" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.5l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>'+(b==='founding'?'Founder':'Jonin Club'):a.dataset.orig;a.classList.toggle('mem',on)});
     each('.pdd h4',function(h){if(h.dataset.orig==null)h.dataset.orig=h.textContent;h.textContent=on?'Your Jonin Club includes':h.dataset.orig});
     if(!on)return;
     each('a.pxlock',function(a){var row=a.closest('.mvrow'),art=row&&row.querySelector('.mvart');if(!art)return;
@@ -156,7 +156,7 @@
     box.className='pxreal';box.setAttribute('data-unlocked','');box.innerHTML='<p class="none">Loading prices…</p>';
     a.replaceWith(box);
     var sec=box.closest('.px'),h=sec&&sec.querySelector('h3');
-    if(h)h.innerHTML='Price estimate<span>⭐ Jonin Club · by version</span>';
+    if(h)h.innerHTML='Price estimate<span><svg class="jstar" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.5l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg> Jonin Club · by version</span>';
     var band=sec&&sec.querySelector('.band');if(band)band.remove();
     Promise.all([
       rest('/rest/v1/price_estimates?card_id=eq.'+encodeURIComponent(id)+'&select=printing,edition,grader,grade,estimate,sales_count,last_sold_at,last_price',tok).catch(function(){return null}),
@@ -280,7 +280,7 @@
   // When David gives someone Jonin Club or Founding member from /admin/, Supabase sets memberships.upgrade_notice.
   // The next page they open while signed in shows this once; dismiss_upgrade_notice clears it as soon as it shows.
   // PLACEHOLDER wording for David to change.
-  var UPG={founding:{h:'⭐ You’re a Founding member',p:'You’ve been made one of Jonin’s founding members. Jonin Club is yours free, forever, and your profile now shows the founding ring.'},
+  var UPG={founding:{h:'<svg class="jstar" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.5l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg> You’re a Founding member',p:'You’ve been made one of Jonin’s founding members. Jonin Club is yours free, forever, and your profile now shows the founding ring.'},
            premium:{h:'You’re in Jonin Club',p:'You’ve been upgraded to Jonin Club. Everything below is unlocked on your account now.'}};
   function upgradeShow(kind,tok){var u=UPG[kind];if(!u||upgradeShow.on||/^\/admin\//.test(location.pathname))return false;upgradeShow.on=1;
     rest('/rest/v1/rpc/dismiss_upgrade_notice',tok,{}).catch(function(){});
