@@ -1,0 +1,29 @@
+# Finds product photos for sealed items on eBay and queues them in Jonin Hub → Review → Sealed → Photos.
+# Nothing goes on jonin.cards until David picks one; the Sync workflow then copies it to R2.
+name: Find sealed photos
+on:
+  schedule: [{ cron: "41 10 * * 1" }]   # PLACEHOLDER: Mondays 5:41am New York, for items still without a photo
+  workflow_dispatch:
+    inputs:
+      product_filter:
+        description: "Product id or set id (e.g. 1-booster-box or 1). Blank = every sealed item without a photo"
+        required: false
+concurrency: { group: find-sealed-images, cancel-in-progress: false }
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests pillow pytest
+      - run: cd pipeline && python -m pytest -q
+        env: { SUPABASE_URL: "test", SUPABASE_SERVICE_KEY: "test" }
+      - name: Find photos
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          PRODUCT_FILTER: ${{ github.event.inputs.product_filter }}
+        run: cd pipeline && python find_sealed_images.py

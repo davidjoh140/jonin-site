@@ -39,7 +39,8 @@ def build(products, sets, ranges, sales, listings, now=None):
         if not p.get("public", True) or not p.get("slug"):
             continue
         ss, ll = sold.get(p["id"], []), live.get(p["id"], [])
-        img, credit = p.get("image_url") or "", ""
+        img = p.get("image_url") or ""
+        credit = "Seller photo" if "/site/sealed/" in img else ""     # picked in the Hub from an eBay listing
         if not img:
             img = next((x[5] for x in ss if x[5]), "") or next((x["img"] for x in ll if x["img"]), "")
             credit = "Seller photo" if img else ""

@@ -74,3 +74,10 @@ def test_listing_and_settle():
 def test_naruto_deck():
     assert pid("Naruto CCG Curse of the Sand theme deck Naruto sealed") == "3-naruto"
     assert pid("Naruto CCG Curse of the Sand theme deck sealed") is None
+
+
+def test_photo_rules():
+    t = "Naruto CCG Path to Hokage booster box EMPTY no cards"
+    assert pid(t) is None
+    assert sealed.match(t, P, SETS, photo=True)[0]["id"] == "1-booster-box"
+    assert sealed.match("Lot of 3 Naruto Path to Hokage booster box", P, SETS, photo=True) is None

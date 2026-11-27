@@ -89,12 +89,21 @@ def edition(title):
     return ""
 
 
-def match(title, products, sets):
-    """One sealed product for a listing title -> (product, confidence, reason) or None."""
+# For photos only (find_sealed_images.py): an opened or empty box still shows the right box art. PLACEHOLDER
+PHOTO_SKIP_RE = re.compile(r"\b(?:japanese|japan|kayou|mythos|boruto|proxy|custom|replica|reprint|lot|bundle|break|"
+                           r"mystery|repack|you pick|choose|pulls|pulled|wrapper|wrappers|binder|playmat|sleeves)\b")
+
+
+def match(title, products, sets, photo=False):
+    """One sealed product for a listing title -> (product, confidence, reason) or None.
+    photo=True: looser rules for finding a product photo (opened/empty items allowed)."""
     low = " " + (title or "").lower() + " "
     if not re.search(r"naruto", low):
         return None
-    if SKIP_RE.search(low) or any(w in low for w in cfg.SALES_SKIP_WORDS) or MULTI.search(low):
+    if photo:
+        if PHOTO_SKIP_RE.search(low) or MULTI.search(low):
+            return None
+    elif SKIP_RE.search(low) or any(w in low for w in cfg.SALES_SKIP_WORDS) or MULTI.search(low):
         return None
     if CARD_NUMBER.search(title or ""):
         return None
