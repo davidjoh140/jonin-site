@@ -26,7 +26,23 @@ SIZE = (250, 350)        # PLACEHOLDER: 250px wide covers the widest grid tile o
 QUALITY = 78             # PLACEHOLDER: webp quality
 
 
+SCAN_PREFIXES = ("https://jonin.cards/img/scans/", "https://img.jonin.cards/site/scans/")
+
+
+def source_id(img_url):
+    """Stable id for a card image: a mirrored scan keeps the same id whether it's served from jonin.cards or R2."""
+    for p in SCAN_PREFIXES:
+        if img_url.startswith(p):
+            return "scan:" + img_url[len(p):]
+    return img_url
+
+
 def key(img_url):
+    return hashlib.sha1(source_id(img_url).encode("utf-8")).hexdigest()[:16]
+
+
+def legacy_key(img_url):
+    """Thumbnail name before the move to R2 (hash of the full URL)."""
     return hashlib.sha1(img_url.encode("utf-8")).hexdigest()[:16]
 
 

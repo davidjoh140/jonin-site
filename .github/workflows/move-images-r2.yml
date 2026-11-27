@@ -1,0 +1,32 @@
+# One-time (re-runnable) move of card scans and grid thumbnails from the repo into R2 (img.jonin.cards).
+# Commits pipeline/r2_site.json, the record of what's in R2. Manual only.
+name: Move site images to R2
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: sync-cards, cancel-in-progress: false }
+jobs:
+  move:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q boto3 pillow requests
+      - name: Upload scans and thumbnails to R2
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://f6d20bce1fc2f76725b857ef0fed6d10.r2.cloudflarestorage.com
+          R2_BUCKET: jonin-scans
+        run: cd pipeline && python move_images_r2.py
+      - name: Commit the R2 record
+        run: |
+          git config user.name "jonin-bot"
+          git config user.email "jonin-bot@users.noreply.github.com"
+          git add pipeline/r2_site.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Record site images now in R2"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0; sleep 5; done; exit 1
