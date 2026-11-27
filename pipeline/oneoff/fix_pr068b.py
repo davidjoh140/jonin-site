@@ -27,6 +27,11 @@ fixed = open("out/m068b.webp", "rb").read()
 if os.environ.get("WRITE_MASTER") == "1":
     s3.put_object(Bucket=B, Key="masters/P/PR068B.webp", Body=fixed, ContentType="image/webp")
     print("wrote masters/P/PR068B.webp")
+    import base64
+    th = io.BytesIO(); Image.open(io.BytesIO(fixed)).convert("RGB").resize((200, 280), Image.LANCZOS).save(th, "WEBP", quality=80)
+    supa.update("enhanced_scans", {"card_id": "P:PR068B"}, {"r2_key": "masters/P/PR068B.webp",
+                "thumb_b64": base64.b64encode(th.getvalue()).decode()})
+    print("enhanced row updated")
 for n in ("m067", "m068b", "m068"):
     x = Image.open(f"out/{n}.webp").convert("RGB")
     x.crop((0, int(H * 0.95), int(W * 0.4), H)).save(f"out/{n}_strip.png")
