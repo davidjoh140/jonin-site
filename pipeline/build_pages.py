@@ -708,7 +708,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 <p class="mt">{e(s["name"])} · {e(c["n"])} · {e(c["r"])}</p>
 {quick_links(c, s, set_cards, char_lists or {}, chars_by_name or {})}
 {mv_badges(c, ranks, pops)}<dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
-{price_block(c)}{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
+{('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
 <a class="primary" href="/#card={quote(c['s'] + ':' + c['n'])}" data-jt="track-click">Track it in your collection</a>
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="slab">eBay sold · slabs</a>
@@ -719,6 +719,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 {nt_html}{newbie('card')}
 </div>
 </article>
+<div class="market">{price_block(c)}</div>
 <nav class="prevnext">{nav}</nav>
 {related_rows(c, s, set_cards, char_lists or {}, chars_by_name or {}, nt_cards)}
 '''
