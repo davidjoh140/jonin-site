@@ -38,6 +38,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python pipeline/export_cards.py
+      - name: Make grid thumbnails (small copies of each card image)
+        run: python pipeline/thumbs.py
       - name: Count new slab photos to crop and flatten
         id: slabs
         run: echo "n=$(python pipeline/slab_tiles.py --pending)" >> "$GITHUB_OUTPUT"

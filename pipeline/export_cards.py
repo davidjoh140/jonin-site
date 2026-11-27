@@ -451,6 +451,12 @@ def main():
         write_card_sales(sales)
         write_card_history(sales)
         write_votes(supa.select("card_votes", {"select": "character,card_id,user_id"}))
+        # Grid thumbnails (thumbs.py): "th" for every card whose thumbnail exists, added last like thumbs.py does.
+        import thumbs
+        for c in data["cards"]:
+            t = thumbs.thumb_url(c.get("img") or "")
+            if t:
+                c["th"] = t
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),
                      "with_image": sum(1 for c in data["cards"] if "img" in c),

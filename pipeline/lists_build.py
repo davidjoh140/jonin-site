@@ -35,7 +35,7 @@ def popular_ranked(v, cards_by_key, top=POPULAR_TOP):
 
 def art(c, eager=False):
     e = B.e
-    return (f'<img loading="{"eager" if eager else "lazy"}" src="{e(c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
+    return (f'<img loading="{"eager" if eager else "lazy"}" src="{e(c.get("th") or c["img"])}" alt="{e(c["name"])} {e(c["n"])} Naruto CCG card" width="750" height="1050">'
             if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
 
 

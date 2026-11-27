@@ -377,7 +377,7 @@ def card_alt(c, s):
 
 
 def tile(c, s):
-    img = (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
+    img = (f'<img loading="lazy" decoding="async" src="{e(c.get("th") or c["img"])}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
            if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
     return (f'<a class="tile" href="/card/{slug(c)}/" data-card="{e(c["s"] + ":" + c["n"])}">{img}<span class="tt">{e(c["name"])}</span>'
             f'<span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])} · {e(c["r"])}</span></a>')
@@ -885,7 +885,7 @@ def near_top(c, s, set_cards, char_lists, chars_by_name):
         return '', []
     return (f'<section class="neartop"><h3><a href="{href}" data-jt="near-top" data-jt-to="all">{title} →</a></h3><div class="ntgrid">'
             + ''.join(f'<a href="/card/{slug(x)}/" data-jt="near-top" data-jt-to="card">'
-                      + (f'<img loading="lazy" src="{e(x["img"])}" alt="{e(card_alt(x, SETS_BY_ID[x["s"]]))}" width="750" height="1050">'
+                      + (f'<img loading="lazy" decoding="async" src="{e(x.get("th") or x["img"])}" alt="{e(card_alt(x, SETS_BY_ID[x["s"]]))}" width="750" height="1050">'
                          if re.match(r'^https://', x.get('img') or '') else f'<span class="noimg sm"><b>{e(x["n"])}</b></span>')
                       + f'<span>{e(x["name"])}</span></a>' for x in cs) + '</div></section>\n'), cs
 
@@ -998,7 +998,7 @@ def set_page(s, cards):
         facts.append(('Rarities', e(rar)))
     grid = ''.join(
         f'<a class="tile" href="/card/{slug(c)}/" data-card="{e(c["s"] + ":" + c["n"])}">'
-        + (f'<img loading="lazy" src="{e(c["img"])}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
+        + (f'<img loading="lazy" decoding="async" src="{e(c.get("th") or c["img"])}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
            if re.match(r'^https://', c.get('img') or '') else f'<span class="noimg sm"><b>{e(c["n"])}</b></span>')
         + f'<span class="tt">{e(c["name"])}</span><span class="tn stag">{sym_img(s)}{e(s["name"])}</span><span class="tn">{e(c["n"])}</span></a>' for c in cards)
     sym = f'<img class="sym" src="{e(s["symbol"])}?v={SYMV}" alt="">' if s.get('symbol') else ''
