@@ -79,27 +79,32 @@ def _round_sig(v, up):
 
 
 def price_range(sales):
-    """Free price range for one card from its approved sales: [low, high] of a typical copy, rounded so exact
-    comps stay Jonin Club only, plus "raw" or "graded" for which copies it describes. None with no sales.
-    PLACEHOLDER rules for David to revisit: raw sales only when the card has any (graded otherwise);
-    with 4+ sales the middle half (25th–75th percentile) so one-off highs and lows don't stretch it;
-    rounded to 2 significant figures."""
+    """Free price range for one card: [low, high] of a typical copy of its most common version, rounded so exact
+    comps stay Jonin Club only, plus "raw" or "graded" and the version it describes. None with no sales.
+    PLACEHOLDER rules for David to revisit: raw sales when the card has any (graded otherwise); the version is
+    normal Unlimited when it has sales, else the version with the most sales; with 4+ sales the middle half
+    (25th–75th percentile); rounded to 2 significant figures."""
     ok = [x for x in sales if x.get("status") == "approved" and float(x.get("price") or 0) > 0
           and (x.get("printing") or "") != "?" and (x.get("edition") or "") != "?"]
-    raw = [float(x["price"]) for x in ok if (x.get("grader") or "Raw") == "Raw"]
-    kind, ps = ("raw", raw) if raw else ("graded", [float(x["price"]) for x in ok])
-    if not ps:
+    raw = [x for x in ok if (x.get("grader") or "Raw") == "Raw"]
+    kind, pool = ("raw", raw) if raw else ("graded", ok)
+    if not pool:
         return None
-    ps.sort()
+    ver = lambda x: ((x.get("printing") or "Normal"), (x.get("edition") or "Unlimited"))
+    counts = {}
+    for x in pool:
+        counts[ver(x)] = counts.get(ver(x), 0) + 1
+    pick = ("Normal", "Unlimited") if ("Normal", "Unlimited") in counts else max(counts, key=lambda v: (counts[v], v == ("Normal", "1st Edition")))
+    ps = sorted(float(x["price"]) for x in pool if ver(x) == pick)
     if len(ps) >= 4:
         lo, hi = ps[(len(ps) - 1) // 4], ps[-1 - (len(ps) - 1) // 4]
     else:
         lo, hi = ps[0], ps[-1]
     if lo == hi:                       # one price: show "about $X" rounded to the nearest 2 figures
         v = round(lo) if lo < 10 else int(round(lo, -(len(str(int(lo))) - 2)))
-        return [v, v], kind
+        return [v, v], kind, pick
     a, b = _round_sig(lo, False), _round_sig(hi, True)
-    return [a, max(a, b)], kind
+    return [a, max(a, b)], kind, pick
 
 
 def version_label(sale):
@@ -351,6 +356,7 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
                 o["pr"] = pr[0]                 # free rounded range of a typical copy (card pages, Google)
                 if pr[1] == "graded":
                     o["prk"] = "g"              # no raw sales: the range describes graded copies
+                o["prv"] = " · ".join(pr[2])    # version it describes, e.g. "Normal · Unlimited"
         if c["id"] in tops:
             o["top"] = tops[c["id"]]
         if c["id"] in am:

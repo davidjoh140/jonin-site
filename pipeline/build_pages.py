@@ -76,6 +76,15 @@ def slab_name(c, s):
     return f"{y + ' ' if y else ''}Naruto CCG {slab_set(s)} {c['name']} {slab_num(c)}"
 
 
+def ver_words(c):
+    """'Unlimited non-foil' from cards.json prv 'Normal · Unlimited' ('' if unknown)."""
+    pv = (c.get('prv') or '').split(' · ')
+    if len(pv) != 2:
+        return ''
+    pr, ed = pv
+    return f"{ed} {'non-foil' if pr == 'Normal' else pr.lower()}"
+
+
 def range_text(c):
     """Free price range '$190–$1,300' (or 'about $40' for a single price), or '' with no sales."""
     pr = c.get('pr')
@@ -173,8 +182,8 @@ def price_block(c):
     rt = range_text(c)
     if rt:
         return (f'<section class="px"><h3>Market price<span> typical copy</span></h3>'
-                f'<p class="band">{e(rt)}</p><p class="mt">{"A typical graded copy" if c.get("prk") == "g" else "A typical raw copy"}, from real sales. '
-                f'{"Higher grades and rarer versions" if c.get("prk") == "g" else "Graded copies and rarer versions"} can sell for more.</p>'
+                f'<p class="band">{e(rt)}</p><p class="mt">Typical price for a {"graded" if c.get("prk") == "g" else "raw"} {e(ver_words(c)) or "copy"}{" copy" if ver_words(c) else ""}, from real sales. '
+                f'{"Other versions" if c.get("prk") == "g" else "Foils, 1st Editions and graded copies"} can sell for more.</p>'
                 f'{lock}{guide}</section>')
     if pb is None or not 0 <= pb < len(BANDS):
         return f'<section class="px"><h3>Market price</h3>{lock}{guide}</section>'
@@ -745,7 +754,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
     rt = range_text(c)
     band = BANDS[c['pb']] if c.get('pb') is not None and 0 <= c['pb'] < len(BANDS) else ''
     desc = (f"What is the {y + ' ' if y else ''}{c['name']} {slab_num(c)} from {s['name']} worth? "
-            + (f"A typical {'graded' if c.get('prk') == 'g' else 'raw'} copy sells for {rt}. " if rt else
+            + (f"A typical {'graded' if c.get('prk') == 'g' else 'raw'} {ver_words(c) + ' ' if ver_words(c) else ''}copy sells for {rt}. " if rt else
                f"Market price: {band}. " if band else '')
             + f"{c['r']} {c['t']} card, {slab_set(s).split(':')[0]} of the Bandai Naruto CCG. "
             f"Printings: {', '.join(c.get('v') or [])}{'; ' + ' and '.join(eds) if eds else ''}. "

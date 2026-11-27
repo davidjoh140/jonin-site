@@ -140,15 +140,15 @@ def guide_page(cards, years, mv_chars, sets_by_id):
             'match the exact version, and compare real sold prices for raw and graded copies.')
     qas = [
         ('What are my Naruto cards worth?',
-         'Most original Naruto CCG commons and uncommons sell for a few dollars. Super Rares, promos, 1st Editions, '
-         'certain foils and graded copies of popular characters are worth the most. Look up your card to see what a typical copy sells for.'),
+         'Most sell for a few dollars. Super Rares, promos, 1st Editions, foils and graded cards of popular characters '
+         'are worth the most. Look up your card to see its price.'),
         ('What is the most valuable Naruto card?',
-         'See <a href="/most-valuable/">the most valuable Naruto cards</a>, ranked by the highest real sale and updated as new sales come in.'),
+         'See <a href="/most-valuable/">the most valuable Naruto cards</a>, ranked by real sales.'),
         ('Is my Sasuke card worth money?',
-         'It depends which Sasuke card it is. Look it up in <a href="/character/sasuke/">every Sasuke card</a>, or see '
+         'It depends which one. Find it in <a href="/character/sasuke/">all Sasuke cards</a>, or see '
          '<a href="/character/sasuke/most-valuable/">the most valuable Sasuke cards</a>.'),
         ('Are Kayou Naruto cards covered?',
-         'No. Jonin covers the original Bandai Naruto CCG (2006–2013). Kayou and other newer Naruto cards are different products.'),
+         'No. Jonin covers the original Bandai Naruto cards from 2006–2013. Kayou cards are a different game.'),
         ('Can I sell my Naruto cards to Jonin?',
          'Yes. <a href="https://sell.jonin.cards">Get an offer</a> for single cards, slabs or a whole collection.'),
     ]
@@ -177,29 +177,29 @@ def guide_page(cards, years, mv_chars, sets_by_id):
         '<circle cx="184" cy="281" r="3.6" class="c-dot"/><circle cx="194" cy="281" r="3.6" class="c-dot"/><circle cx="204" cy="281" r="3.6" class="c-dot"/>'
         '</svg>')
     read = f"""<section class="vsec"><p class="eyebrow">Step 1</p><h2>Read your card</h2>
-<p class="sub">Four things decide what a Naruto card is worth.</p>
+<p class="sub">Check these 4 things.</p>
 <div class="anat">{card_svg}
 <ol class="checks">
-<li><b>Card number</b><span>Like N-934 or J-001. It tells you exactly which card you have.</span></li>
-<li><b>Rarity dots</b><span>After the copyright line. <span class="rs rs-C">C</span> none · <span class="rs"><i></i></span> Uncommon · <span class="rs"><i></i><i></i></span> Rare · <span class="rs rs-SR"><i></i><i></i><i></i></span> Super Rare</span></li>
-<li><b>Edition and foil</b><span>1st Edition or Unlimited, and normal or foil: <span class="fx f-flat"></span><span class="fx f-diamond"></span><span class="fx f-wavy"></span><span class="fx f-spiral"></span><span class="fx f-prism"></span> <a href="/articles/naruto-ccg-foil-types/">Foil types</a></span></li>
-<li><b>Condition</b><span>Raw (ungraded) or graded, like a PSA 10. A high grade can be worth many times a raw copy.</span></li>
+<li><b>Card number</b><span>Like N-934. It tells you which card you have.</span></li>
+<li><b>Rarity dots</b><span>The dots after the copyright line.</span><span class="rar"><em><span class="rs rs-C">C</span>Common</em><em><span class="rs"><i></i></span>Uncommon</em><em><span class="rs"><i></i><i></i></span>Rare</em><em><span class="rs rs-SR"><i></i><i></i><i></i></span>Super Rare</em></span></li>
+<li><b>Edition and foil</b><span>1st Edition or Unlimited. Foil or not. Each version has its own price.</span><span class="rar"><em><span class="fx f-flat"></span>Flat</em><em><span class="fx f-diamond"></span>Diamond</em><em><span class="fx f-wavy"></span>Wavy</em><em><span class="fx f-spiral"></span>Spiral</em><em><span class="fx f-prism"></span>Prism</em></span></li>
+<li><b>Condition</b><span>Raw (not graded) or graded, like PSA 10. High grades sell for much more.</span></li>
 </ol></div></section>"""
     # 2. How to comp: search -> match the version -> compare sold prices
     comp = """<section class="vsec"><p class="eyebrow">Step 2</p><h2>How to price it</h2>
-<p class="sub">Compare your card only with sales of the same card, version and condition.</p>
+<p class="sub">Only compare with sales of the exact same version.</p>
 <div class="flow">
 <div class="fstep"><span class="no">1</span><h3>Find the card</h3>
 <div class="mock msearch"><span class="mag"></span>Sasuke N-934<span class="caret"></span></div>
-<p>Search by name or number, or browse by set or year.</p></div>
+<p>Search the name or number.</p></div>
 <span class="farr" aria-hidden="true">→</span>
 <div class="fstep"><span class="no">2</span><h3>Match your version</h3>
 <div class="mock mchips"><span class="on">1st Edition</span><span>Unlimited</span><span class="on">Foil</span><span>Normal</span><span class="on">Raw · NM</span><span>PSA 10</span></div>
-<p>A foil 1st Edition and a normal Unlimited are different prices.</p></div>
+<p>Pick the same edition, foil and grade as yours.</p></div>
 <span class="farr" aria-hidden="true">→</span>
 <div class="fstep"><span class="no">3</span><h3>Check sold prices</h3>
 <div class="mock msold"><div><span>Sold · 1st Ed · Foil · Raw</span><b>$•••</b></div><div><span>Sold · 1st Ed · Foil · Raw</span><b>$•••</b></div><div class="x"><span>Listed · PSA 10</span><b>skip</b></div></div>
-<p>Use sold prices, not asking prices, and favor the most recent sales.</p></div>
+<p>Look at what it sold for, not what people are asking. Newer sales count most.</p></div>
 </div>
 <p class="btns"><a class="primary" href="/">Look up your card</a></p></section>"""
     faq = ('<section class="vsec"><p class="eyebrow">Questions</p><h2>Naruto card values, answered</h2><div class="faqs">'
@@ -207,7 +207,7 @@ def guide_page(cards, years, mv_chars, sets_by_id):
     body = f"""<div class="vg">
 <nav class="crumb"><a href="/">All cards</a> › Card values</nav>
 <section class="vhero"><p class="eyebrow">Naruto CCG card values</p><h1>What are my Naruto cards worth?</h1>
-<p class="lede">Most original Bandai Naruto CCG cards sell for a few dollars. The money is in Super Rares, promos, 1st Editions, foils and graded copies of popular characters. Here's how to tell what yours is worth.</p></section>
+<p class="lede">Most Naruto cards sell for a few dollars. Rare cards, foils, 1st Editions and graded cards can be worth a lot more. Here's how to check yours.</p></section>
 {read}
 {comp}
 <section class="vsec"><p class="eyebrow">Browse</p><h2>Find your card by year</h2><div class="ytiles">{ytiles}</div></section>

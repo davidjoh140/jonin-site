@@ -350,3 +350,18 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 .vg .ytile{padding:16px 6px}.vg .ytile b{font-size:24px}
 @media (max-width:860px){.vg .flow{grid-template-columns:1fr}.vg .farr{transform:rotate(90deg);justify-self:center}.vg .ytiles{grid-template-columns:repeat(4,1fr)}}
 @media (max-width:640px){.vg .anat{grid-template-columns:1fr;gap:28px}.vg .cardsvg{max-width:200px;margin:0 auto;display:block}}
+/* guide v3: centered title, simpler and brighter text */
+.vhero h1{display:block;text-align:center}
+.vhero .lede,.vg .sub{color:var(--ink);opacity:.92}
+.vhero .lede{font-size:19px;max-width:600px}
+.vg .sub{font-size:18px}
+.vg .checks li{padding-bottom:28px}
+.vg .checks b{font-size:20px}
+.vg .checks span{color:var(--ink);opacity:.88;font-size:16.5px}
+.vg .checks .rar{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:10px;opacity:1}
+.vg .checks .rar em{display:inline-flex;align-items:center;gap:7px;font-style:normal;font-size:14px;color:var(--ink)}
+.vg .checks .rar .rs{margin:0}
+.vg .fstep h3{font-size:19px}
+.vg .fstep p{color:var(--ink);opacity:.88;font-size:16px}
+.vg details p{color:var(--ink);opacity:.88;font-size:16px}
+.vg summary{font-size:17px}

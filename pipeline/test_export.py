@@ -44,11 +44,11 @@ def test_load_skips_reviewed():
     assert [r["card_id"] for r in sent] == ["1:N-3"]
 
 
-def test_price_range_typical_raw_copy():
+def test_price_range_typical_copy_of_most_common_version():
     from export_cards import price_range
-    s = lambda p, g="Raw", st="approved": {"price": p, "grader": g, "status": st, "printing": "Normal", "edition": "1st Edition"}
-    # raw only, middle half of 8 sales: drops the $3 low and the $400 high
-    assert price_range([s(p) for p in (3, 12, 14, 15, 18, 20, 22, 400)] + [s(5000, "PSA")]) == ([12, 22], "raw")
-    assert price_range([s(13.5), s(22)]) == ([13, 22], "raw")
-    assert price_range([s(1247, "PSA")]) == ([1200, 1200], "graded")
+    s = lambda p, g="Raw", st="approved", pr="Normal", ed="Unlimited": {"price": p, "grader": g, "status": st, "printing": pr, "edition": ed}
+    # normal Unlimited raw, middle half of 8 sales; foil 1st Ed and graded sales ignored
+    assert price_range([s(p) for p in (3, 12, 14, 15, 18, 20, 22, 400)] + [s(5000, "PSA"), s(900, pr="Diamond foil", ed="1st Edition")]) == ([12, 22], "raw", ("Normal", "Unlimited"))
+    assert price_range([s(13.5, ed="1st Edition"), s(22, ed="1st Edition"), s(80, pr="Wavy foil")]) == ([13, 22], "raw", ("Normal", "1st Edition"))
+    assert price_range([s(1247, "PSA")]) == ([1200, 1200], "graded", ("Normal", "Unlimited"))
     assert price_range([s(50, st="pending")]) is None
