@@ -3,6 +3,7 @@
 // leads made in the last 15 minutes, and only to the email on the lead.
 // Needs the RESEND_API_KEY secret; without it, it does nothing.
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { joninEmail, h, p, details } from "../_shared/jonin-email.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -11,8 +12,6 @@ const cors = {
 };
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
-const esc = (s: string) =>
-  String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -42,37 +41,27 @@ Deno.serve(async (req) => {
   if (lead.handoff) rows.push(["Pickup or ship", lead.handoff]);
   if (lead.town) rows.push(["Town/ZIP", lead.town]);
 
-  const text = `Hi ${first},
-
-We got your cards. We'll look through everything and reach out soon.
-Your offer may come from Jonin or a trusted buyer.
-
-What you sent:
-${rows.map(([k, v]) => `- ${k}: ${v}`).join("\n")}
-
-Questions or more photos? Just reply to this email.
-
-Jonin
-jonin.cards`;
-
-  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#222;max-width:520px">
-<p>Hi ${esc(first)},</p>
-<p><b>We got your cards.</b> We'll look through everything and reach out soon.<br>Your offer may come from Jonin or a trusted buyer.</p>
-<p style="margin-bottom:4px"><b>What you sent</b></p>
-<table style="border-collapse:collapse;font-size:14px">${rows.map(([k, v]) =>
-    `<tr><td style="padding:2px 14px 2px 0;color:#777">${esc(k)}</td><td style="padding:2px 0">${esc(v)}</td></tr>`).join("")}</table>
-<p>Questions or more photos? Just reply to this email.</p>
-<p>Jonin<br><a href="https://jonin.cards" style="color:#E8743B">jonin.cards</a></p></div>`;
+  // Shared Jonin template (../_shared/jonin-email.ts): buy@ banner + Jonin Buying signature.
+  const mail = joninEmail("buy", {
+    subject: "We got your cards - Jonin",
+    preheader: "We'll look through everything and reach out soon.",
+    blocks: [
+      h(`Hi ${first}, we got your cards.`),
+      p("We'll look through everything and reach out soon. Your offer may come from Jonin or a trusted buyer."),
+      details("What you sent", Object.fromEntries(rows)),
+      p("Questions or more photos? Just reply to this email."),
+    ],
+  });
 
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Jonin <buy@jonin.cards>",
+      from: mail.from,
       to: [lead.email],
       reply_to: "buy@jonin.cards",
-      subject: "We got your cards - Jonin",
-      text, html,
+      subject: mail.subject,
+      text: mail.text, html: mail.html,
     }),
   });
   if (!r.ok) {

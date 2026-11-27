@@ -80,7 +80,7 @@ export const SENDERS: Record<Sender, Profile> = {
     title: "Fast alerts for the original Bandai Naruto CCG",
     lines: ["Questions? Email david@jonin.cards."],
     links: [["Manage alerts", LINKS.manageAlerts], ["Jonin Club", LINKS.club], ["Discord", LINKS.discord]],
-    footer: "You're getting this because you turned on email alerts in Jonin Club.",
+    footer: "You're getting this because a card on your Jonin want list was just listed.",
   },
 };
 
