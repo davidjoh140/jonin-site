@@ -1,4 +1,12 @@
 {
+ "deidara-n-1337-cgc-10-606.jpg": {
+  "note": "edge20 ratio 0.61 area 0.94 skew 2.0",
+  "status": "ok"
+ },
+ "deidara-pr-070-bgs-9-5-604.jpg": {
+  "note": "no clean slab crop (no label found on top)",
+  "status": "noslab"
+ },
  "gaara-of-the-desert-possessed-mode-n-179-psa-6-314.jpg": {
   "note": "mask8 ratio 0.63 area 0.76 skew 3.0",
   "status": "ok"
@@ -102,6 +110,10 @@
  "pain-deva-path-itachi-uchiha-n-1096-psa-10-276.jpg": {
   "note": "skewed photo (5 degrees off straight-on)",
   "status": "noslab"
+ },
+ "pain-deva-path-n-1000-bgs-9-5-318.jpg": {
+  "note": "edge20 ratio 0.63 area 0.97 skew 0.1",
+  "status": "ok"
  },
  "pain-deva-path-n-1422-bgs-8-5-329.jpg": {
   "note": "mask8 ratio 0.63 area 0.41 skew 1.7",
