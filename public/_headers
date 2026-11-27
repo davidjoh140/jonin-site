@@ -13,3 +13,9 @@
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 /theme-faces/*
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+# Card list (audit fix 2026-11-27): browsers reuse their copy for 5 minutes, then refresh it in the background.
+# The sync job rebuilds it at most every 15 minutes, so visitors are never more than a few minutes behind.
+/cards.json
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+/chars.json
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400

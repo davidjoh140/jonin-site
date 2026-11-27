@@ -387,7 +387,8 @@
     document.head.appendChild(c)})();
   function setUnread(n){UNREAD=n||0;each('.jdot',function(d){d.hidden=!UNREAD});each('.jmn',function(b){b.hidden=!UNREAD;b.textContent=UNREAD})}
   var lastPoll=0;
-  function pollUnread(force){var s=session();if(!s){setUnread(0);return}if(s.expires_at&&s.expires_at*1000<Date.now()+5000)return;
+  function pollUnread(force){if(document.documentElement.classList.contains('embed'))return;   // card-page collection frame has no header
+    var s=session();if(!s){setUnread(0);return}if(s.expires_at&&s.expires_at*1000<Date.now()+5000)return;
     if(!force&&Date.now()-lastPoll<55e3){setUnread(UNREAD);return}lastPoll=Date.now();
     rest('/rest/v1/rpc/my_unread_messages',s.access_token,{}).then(function(n){setUnread(typeof n==='number'?n:0)}).catch(function(){})}
   function mDate(d){try{return new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}catch(_){return ''}}

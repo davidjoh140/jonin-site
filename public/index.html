@@ -165,7 +165,7 @@ footer{border-top:1px solid var(--line2);color:var(--mute);font-size:12px;text-a
 .f-prism{background:conic-gradient(from 200deg at 50% 70%,#ff5f6d,#ffc371,#f9f871,#5ef0a0,#4cc9f0,#9d6bff,#ff5f6d)}
 .fchips{position:absolute;top:8px;right:8px;display:flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:999px;background:color-mix(in srgb,var(--deep) 88%,transparent);border:1px solid var(--line)}.fchips .fx{font-size:4.5px}
 .pv{display:flex;flex-wrap:wrap;gap:6px 14px}.pv span{display:inline-flex;align-items:center;gap:6px}.pv .fx{font-size:5px}
-@media(max-width:900px){#v-cards:not([hidden]){display:block}#v-cards>.lside{margin:0 0 16px}.ftog{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-weight:600;font-size:14px}.ftog:focus-visible{outline:2px solid var(--acc);outline-offset:2px}.ftog .fn{color:var(--acc2);font-weight:600}.ftog .chev{font-size:11px;color:var(--mute);transform:rotate(-90deg);transition:transform .15s}#fbar.fopen .ftog .chev{transform:none}#fbar:not(.fopen) #rars,#fbar:not(.fopen) #types,#fbar:not(.fopen) .brk{display:none!important}#fbar.fopen .ftbrk{display:block}.ftog{white-space:nowrap}.clist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:4px;max-height:min(46vh,360px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:2px}.crow{grid-template-columns:26px minmax(0,1fr) auto;column-gap:8px;padding:6px 6px 7px 4px;min-height:44px}.crow img,.crow .cdot{width:26px;height:26px}.crow .cn{font-size:13px}.chars:not([open]) .qn.on{color:var(--ink)}}
+@media(max-width:900px){#v-cards:not([hidden]){display:flex;flex-direction:column}#v-cards>.hrow{order:1}#v-cards>.picks{order:2}#v-cards>.bar{order:3}#v-cards>.lside{order:4}#v-cards>.ctaband{order:5}#v-cards>.grid{order:6}#v-cards>.more{order:7}#v-cards>.lside{margin:0 0 16px}.ftog{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-weight:600;font-size:14px}.ftog:focus-visible{outline:2px solid var(--acc);outline-offset:2px}.ftog .fn{color:var(--acc2);font-weight:600}.ftog .chev{font-size:11px;color:var(--mute);transform:rotate(-90deg);transition:transform .15s}#fbar.fopen .ftog .chev{transform:none}#fbar:not(.fopen) #rars,#fbar:not(.fopen) #types,#fbar:not(.fopen) .brk{display:none!important}#fbar.fopen .ftbrk{display:block}.ftog{white-space:nowrap}.clist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:4px;max-height:min(46vh,360px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:2px}.crow{grid-template-columns:26px minmax(0,1fr) auto;column-gap:8px;padding:6px 6px 7px 4px;min-height:44px}.crow img,.crow .cdot{width:26px;height:26px}.crow .cn{font-size:13px}.chars:not([open]) .qn.on{color:var(--ink)}}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}nav{order:3;width:100%}aside{width:100%}}
 
 /* motion: springy presses, lifts and entrances */
@@ -356,6 +356,8 @@ html.embed body>#embedroot{display:block!important}
 html.embed body>.ov:not([hidden]){display:flex!important}
 #embedroot{padding:2px}#embedroot .mycoll{margin:0}
 a.card{color:inherit;text-decoration:none}
+@media(max-width:600px){header nav{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);padding-right:28px}}
+#more[hidden]{display:none!important}
 </style>
 <link rel="stylesheet" href="/themes.css?v=2"><link rel="stylesheet" href="/prem.css?v=f0c908cc"><script>if(/[?&]embed=coll(&|$)/.test(location.search))document.documentElement.classList.add('embed');
 /* Old /#card=ID links (shared links, admin) now go straight to that card's page. */
@@ -412,7 +414,7 @@ const QUICK=[['Naruto','char:Naruto Uzumaki'],['Sasuke','char:Sasuke Uchiha'],['
 (function(){var e=function(v){return String(v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
 var m=matchMedia('(max-width:900px)').matches,q=document.getElementById('quick'),lg=document.getElementById('legend'),o=null;try{o=localStorage.getItem('jq')}catch(_){}
 q.open=m?false:o!=='1';if(m)lg.open=false;
-document.getElementById('clist').innerHTML=QUICK.map(function(x){var l=x[0],v=x[1],f=v.indexOf('char:')===0?'chars/'+l.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.webp':'',c=QCOL[l]||'#F57C00';
+if(!document.documentElement.classList.contains('embed'))document.getElementById('clist').innerHTML=QUICK.map(function(x){var l=x[0],v=x[1],f=v.indexOf('char:')===0?'chars/'+l.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.webp':'',c=QCOL[l]||'#F57C00';
 return '<button type="button" class="crow" data-q="'+e(v.replace(/^char:/,''))+'" aria-pressed="false" style="--c:'+c+'">'+(f?'<img src="'+f+'" alt="" width="30" height="30" loading="lazy" decoding="async" onerror="this.outerHTML=\'<span class=cdot></span>\'">':'<span class="cdot"></span>')+'<span class="cn">'+e(l)+'</span><span class="cnum">0</span><span class="cbar" aria-hidden="true"><i></i></span></button>'}).join('');
 var b=document.getElementById('ctaband'),off=false,ses=false;try{off=Date.now()-(+localStorage.getItem('jcta')||0)<864e5;for(var i=0;i<localStorage.length;i++)if(/^sb-.*-auth-token$/.test(localStorage.key(i)))ses=true}catch(_){}
 if(!off&&!ses){var n=0;try{var g=JSON.parse(localStorage.getItem('jonin_guest_v1')||'{}'),ids={};(g.items||[]).forEach(function(it){ids[String(it[0]).split('|')[0]]=1});(g.slabs||[]).forEach(function(x){ids[x.card_id]=1});n=Object.keys(ids).length}catch(_){}
@@ -532,6 +534,15 @@ function qPrep(){if(QP.q===S.q)return QP;const q0=qNorm(S.q.toLowerCase().trim()
   QP={q:S.q,ws:ws.map(w=>({w,num:/^#?\d+$/.test(w),re:w.length<=3?new RegExp('(^|[^a-z0-9])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')):null}))};return QP}
 let PH={q:null,k:'',on:false};
 const phraseOn=()=>{if(PH.q!==S.q){const k=qNorm(S.q.toLowerCase()).replace(/[\s'’.-]/g,'');PH={q:S.q,k,on:k.length>2&&D.cards.some(c=>flatC(c).includes(k))}}return PH.on};
+// Typo help (audit fix 2026-11-27): when a search finds nothing, each word of 4+ letters that appears in no card is swapped
+// for the closest word from card, character and set names (1 letter off, or 2 for longer words), e.g. "kakshi" → "kakashi".
+let SUGG=null,VOCAB=null;
+function editDist(a,b,max){if(Math.abs(a.length-b.length)>max)return max+1;let p=Array.from({length:b.length+1},(_,j)=>j);
+  for(let i=1;i<=a.length;i++){const c=[i];let lo=i;for(let j=1;j<=b.length;j++){c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));if(c[j]<lo)lo=c[j]}if(lo>max)return max+1;p=c}return p[b.length]}
+function typoFix(q){if(!VOCAB){const v=new Set();D.cards.forEach(c=>(c.name+' '+setName(c.s)).toLowerCase().split(/[^a-z0-9']+/).forEach(w=>{w=w.replace(/'/g,'');if(w.length>=4)v.add(w)}));VOCAB=[...v]}
+  let changed=false;const out=q.toLowerCase().trim().split(/\s+/).map(w=>{if(w.length<4||/\d/.test(w)||VOCAB.some(x=>x.includes(w)))return w;
+    const max=w.length>=6?2:1;let best=null,bd=max+1;for(const x of VOCAB){const d=editDist(w,x,max);if(d<bd||(d===bd&&best&&x.length<best.length)){bd=d;best=x}}if(best&&bd<=max){changed=true;return best}return w});
+  return changed?out.join(' '):null}
 function match(c){
   if(S.set&&c.s!==S.set)return false;
   if(S.rars.length&&!S.rars.includes(c.src))return false;
@@ -603,11 +614,13 @@ function paintChars(){const rows=[...document.querySelectorAll('#clist .crow')];
   rows.forEach((b,i)=>{b.setAttribute('aria-pressed',S.chars.includes(b.dataset.q));b.classList.toggle('zero',!n[i]);b.querySelector('.cnum').textContent=n[i];b.querySelector('.cbar i').style.width=(n[i]/mx*100).toFixed(1)+'%';b.title=n[i]+' card'+(n[i]===1?'':'s')})}
 function renderCards(reset){
   {const k=S.rars.length+(S.type?1:0)+DETAILS.filter(([d])=>S[d]).length;$('#fn').textContent=k?'· '+k:''}
-  if(reset){list=sorted(D.cards.filter(match));shown=0;const g=$('#grid');if(g.dataset.r)g.classList.add('quick');g.dataset.r='1';g.innerHTML=''}
+  if(reset){list=sorted(D.cards.filter(match));SUGG=null;if(!list.length&&S.q){const t=typoFix(S.q);if(t){const q0=S.q;S.q=t;const alt=sorted(D.cards.filter(match));S.q=q0;if(alt.length){list=alt;SUGG=t}}}shown=0;const g=$('#grid');if(g.dataset.r)g.classList.add('quick');g.dataset.r='1';g.innerHTML=''}
   const next=list.slice(shown,shown+PAGE);$('#grid').insertAdjacentHTML('beforeend',next.map((c,j)=>tile(c,shown+j)).join(''));shown+=next.length;
   {const ct=$('#count'),txt=list.length.toLocaleString()+' cards';if(ct.textContent!==txt){ct.textContent=txt;if(reset){ct.classList.remove('bump');void ct.offsetWidth;ct.classList.add('bump')}}}$('#more').hidden=shown>=list.length;
   $('#clear').hidden=!active();
-  if(!list.length)$('#grid').innerHTML='<p class="empty">No cards match. <button class="clear" data-clear>↺ Reset</button></p>';
+  if(reset&&SUGG)$('#grid').insertAdjacentHTML('afterbegin',`<p class="empty sugg" style="grid-column:1/-1;margin:0 0 4px">No cards for “${esc(S.q)}”. Showing <b>${esc(SUGG)}</b> instead. <button class="clear" data-usesugg="${esc(SUGG)}">Search ${esc(SUGG)}</button></p>`);
+  if(!list.length){const fk=S.rars.length+(S.type?1:0)+DETAILS.filter(([d])=>S[d]).length+(S.set?1:0)+S.chars.length;
+    $('#grid').innerHTML=`<p class="empty">No cards match${S.q?' “'+esc(S.q)+'”':''}${fk?' with the '+fk+' filter'+(fk===1?'':'s')+' you have on':''}. ${fk&&S.q?'<button class="clear" data-keepq>Clear filters, keep search</button> ':''}<button class="clear" data-clear>↺ Reset</button></p>`}
   if(reset)paintChars();
   document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r?S.rars.includes(b.dataset.r):!S.rars.length));
   paintSet();$('#sortsel').value=S.sort;document.querySelectorAll('#types .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ty===S.type));if($('#details .dd'))paintDetails();if(document.activeElement!==$('#q'))$('#q').value=S.q}
@@ -656,6 +669,8 @@ document.addEventListener('click',e=>{const t=e.target.closest('button,a');if(!t
   else if(t.dataset.ty!=null){S.type=t.dataset.ty&&S.type!==t.dataset.ty?t.dataset.ty:'';writeHash();renderCards(true);pop(t)}
   else if(t.dataset.r!=null){S.rars=t.dataset.r?tog(S.rars,t.dataset.r):[];writeHash();renderCards(true);pop(t)}
   else if(t.id==='clear'||t.dataset.clear!=null){S=S0();writeHash();renderCards(true)}
+  else if(t.dataset.keepq!=null){S=Object.assign(S0(),{q:S.q});writeHash();renderCards(true)}
+  else if(t.dataset.usesugg!=null){S.q=t.dataset.usesugg;writeHash();renderCards(true)}
   else if(t.dataset.i!=null){if(t.tagName==="A"){saveGrid();return}openCard(+t.dataset.i)}
   else if(t.dataset.step){openCard((sel+ +t.dataset.step+list.length)%list.length)}
   else if(t.dataset.close!=null||t.id==='ovbg')close();
@@ -694,7 +709,7 @@ function nudge(){if(ME)return;let seen=null;try{seen=sessionStorage.getItem('jnu
   t.addEventListener('click',e=>{if(e.target.closest('.x')||e.target.closest('[data-auth]'))setTimeout(()=>t.remove(),0)});document.body.appendChild(t);setTimeout(()=>t.remove(),12000)}
 // Founding members: spots left from Supabase (null until loaded = treat as open).
 let FLEFT=null;const offerOpen=()=>FLEFT===null||FLEFT>0;
-function loadFounding(){if(!sbc())return;sb.rpc('founding_spots_left').then(r=>{if(!r.error&&typeof r.data==='number'){FLEFT=r.data;try{localStorage.setItem('jonin_fleft',JSON.stringify({n:FLEFT,t:Date.now()}))}catch(_){}paintAcct()}}).catch(()=>{})}
+function loadFounding(){if(!sbc()||document.documentElement.classList.contains('embed'))return;sb.rpc('founding_spots_left').then(r=>{if(!r.error&&typeof r.data==='number'){FLEFT=r.data;try{localStorage.setItem('jonin_fleft',JSON.stringify({n:FLEFT,t:Date.now()}))}catch(_){}paintAcct()}}).catch(()=>{})}
 const foundingLine=()=>offerOpen()?`<p class="fnd"><svg class="jstar" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.5l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg> <b>Founding offer:</b> the first 20 members get Jonin Club free, forever.${FLEFT!==null?` <b>${plural(FLEFT,'spot')} left.</b>`:''}</p>`:(ME&&MYBADGE==='founding'?'':`<p class="fnd"><svg class="jstar" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.5l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg> <b>Founding spots are gone.</b> Jonin Club opens soon. <a href="/club/#join">Join the waitlist</a></p>`);
 // Set progress for the card's set: cards you have any printing/edition of (same rule as the set pages).
 function setProg(c){if(!D)return null;const ids=new Set();for(const [k,v] of COLL){const a=k.split('|');if(a[3]==='have'&&v>0)ids.add(a[0])}
@@ -1215,7 +1230,10 @@ setInterval(()=>{if(!document.hidden)loadTick()},300000);   // every 5 minutes (
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadTick()});
 if(!sbc())AUTHREADY=true;paintAcct();loadFounding();loadTick();
 if(location.hash==='#signup'||location.hash==='#signin'){const m=location.hash==='#signin'?'in':'up';history.replaceState(null,'',location.pathname);setTimeout(()=>{if(!ME&&!hasSession())openAuth(m)},300)}
-const LIVE=Promise.all([0,1,2,3,4,5].map(i=>fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url',{headers:{apikey:SUPA_KEY,Range:`${i*1000}-${i*1000+999}`}}).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>a.flat());
+// Live images (audit fix 2026-11-27): only ask Supabase about the few cards with no image in cards.json yet, after the grid
+// has drawn. Before, every visit downloaded every card's image link (6 calls) and held the grid back until it arrived.
+function liveFill(){if(!D||document.documentElement.classList.contains('embed'))return;const miss=D.cards.filter(c=>!c.img).map(c=>'"'+c.s+':'+c.n+'"');if(!miss.length)return;
+  fetch(SUPA+'/rest/v1/site_card_images?select=card_id,url&card_id=in.('+encodeURIComponent(miss.join(','))+')',{headers:{apikey:SUPA_KEY}}).then(r=>r.ok?r.json():[]).then(rows=>{if(applyLive(rows)&&VIEW==='cards')renderCards(true)}).catch(()=>{})}
 // Live list only fills cards that have no image in cards.json yet (images are served from jonin.cards; see pipeline/mirror_images.py)
 // Back from a card page: same search/filters (hash), render as many cards as before, then scroll back.
 function restoreGrid(v){let g=null;try{g=JSON.parse(sessionStorage.getItem('jgrid')||'null');sessionStorage.removeItem('jgrid')}catch(_){}
@@ -1250,7 +1268,7 @@ function embedBoot(){const id=new URLSearchParams(location.search).get('card')||
   document.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey||e.shiftKey||!$('#authov').hidden)return;const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
     const k=e.key==='ArrowLeft'?'prev':e.key==='ArrowRight'?'next':'';const a=k&&top.querySelector('.cnav a[data-key="'+k+'"]');if(a){e.preventDefault();top.defaultView.location.href=a.href}})}
 function applyLive(rows){if(!D||!rows||!rows.length)return false;const m={};rows.forEach(r=>{if(r&&r.url)m[r.card_id]=r.url});let n=0;D.cards.forEach(c=>{const u=m[c.s+':'+c.n];if(u&&/^https:\/\//.test(u)&&!c.img){c.img=u;n++}});return n>0}
-fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promise.race([LIVE,new Promise(r=>setTimeout(()=>r(null),2500))]);if(live)applyLive(live);else LIVE.then(rows=>{if(applyLive(rows))renderCards(true)});D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
+fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;setTimeout(liveFill,1500);D.byId={};D.sets.forEach(s=>{D.byId[s.id]=s;if(s.id==='21')s.symbol='symbols/21.png'});
   $('#qn').textContent='('+QUICK.length+')';favFirst();
   $('#ftog').addEventListener('click',e=>{e.stopPropagation();const o=$('#fbar').classList.toggle('fopen');$('#ftog').setAttribute('aria-expanded',String(o))});
   {const d=$('#quick');d.addEventListener('toggle',()=>{try{localStorage.setItem('jq',d.open?'0':'1')}catch(_){}})}

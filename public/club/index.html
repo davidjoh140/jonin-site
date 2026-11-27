@@ -16,6 +16,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* Phones (audit fix 2026-11-27): same header as every other page, so the profile button stays on the first row. */
+@media(max-width:600px){header .hw{flex-wrap:nowrap}header nav{display:none}}
+
 :root{--bg:#1B1622;--panel:#241E2D;--line:#352C40;--ink:#FFF4E6;--mute:#B8AEA6;--acc:#F57C00;--acc2:#FF9A3D;--red:#B5121B;--red2:#8E0E15;--line2:#2E2638;--edge:#3A3046;--edge2:#30283A;--hov:#4A3E57;--art:#221C2A;--deep:#17121D;--deeper:#0F0B13;--ib:#2A2333;--accdim:#6B3F10;--buybg:#2A1418;--buyline:#5A1C22;--ont:#fff}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}

@@ -269,6 +269,28 @@ def recent_block(c):
     return f'<div class="pxfree" data-static><h4 class="pxfh">Recent sales</h4><div class="pvsl">{rows}</div>{more}</div>'
 
 
+def known_rar(c):
+    """Rarity is shown only when it's known (audit fix 2026-11-27: 14 cards said "Rarity: Unknown")."""
+    return bool(c.get('r')) and c['r'] != 'Unknown'
+
+
+def rar_word(c):
+    return f"{c['r']} " if known_rar(c) else ''
+
+
+def value_line(c):
+    """Card page, right under the name (audit fix 2026-11-27): the free typical value, so "what's it worth" is answered on
+    the first screen. Taps down to the full price section (#prices)."""
+    rt = range_text(c)
+    if rt:
+        what = f'{"graded" if c.get("prk") == "g" else "raw"} {ver_words(c) or "copy"}'
+        return f'<a class="valline" href="#prices" data-jt="value-line"><span>Typical value</span><b>{e(rt)}</b><small>{e(what)} · sales ↓</small></a>\n'
+    pb = c.get('pb')
+    if pb is not None and 0 <= pb < len(BANDS):
+        return f'<a class="valline" href="#prices" data-jt="value-line"><span>Market price</span><b>{e(BANDS[pb])}</b><small>all versions · sales ↓</small></a>\n'
+    return ''
+
+
 def price_block(c):
     """Free "Market price": one price band for the whole card. Exact prices by edition, foil and grade,
     and every sold listing, are Jonin Club only."""
@@ -734,6 +756,25 @@ def leaderboard_page():
     return HEAD.format(title=e(title), desc=e(desc), url=url, img=e(SITE + '/og.png'), tw='summary_large_image', ld=ld) + body + FOOT
 
 
+def not_found_page(chars):
+    """404.html (audit fix 2026-11-27). Without it, Cloudflare Pages served the homepage with a 200 for any bad address,
+    which Google counts as duplicate pages. Search box sends you to the homepage search; popular characters below.
+    PLACEHOLDER copy for David to edit."""
+    title = 'Page not found | Jonin'
+    desc = 'That page does not exist on Jonin. Search the Naruto CCG card database instead.'
+    pills = ''.join(f'<a class="pill" href="/character/{e(ch["slug"])}/">{e(ch["label"])}</a>' for ch in chars[:12])
+    body = f'''<section class="sethead"><h1>Page not found</h1>
+<p class="lede">That page doesn’t exist, or the link is out of date. Search for the card instead.</p></section>
+<form class="nfq" action="/" onsubmit="event.preventDefault();var q=this.q.value.trim();location.href='/'+(q?'#q='+encodeURIComponent(q):'')">
+<input name="q" type="search" placeholder="Card, character or number, e.g. Kakashi or N-001" aria-label="Search cards" autofocus>
+<button class="pill" type="submit">Search</button></form>
+<h2>Popular characters</h2><p class="nfp">{pills}</p>
+<p class="mt"><a href="/">Browse all cards →</a> · <a href="/#sets">All sets →</a> · <a href="/lists/">Lists →</a></p>
+<style>.nfq{{display:flex;gap:8px;max-width:560px;margin:8px 0 20px}}.nfq input{{flex:1;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:inherit;font:inherit}}.nfp{{display:flex;flex-wrap:wrap;gap:8px}}</style>
+'''
+    return HEAD.format(title=e(title), desc=e(desc), url=SITE + '/', img=e(SITE + '/og.png'), tw='summary', ld='<meta name="robots" content="noindex">') + body + FOOT
+
+
 def battle_page():
     """/battle/: the daily 1v1 character battle (David, 2026-11-27). Static shell; /battle.js reads today_battle() and
     vote_battle() from Supabase (db/038_daily_battle.sql)."""
@@ -838,7 +879,7 @@ def near_top(c, s, set_cards, char_lists, chars_by_name):
             pool, title, href = char_lists[ch['slug']], f'More {e(ch["label"])} cards', f'/character/{ch["slug"]}/'
             break
     else:
-        pool, title, href = set_cards, f'More from {e(s["name"])}', f'/set/{set_slug(s)}/'
+        pool, title, href = set_cards, f'Top cards from {e(s["name"])}', f'/set/{set_slug(s)}/'   # audit fix: was a second "More from" heading
     cs = sorted([x for x in pool if x is not c], key=lambda x: (x['top'][0] if x.get('top') else 10 ** 6, RANK.get(x['r'], 9), x['n']))[:4]
     if not cs:
         return '', []
@@ -878,7 +919,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
     desc = (f"What is the {y + ' ' if y else ''}{c['name']} {slab_num(c)} from {s['name']} worth? "
             + (f"A typical {'graded' if c.get('prk') == 'g' else 'raw'} {ver_words(c) + ' ' if ver_words(c) else ''}copy sells for {rt}. " if rt else
                f"Market price: {band}. " if band else '')
-            + f"{c['r']} {c['t']} card, {slab_set(s).split(':')[0]} of the Bandai Naruto CCG. "
+            + f"{rar_word(c)}{c['t']} card, {slab_set(s).split(':')[0]} of the Bandai Naruto CCG. "
             f"Printings: {', '.join(c.get('v') or [])}{'; ' + ' and '.join(eds) if eds else ''}. "
             "eBay sold prices for raw and PSA graded copies.")
     psa = (f'<a href="{e(PSA_POP + PSA[c["s"]])}" target="_blank" rel="noopener">PSA pop report · {e(set_label(s))}</a>'
@@ -888,7 +929,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
     cy = set_year(s)
     rows = [*([('Year', f'<a href="/year/{cy}/">{cy}</a>')] if cy else []),
             ('Set', f'<a class="stag" href="/set/{set_slug(s)}/">{sym_img(s)}{e(s["name"])}</a> · {e(set_label(s))}{" · " + e(s["rel"]) if s.get("rel") else ""}'),
-            ('Number', e(c['n'])), ('Rarity', e(c['r'])), ('Type', e(c['t'])),
+            ('Number', e(c['n'])), *([('Rarity', e(c['r']))] if known_rar(c) else []), ('Type', e(c['t'])),
             *[(k, detail_html(f, c[f])) for k, f in (('Element', 'el'), ('Turn cost', 'tc'), ('Hand cost', 'hc'), ('Village', 'vil'))
               if c.get(f) not in (None, '')],   # approved scan details (cards.json el/tc/hc/vil), with the scan-cut icon
             ('Editions', e(', '.join(eds) or '—')),
@@ -920,10 +961,10 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 <div class="info">
 <div class="cnav">{f'<a href="/card/{slug(prev)}/" aria-label="Previous card: {e(prev["name"])} {e(prev["n"])}" data-key="prev">‹</a>' if prev else ''}{f'<a href="/card/{slug(nxt)}/" aria-label="Next card: {e(nxt["name"])} {e(nxt["n"])}" data-key="next">›</a>' if nxt else ''}</div>
 <h1>{e(c["name"])}</h1>
-<p class="mt">{e(s["name"])} · {e(c["n"])} · {e(c["r"])}</p>
+<p class="mt">{e(s["name"])} · {e(c["n"])}{(" · " + e(c["r"])) if known_rar(c) else ""}</p>
 <p class="mt slabname">{e(slab_name(c, s))}</p>
 {quick_links(c, s, set_cards, char_lists or {}, chars_by_name or {})}
-{mv_badges(c, ranks, pops)}<div class="fsslot" data-fsslot></div><dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
+{value_line(c)}{mv_badges(c, ranks, pops)}<div class="fsslot" data-fsslot></div><dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
 {('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}
 <div class="links">
 <a href="{e(sold(card_q(c), 'slab'))}" target="_blank" rel="sponsored noopener" data-jt="ebay-click" data-jt-kind="slab">eBay sold · slabs</a>
@@ -935,7 +976,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 {newbie('card')}
 </div>
 </article>
-<div class="market{'' if sold_slab(c) else ' one'}">{sold_slab(c)}{price_block(c)}</div>{history_block(c)}
+<div class="market{'' if sold_slab(c) else ' one'}" id="prices">{sold_slab(c)}{price_block(c)}</div>{history_block(c)}
 {nt_html}
 <nav class="prevnext">{nav}</nav>
 {related_rows(c, s, set_cards, char_lists or {}, chars_by_name or {}, nt_cards)}
@@ -1171,6 +1212,7 @@ def main():
     changed += write(os.path.join(ROOT, 'giveaway', 'index.html'), giveaway_page())
     changed += write(os.path.join(ROOT, 'leaderboard', 'index.html'), leaderboard_page())
     changed += write(os.path.join(ROOT, 'battle', 'index.html'), battle_page())
+    changed += write(os.path.join(ROOT, '404.html'), not_found_page(chars))
     # Character list for the /welcome/ setup page (same order as the homepage sidebar).
     changed += write(os.path.join(ROOT, 'chars.json'), json.dumps([{'slug': ch['slug'], 'label': ch['label'], 'cards': counts[ch['slug']]} for ch in chars], ensure_ascii=False) + '\n')
     mvidx = os.path.join(ROOT, 'most-valuable')

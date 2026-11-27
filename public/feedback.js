@@ -7,6 +7,8 @@
   var css=`
 .jfb-fab{position:fixed;left:16px;bottom:16px;z-index:900;background:var(--deep,#17121D);border:1px solid var(--edge,#3A3046);color:var(--ink,#FFF4E6);border-radius:999px;padding:10px 14px;font:600 14px Inter,system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 30px -10px rgba(0,0,0,.7)}
 .jfb-fab:hover{border-color:var(--red,#B5121B)}
+/* Phones (audit fix 2026-11-27): icon only, so it covers less of the page. */
+@media(max-width:600px){.jfb-fab{width:44px;height:44px;padding:0;display:grid;place-items:center;font-size:18px;left:12px;bottom:12px}.jfb-t{display:none}}
 .jfb-ov{position:fixed;inset:0;z-index:1000;background:rgba(10,7,14,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px}
 .jfb-ov[hidden]{display:none}
 .jfb-box{position:relative;width:min(440px,100%);max-height:100%;overflow-y:auto;background:var(--deep,#17121D);border:1px solid var(--edge2,#30283A);border-radius:18px;padding:22px;display:grid;gap:12px;color:var(--ink,#FFF4E6);font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
@@ -40,7 +42,7 @@
   function vid(){try{var v=localStorage.getItem('jv');if(!v){v=Math.random().toString(36).slice(2,12);localStorage.setItem('jv',v)}return v}catch(_){return null}}
 
   var wrap=document.createElement('div');
-  wrap.innerHTML=`<button class="jfb-fab" type="button" data-fb aria-label="Send feedback">💬 Feedback</button>
+  wrap.innerHTML=`<button class="jfb-fab" type="button" data-fb aria-label="Send feedback">💬<span class="jfb-t"> Feedback</span></button>
 <div class="jfb-ov" hidden><form class="jfb-box" novalidate>
   <button type="button" class="jfb-x" data-jfbx aria-label="Close">✕</button>
   <h2>Feedback</h2>
