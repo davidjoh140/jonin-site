@@ -35,7 +35,16 @@ h1{font:800 clamp(26px,3.2vw,34px)/1.15 "Baloo 2",sans-serif;margin:0 0 16px}
 #q:focus{border-color:var(--red)}
 .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
 .lbl{color:var(--mute);font-size:13px;margin-right:2px}
-.details{display:contents}.details[hidden]{display:none}.dsel{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mute)}.dsel select{min-height:34px;padding:0 10px;border-radius:999px;background:var(--panel);color:var(--ink);border:1px solid var(--edge);font:500 13px Inter,sans-serif;cursor:pointer}
+.details{display:contents}.details[hidden]{display:none}
+.dd{position:relative;display:inline-flex}.ddb{gap:7px;padding:0 12px 0 14px}.ddb .ddl{color:var(--mute);font-weight:500}.ddb .ddv{display:inline-flex;align-items:center;gap:5px}.ddb .ddv b{font:700 14px/1 "Baloo 2",sans-serif;color:var(--ink);padding-top:2px}.ddb .ddany{color:var(--ink)}
+.ddb .chev{font-size:11px;color:var(--mute);transition:transform .15s}.ddb[aria-expanded=true] .chev{transform:rotate(180deg)}.ddb.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--panel))}
+.ddp{position:absolute;top:calc(100% + 6px);left:0;z-index:30;min-width:210px;max-height:340px;overflow:auto;margin:0;padding:6px;list-style:none;background:var(--panel);border:1px solid var(--edge);border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.45)}
+.ddo{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:14px;color:var(--ink)}.ddo:hover,.ddo[aria-selected=true]{background:color-mix(in srgb,var(--acc) 14%,transparent)}.ddo[aria-selected=true]{font-weight:600}
+.ddn{margin-left:auto;padding-left:12px;color:var(--mute);font-size:12px;font-variant-numeric:tabular-nums}
+.dic{width:26px;height:26px;flex:none;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}.dic.sm{width:20px;height:20px}
+.dnum{display:inline-grid;place-items:center;border-radius:7px;font:800 15px/1 "Baloo 2",sans-serif;color:#fff;background:#4A7FB5;text-shadow:0 1px 0 #0008}.dnum.hc{background:#B5672F}.dic.sm.dnum{font-size:12px}
+.dany{display:inline-grid;place-items:center;border-radius:50%;border:1px dashed var(--edge);color:var(--mute);font-size:11px}
+.tmeta{display:flex;align-items:center;gap:4px}.tic{width:17px;height:17px;object-fit:contain;flex:none}.tmeta .tic:first-of-type{margin-left:auto}.tic.dnum{font-size:10px;border-radius:4px}
 .pill{min-height:34px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;background:var(--panel);color:var(--ink);border:1px solid var(--edge)}
 .pill[aria-pressed=true]{background:var(--red);color:var(--ont);border-color:var(--red)}
 .bar .brk{flex-basis:100%;height:0}
@@ -458,10 +467,28 @@ const S0=()=>({q:'',set:'',type:'',chars:[],rars:[],sort:'',el:'',tc:'',hc:'',vi
 // Card details read off the scans and approved by David (cards.json el/tc/hc/vil). Each dropdown only shows once some cards have that detail.
 const DETAILS=[['el','Element'],['tc','Turn cost'],['hc','Hand cost'],['vil','Village']];
 const EL_ORDER=['Fire','Water','Wind','Lightning','Earth','Void'];
-function buildDetails(){const box=$('#details');if(!box)return;box.innerHTML=DETAILS.map(([k,l])=>{const vals=[...new Set(D.cards.map(c=>c[k]).filter(v=>v!=null&&v!==''))];if(!vals.length)return '';
-  vals.sort((a,b)=>k==='el'?EL_ORDER.indexOf(a)-EL_ORDER.indexOf(b):typeof a==='number'?a-b:String(a).localeCompare(String(b)));
-  return `<label class="dsel"><span>${l}</span><select data-dk="${k}"><option value="">Any</option>${vals.map(v=>`<option value="${esc(String(v))}">${esc(String(v))}</option>`).join('')}</select></label>`}).join('');
-  box.hidden=!box.innerHTML;box.querySelectorAll('select').forEach(x=>x.onchange=()=>{S[x.dataset.dk]=x.value;writeHash();renderCards(true)})}
+// Icons cut from the card scans (public/icons). Values without an icon get a plain number badge.
+const VIL_ICON={'Leaf':'leaf','Sand':'sand','Sound':'sound','Mist':'mist','Rain':'rain','Rock':'rock','Cloud':'cloud','Rogue Ninja':'rogue'};
+const ICON_HAVE={tc:[0,1,2,3,4,5,6],hc:[0,1]};
+function dIcon(k,v,cls){cls=cls||'dic';if(v==null||v==='')return '';
+  if(k==='el')return `<img class="${cls}" src="/icons/el-${esc(String(v).toLowerCase())}.png" alt="" width="22" height="22">`;
+  if(k==='vil')return VIL_ICON[v]?`<img class="${cls}" src="/icons/vil-${VIL_ICON[v]}.png" alt="" width="22" height="22">`:'';
+  if((k==='tc'||k==='hc')&&ICON_HAVE[k].includes(+v))return `<img class="${cls}" src="/icons/${k}-${+v}.png" alt="" width="22" height="22">`;
+  if(k==='tc'||k==='hc')return `<span class="${cls} dnum ${k}">${esc(String(v))}</span>`;return ''}
+const dLabel=(k,v)=>k==='tc'||k==='hc'?(v===''?'Any':String(v)):(v||'Any');
+function buildDetails(){const box=$('#details');if(!box)return;box.innerHTML=DETAILS.map(([k,l])=>{const cnt=new Map();D.cards.forEach(c=>{const v=c[k];if(v!=null&&v!=='')cnt.set(v,(cnt.get(v)||0)+1)});if(!cnt.size)return '';
+  const vals=[...cnt.keys()].sort((a,b)=>k==='el'?EL_ORDER.indexOf(a)-EL_ORDER.indexOf(b):typeof a==='number'?a-b:String(a).localeCompare(String(b)));
+  return `<div class="dd" data-dk="${k}"><button type="button" class="pill ddb" aria-haspopup="listbox" aria-expanded="false"><span class="ddl">${l}</span><span class="ddv"></span><span class="chev" aria-hidden="true">▾</span></button>
+  <ul class="ddp" role="listbox" aria-label="${l}" hidden><li role="option" class="ddo" data-v=""><span class="dic dany">✕</span><span>Any ${l.toLowerCase()}</span></li>${vals.map(v=>`<li role="option" class="ddo" data-v="${esc(String(v))}">${dIcon(k,v)}<span>${k==='tc'?'Turn cost '+v:k==='hc'?'Hand cost '+v:esc(String(v))}</span><span class="ddn">${cnt.get(v).toLocaleString()}</span></li>`).join('')}</ul></div>`}).join('');
+  box.hidden=!box.innerHTML;paintDetails()}
+function paintDetails(){document.querySelectorAll('#details .dd').forEach(dd=>{const k=dd.dataset.dk,v=S[k]||'';dd.querySelector('.ddv').innerHTML=v?dIcon(k,k==='tc'||k==='hc'?+v:v,'dic sm')+`<b>${esc(dLabel(k,v))}</b>`:'<span class="ddany">Any</span>';
+  dd.querySelector('.ddb').classList.toggle('on',!!v);dd.querySelectorAll('.ddo').forEach(o=>o.setAttribute('aria-selected',o.dataset.v===v))})}
+function ddClose(){document.querySelectorAll('#details .ddp').forEach(p=>{p.hidden=true;p.previousElementSibling.setAttribute('aria-expanded','false')})}
+document.addEventListener('click',e=>{const b=e.target.closest('#details .ddb'),o=e.target.closest('#details .ddo');
+  if(b){const p=b.nextElementSibling,open=p.hidden;ddClose();if(open){p.hidden=false;b.setAttribute('aria-expanded','true')}return}
+  if(o){const k=o.closest('.dd').dataset.dk;S[k]=o.dataset.v;ddClose();writeHash();renderCards(true);return}
+  if(!e.target.closest('#details'))ddClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')ddClose()});
 let VIEW='cards',D=null,S=S0(),list=[],shown=0,sel=-1;
 const PAGE=120;
 const setName=id=>D.byId[id]?.name||id;
@@ -487,7 +514,7 @@ const qNorm=q=>q.replace(/(^|[^a-z0-9])alt(?:ernate|ernative)?[\s-]*arts?(?![a-z
 const wordHit=(w,hay)=>w.length<=3?new RegExp('(^|[^a-z0-9])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).test(hay):hay.includes(w);
 // Multi-word search: if any card holds the whole phrase ("gen con", "dream legacy"), only phrase matches show;
 // otherwise each word matches on its own ("kakashi 12"). Checked once per query.
-const flatOf=c=>(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')).toLowerCase().replace(/[\s'’.-]/g,'');
+const flatOf=c=>(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')+' '+(c.t||'')+' '+(c.el||'')+' '+(c.vil||'')).toLowerCase().replace(/[\s'’.-]/g,'');
 let PH={q:null,k:'',on:false};
 const phraseOn=()=>{if(PH.q!==S.q){const k=qNorm(S.q.toLowerCase()).replace(/[\s'’.-]/g,'');PH={q:S.q,k,on:k.length>2&&D.cards.some(c=>flatOf(c).includes(k))}}return PH.on};
 function match(c){
@@ -496,7 +523,7 @@ function match(c){
   if(S.type&&c.t!==S.type)return false;
   for(const [k] of DETAILS)if(S[k]&&String(c[k]??'')!==S[k])return false;
   if(S.chars.length){const names=c.name.split(/\s*&\s*/).map(baseName);if(!S.chars.some(v=>v.split('|').some(w=>names.includes(w))))return false}
-  if(S.q){const q0=qNorm(S.q.toLowerCase().trim()),q=(ALIAS[q0.replace(/[\s'’.-]/g,'')]||q0).split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')).toLowerCase(),flat=flatOf(c);if(q.length>1&&phraseOn()){if(!flat.includes(PH.k))return false}else if(!q.every(w=>numHit(w,c.n)||(!/^#?\d+$/.test(w)&&wordHit(w,hay))))return false}
+  if(S.q){const q0=qNorm(S.q.toLowerCase().trim()),q=(ALIAS[q0.replace(/[\s'’.-]/g,'')]||q0).split(/\s+/).filter(Boolean),hay=(c.name+' '+c.n+' '+setName(c.s)+' '+(D.byId[c.s]?.code||'')+' '+(c.src==='ALT'?c.r:'')+' '+(c.note||'')+' '+(c.deck||'')+' '+(c.t||'')+' '+(c.el||'')+' '+(c.vil||'')).toLowerCase(),flat=flatOf(c);if(q.length>1&&phraseOn()){if(!flat.includes(PH.k))return false}else if(!q.every(w=>numHit(w,c.n)||(!/^#?\d+$/.test(w)&&wordHit(w,hay))))return false}
   return true}
 // Price band on each grid tile (free). Exact prices are Jonin Club only.
 const BANDS0=['Under $10','$10–50','$50–200','$200+'],band=c=>{const b=(D&&D.bands)||BANDS0;return c.pb==null?null:b[c.pb]??null};
@@ -526,16 +553,18 @@ const cardUrl=c=>'/card/'+encodeURIComponent((c.s+'-'+c.n).toLowerCase())+'/';
 // Back from a card page puts the grid back where it was (2026-11-26): search/filters live in the hash, scroll + how many were shown here.
 function saveGrid(){try{sessionStorage.setItem('jgrid',JSON.stringify({h:location.hash,y:scrollY,n:shown,v:VIEW}))}catch(_){}}
 function tile(c,i,extra){const sr=c.src==='SR'||c.src==='UR';const fl=foilsOf(c);
-  return `<a class="card in" href="${cardUrl(c)}" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div>${tpx(c)}<div class="nm">${esc(c.name)}</div><div class="mt">${setTag(c.s)}</div><div class="mt">${esc(c.n)} · ${rsym(c.src)}</div>${extra||''}</a>`}
+  return `<a class="card in" href="${cardUrl(c)}" style="--k:${Math.min(i%PAGE,24)}" data-i="${i}" aria-label="${esc(c.name)}, ${esc(setName(c.s))} ${esc(c.n)}, ${esc(RNAME[c.src]||c.r)}${fl.length?', foils: '+esc(fl.map(f=>f[1]).join(', ')):''}"><div class="art${sr?' sr':''}">${/^https:\/\//.test(c.img||'')?`<img src="${esc(c.img)}" alt="" loading="lazy">`:''}<span class="num">${esc(c.n)}</span><span class="ty">${esc(c.t)}</span>${marks(c)}${fl.length?`<span class="fchips">${fl.map(f=>`<span class="fx f-${f[0]}" title="${f[1]}"></span>`).join('')}</span>`:''}</div>${tpx(c)}<div class="nm">${esc(c.name)}</div><div class="mt">${setTag(c.s)}</div><div class="mt tmeta">${esc(c.n)} · ${rsym(c.src)}${c.el?dIcon('el',c.el,'tic'):''}${c.tc!=null?dIcon('tc',c.tc,'tic'):''}</div>${extra||''}</a>`}
 // Sort options. PLACEHOLDER choices for David to confirm: rarity order (UR > SR > R > U > C, then Promo, Starter, unknown),
 // "Newest sets first" = main sets 28 down to 1, then packs/tins/promos; "market value" = the price band (free data only); cards with no sales always go last.
 // Default sort (David, 2026-11-26): market value high to low, so visitors see the big cards first. 'num' = set & number.
-const SORTS=[['','Market value: high to low'],['num','Set & number'],['name','Name A–Z'],['name-d','Name Z–A'],['rar-d','Rarity: high to low'],['rar','Rarity: low to high'],['px','Market value: low to high'],['set-d','Newest sets first']];
+const SORTS=[['','Market value: high to low'],['num','Set & number'],['name','Name A–Z'],['name-d','Name Z–A'],['rar-d','Rarity: high to low'],['rar','Rarity: low to high'],['px','Market value: low to high'],['set-d','Newest sets first'],['tc','Turn cost: low to high'],['tc-d','Turn cost: high to low'],['hc','Hand cost: low to high'],['hc-d','Hand cost: high to low'],['el','Element'],['vil','Village'],['type','Card type']];
+const TYPE_ORD=['Ninja','Jutsu','Mission','Client','Promo'];
+const NULL_LAST=new Set(['px','tc','hc','el','vil']);
 const RORD={UR:6,SR:5,R:4,U:3,C:2,P:1,F:0,'':-1};
 const pxOf=c=>{if(MEMBER&&EST){const e=tileEst(c);return e?+e.estimate:null}return c.pb==null?null:c.pb};
 function sorted(a){const k=!S.sort||S.sort==='px-d'?'px-d':S.sort;if(k==='num')return a;const ix=new Map(D.cards.map((c,i)=>[c,i])),so=new Map(D.sets.map((s,i)=>[s.id,i]));const d=k.endsWith('-d')?-1:1,b=k.replace(/-d$/,'');
-  const key={name:c=>c.name.toLowerCase(),rar:c=>RORD[c.src]??-1,px:pxOf,set:c=>{const i=so.get(c.s)??0;return (D.byId[c.s]||{}).kind==='Main'?i:i-1000}}[b];
-  return a.map(c=>[c,key(c)]).sort(([x,kx],[y,ky])=>{if(b==='px'&&(kx==null||ky==null)){if(kx==null&&ky==null)return ix.get(x)-ix.get(y);return kx==null?1:-1}
+  const key={name:c=>c.name.toLowerCase(),rar:c=>RORD[c.src]??-1,px:pxOf,tc:c=>c.tc??null,hc:c=>c.hc??null,el:c=>c.el?EL_ORDER.indexOf(c.el):null,vil:c=>c.vil?(c.vil==='Rogue Ninja'?'~':c.vil):null,type:c=>{const i=TYPE_ORD.indexOf(c.t);return i<0?9:i},set:c=>{const i=so.get(c.s)??0;return (D.byId[c.s]||{}).kind==='Main'?i:i-1000}}[b];
+  return a.map(c=>[c,key(c)]).sort(([x,kx],[y,ky])=>{if(NULL_LAST.has(b)&&(kx==null||ky==null)){if(kx==null&&ky==null)return ix.get(x)-ix.get(y);return kx==null?1:-1}
     if(b==='rar'&&d===1){const lo=v=>v<2?99:v;kx=lo(kx);ky=lo(ky)}
     const r=kx<ky?-d:kx>ky?d:0;return r||ix.get(x)-ix.get(y)}).map(p=>p[0])}
 // Custom Set dropdown with set symbols. Codes: S1–S28 main sets, TP/T as is, PR for promos.
@@ -565,7 +594,7 @@ function renderCards(reset){
   if(!list.length)$('#grid').innerHTML='<p class="empty">No cards match. <button class="clear" data-clear>↺ Reset</button></p>';
   if(reset)paintChars();
   document.querySelectorAll('#rars .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r?S.rars.includes(b.dataset.r):!S.rars.length));
-  paintSet();$('#sortsel').value=S.sort;document.querySelectorAll('#types .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ty===S.type));document.querySelectorAll('#details select').forEach(x=>x.value=S[x.dataset.dk]||'');if(document.activeElement!==$('#q'))$('#q').value=S.q}
+  paintSet();$('#sortsel').value=S.sort;document.querySelectorAll('#types .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ty===S.type));if($('#details .dd'))paintDetails();if(document.activeElement!==$('#q'))$('#q').value=S.q}
 // Set completion (rule confirmed by David): a card counts as owned if you have any printing/edition of it.
 // Master set: every printing x edition of every card; by.p[set] = printings you have, PRINTS[set] = printings that exist.
 let PRINTS=null;function setPrints(){if(PRINTS)return PRINTS;PRINTS={};D.cards.forEach(c=>{PRINTS[c.s]=(PRINTS[c.s]||0)+Math.max(1,(c.v||[]).length)*Math.max(1,(c.ed||[]).filter(Boolean).length)});return PRINTS}

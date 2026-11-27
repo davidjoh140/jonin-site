@@ -662,6 +662,24 @@ def near_top(c, s, set_cards, char_lists, chars_by_name):
                       + f'<span>{e(x["name"])}</span></a>' for x in cs) + '</div></section>\n'), cs
 
 
+# Scan-cut icons in public/icons (element discs, village symbols, turn/hand cost tiles); others show text only.
+VIL_ICON = {'Leaf': 'leaf', 'Sand': 'sand', 'Sound': 'sound', 'Mist': 'mist', 'Rain': 'rain', 'Rock': 'rock',
+            'Cloud': 'cloud', 'Rogue Ninja': 'rogue'}
+
+
+def detail_icon(f, v):
+    name = {'el': f'el-{str(v).lower()}', 'vil': f'vil-{VIL_ICON.get(v, "")}', 'tc': f'tc-{v}', 'hc': f'hc-{v}'}[f]
+    return name if os.path.isfile(os.path.join(ROOT, 'icons', f'{name}.png')) else ''
+
+
+def detail_html(f, v):
+    """Value with its icon, linking to the card list filtered on it (e.g. /#el=Fire)."""
+    ic = detail_icon(f, v)
+    img = (f'<img src="/icons/{ic}.png" alt="" width="22" height="22" '
+           f'style="width:22px;height:22px;object-fit:contain;vertical-align:-6px;margin-right:6px">') if ic else ''
+    return f'<a href="/#{f}={quote(str(v))}">{img}{e(str(v))}</a>'
+
+
 def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None, ranks=None, pops=None):
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
@@ -678,8 +696,8 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
            if img else f'<div class="noimg"><b>{e(c["n"])}</b><span>{e(c["t"])} · scan coming soon</span></div>')
     rows = [('Set', f'<a class="stag" href="/set/{set_slug(s)}/">{sym_img(s)}{e(s["name"])}</a> · {e(set_label(s))}{" · " + e(s["rel"]) if s.get("rel") else ""}'),
             ('Number', e(c['n'])), ('Rarity', e(c['r'])), ('Type', e(c['t'])),
-            *[(k, e(str(c[f]))) for k, f in (('Element', 'el'), ('Turn cost', 'tc'), ('Hand cost', 'hc'), ('Village', 'vil'))
-              if c.get(f) not in (None, '')],   # approved scan details (cards.json el/tc/hc/vil), same as the old popup showed
+            *[(k, detail_html(f, c[f])) for k, f in (('Element', 'el'), ('Turn cost', 'tc'), ('Hand cost', 'hc'), ('Village', 'vil'))
+              if c.get(f) not in (None, '')],   # approved scan details (cards.json el/tc/hc/vil), with the scan-cut icon
             ('Editions', e(', '.join(eds) or '—')),
             ('Printings', ''.join(f'<span class="pv">{e(v)}</span>' for v in (c.get('v') or [])))]
     cl = char_links_for(c, chars_by_name or {})
