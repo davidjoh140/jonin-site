@@ -29,17 +29,23 @@ Deno.serve(async (req) => {
     .update({ confirm_sent_at: new Date().toISOString() })
     .eq("id", id).eq("email", email).is("confirm_sent_at", null)
     .gt("created_at", new Date(Date.now() - 15 * 60 * 1000).toISOString())
-    .select("name,email,card_count,has_foils,handoff,photos,town").maybeSingle();
+    .select("name,email,card_count,has_foils,handoff,photos,town,country,state,postal,city,selling,language,value_range").maybeSingle();
   if (!lead) return json({ sent: false, reason: "not found" });
 
   const first = String(lead.name).split(/\s+/)[0];
   const photos = (lead.photos ?? []).length;
   const rows: [string, string][] = [];
+  const where = lead.country
+    ? (lead.country === "United States" ? [lead.state, lead.postal].filter(Boolean).join(" ") : [lead.city, lead.country].filter(Boolean).join(", "))
+    : lead.town;
+  if (where) rows.push(["Location", where]);
+  if ((lead.selling ?? []).length) rows.push(["Selling", lead.selling.join(", ")]);
+  if (lead.language) rows.push(["Language", lead.language]);
   if (lead.card_count) rows.push(["Cards", lead.card_count]);
-  if (lead.has_foils) rows.push(["Shiny/foil", lead.has_foils]);
+  if (lead.value_range) rows.push(["Rough value", lead.value_range]);
+  else if (lead.has_foils) rows.push(["Shiny/foil", lead.has_foils]);
   rows.push(["Photos", String(photos)]);
   if (lead.handoff) rows.push(["Pickup or ship", lead.handoff]);
-  if (lead.town) rows.push(["Town/ZIP", lead.town]);
 
   // Shared Jonin template (../_shared/jonin-email.ts): buy@ banner + Jonin Buying signature.
   const mail = joninEmail("buy", {
