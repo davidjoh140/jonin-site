@@ -34,6 +34,48 @@ def set_link(set_id):
     return f'<a class="ghostbtn" href="/sealed/#set-{html.escape(set_id.lower(), quote=True)}">Sealed from this set</a>' if _BY_SET.get(set_id) else ''
 
 
+# What's inside, shown on set pages when a product has no contents filled in yet.
+# Taken from retailer listings (ToyWiz, Noble Knight: 24 packs per box, 10 cards per pack). PLACEHOLDER for David to confirm.
+KIND_ABOUT = {
+    'booster_box': '24 booster packs of 10 cards.',
+    'booster_pack': '10 random cards from the set.',
+    'theme': 'A ready-to-play preconstructed deck.',
+    'starter': 'Ready-to-play starter decks, with cards marked by red dots that are only found in starters.',
+    'tin': 'A collector tin with exclusive cards.',
+    'tournament_pack': 'Booster packs made for draft and sealed events.',
+}
+
+
+def for_set(set_id):
+    """Sealed products for one set, boxes first."""
+    ps = [p for p in load() if p['set'] == set_id]
+    return sorted(ps, key=lambda p: KIND_ORDER.index(p['kind']) if p['kind'] in KIND_ORDER else 99)
+
+
+def set_block(set_id, set_name):
+    """'Sealed products' section for a set page: art, what's inside, price, listed now. '' if none."""
+    ps = for_set(set_id)
+    if not ps:
+        return ''
+    items = ''
+    for p in ps:
+        sp = span(p)
+        about = p.get('contents') or KIND_ABOUT.get(p['kind'], '')
+        price = f'<b class="sbpx">{e(span_text(sp))}</b>' if sp else '<span class="sbpx none">No sales yet</span>'
+        live = f'<span class="sblive">{p["live_n"]} listed now</span>' if p.get('live_n') else ''
+        rel = f'<span>Released {e(p["released"])}</span>' if p.get('released') else ''
+        msrp = f'<span>MSRP {e(B.money(p["msrp"]))}</span>' if p.get('msrp') else ''
+        items += (f'<a class="sbitem" href="/sealed/{e(p["slug"])}/" data-jt="set-sealed" data-jt-to="{e(p["slug"])}">'
+                  f'<span class="sbart">{pic(p, "simg")}</span>'
+                  f'<span class="sbtxt"><span class="sbkind">{ICON.get(p["kind"], "📦")} {e(KIND.get(p["kind"], "Sealed"))}</span>'
+                  f'<b class="sbname">{e(short(p))}</b><span class="sbabout">{e(about)}</span>'
+                  f'<span class="sbmeta">{rel}{msrp}</span><span class="sbprice">{price}{live}</span>'
+                  f'<span class="sbgo">Prices, sales and listings →</span></span></a>')
+    return (f'<section class="setsec" id="sealed"><div class="sechd"><h2>Sealed products</h2>'
+            f'<a class="seclink" href="/sealed/#set-{e(set_id.lower())}">All sealed from {e(set_name)} →</a></div>'
+            f'<div class="sblist">{items}</div></section>')
+
+
 def setup(mod):
     global B
     B = mod

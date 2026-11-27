@@ -97,7 +97,7 @@ jobs:
         run: python pipeline/build_pages.py
       - name: Commit if changed
         run: |
-          OUT="public/cards.json public/404.html pipeline/r2_site.json public/card public/set public/sitemap.xml public/robots.txt public/img public/index.html pipeline/lastmod.json public/character public/characters public/news public/privacy public/terms public/articles pipeline/article_sales.json pipeline/card_recent_sales.json pipeline/card_price_history.json public/battle public/missions public/most-valuable public/lists public/most-popular pipeline/votes.json pipeline/slab_tiles.json pipeline/sale_photos_raw public/sealed pipeline/sealed.json public/price-guide public/year public/what-are-my-naruto-cards-worth public/giveaway public/leaderboard"
+          OUT="public/cards.json public/404.html pipeline/r2_site.json public/card public/set public/sitemap.xml public/robots.txt public/img public/index.html pipeline/lastmod.json public/character public/characters public/news public/privacy public/terms public/articles pipeline/article_sales.json pipeline/card_recent_sales.json pipeline/card_price_history.json public/battle public/missions public/most-valuable public/lists public/most-popular pipeline/votes.json pipeline/slab_tiles.json pipeline/sale_photos_raw public/sealed pipeline/sealed.json pipeline/set_intel.json public/price-guide public/year public/what-are-my-naruto-cards-worth public/giveaway public/leaderboard"
           if [ -z "$(git status --porcelain $OUT)" ]; then echo "No change"; exit 0; fi
           git config user.name "jonin-bot"
           git config user.email "jonin-bot@users.noreply.github.com"

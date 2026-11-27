@@ -491,6 +491,20 @@ def main():
             r = tx.get(c["s"] + ":" + c["n"])
             if r:
                 c["tx"] = [r.get("traits") or "", r.get("ability") or "", r["body"], r.get("flavor") or ""]
+        # Set intel (set pages, 2026-11-27): confirmed facts from the Hub intel feed, table set_intel (db/040_set_intel.sql).
+        # Until that table exists the committed pipeline/set_intel.json is left as it is.
+        try:
+            rows = supa.select("set_intel", {"select": "id,set_id,field,topic,detail,source_name,source_url,noted_on",
+                                             "status": "eq.live", "order": "set_id,noted_on,id"})
+            si = {}
+            for r in rows:
+                si.setdefault(r.pop("set_id"), []).append(r)
+            itext = json.dumps(si, indent=1, ensure_ascii=False) + "\n"
+            ip = Path(__file__).resolve().parent / "set_intel.json"
+            if not ip.exists() or ip.read_text(encoding="utf-8") != itext:
+                ip.write_text(itext, encoding="utf-8")
+        except Exception as ex:
+            print("set intel skipped:", ex)
         # Grid thumbnails (thumbs.py): "th" for every card whose thumbnail exists, added last like thumbs.py does.
         import thumbs
         for c in data["cards"]:
