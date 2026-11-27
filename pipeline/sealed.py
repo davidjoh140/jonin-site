@@ -11,7 +11,7 @@ import re
 import prices
 import settings as cfg
 
-KIND_LABEL = {"booster_pack": "Booster pack", "booster_box": "Booster box", "theme": "Theme deck",
+KIND_LABEL = {"booster_pack": "Booster pack", "booster_box": "Booster box", "blister_pack": "Blister pack", "blister_box": "Blister box", "theme": "Theme deck",
               "starter": "Starter deck", "tin": "Tin", "tournament_pack": "Tournament pack"}
 
 # A title with any of these is not one sealed item. PLACEHOLDER
@@ -19,10 +19,14 @@ SKIP = ["opened", "open box", "empty", "resealed", "re-sealed", "unsealed", "no 
         "box only", "tin only", "case only", "pulls", "pulled", "pack fresh", "from pack", "art card",
         "japanese", "japan", "kayou", "mythos", "boruto", "proxy", "custom", "replica", "reprint", "lot",
         "bundle", "case of", "sealed case", "deck box", "storage box", "playmat", "sleeves", "binder",
-        "you pick", "choose", "booster box break", "break", "rip", "repack", "mystery"]
+        "you pick", "choose", "booster box break", "break", "rip", "repack", "mystery",
+        "art set", "artset"]          # both arts sold together: singles only (David 2026-11-27)
 SKIP_RE = re.compile(r"\b(?:" + "|".join(re.escape(w) for w in SKIP) + r")\b")
 # More than one of something ("3 packs", "x2", "2x") -> skip. PLACEHOLDER: multiples aren't split into a per-item price
-MULTI = re.compile(r"\b(?:[2-9]|\d{2,})\s*(?:x\b|packs\b|boosters\b|boxes\b|tins\b|decks\b)|\bx\s*[2-9]\b|\b[2-9]x\b")
+# A box's own contents ("Booster Box 24 Packs", "Blister Box 15 Packs") aren't multiples: pack counts only count
+# against packs, decks and other single items (2026-11-27).
+PACK_COUNT = re.compile(r"\b(?:[2-9]|\d{2,})\s*(?:packs|boosters|blisters)\b")
+MULTI = re.compile(r"\b(?:[2-9]|\d{2,})\s*(?:x\b|packs\b|boosters\b|blisters\b|boxes\b|tins\b|decks\b)|\bx\s*[2-9]\b|\b[2-9]x\b|\bset of [2-9]\b")
 # A single card's number in the title means it's a card listing ("N-001", "#123", "J-12")
 CARD_NUMBER = re.compile(r"\b[NJMCP]-?\s?\d{2,4}\b|#\s?\d{2,4}\b|\bPR-?\d+", re.I)
 
@@ -66,6 +70,8 @@ def find_kind(t):
         return "theme", False
     if " starter deck " in t or " starter " in t:
         return "starter", False
+    if " blister " in t or " blisters " in t:                 # one pack in a retail blister, or a box of them
+        return ("blister_box", False) if re.search(r" (?:box|display|case) ", t) else ("blister_pack", False)
     if " booster box " in t or " display " in t:
         return "booster_box", False
     if " booster pack " in t:
@@ -101,15 +107,18 @@ def match(title, products, sets, photo=False):
     if not re.search(r"naruto", low):
         return None
     if photo:
-        if PHOTO_SKIP_RE.search(low) or MULTI.search(low):
+        if PHOTO_SKIP_RE.search(low):
             return None
-    elif SKIP_RE.search(low) or any(w in low for w in cfg.SALES_SKIP_WORDS) or MULTI.search(low):
+    elif SKIP_RE.search(low) or any(w in low for w in cfg.SALES_SKIP_WORDS):
         return None
     if CARD_NUMBER.search(title or ""):
         return None
     t = norm(title).replace(" the ", " ")
     kind, inferred = find_kind(t)
     if not kind:
+        return None
+    multi = MULTI.search(low)
+    if multi and not (kind in ("booster_box", "blister_box") and PACK_COUNT.fullmatch(multi.group(0).strip())):
         return None
     by_kind = lambda k: [p for p in products if p["kind"] == k and p.get("public", True)]
     if kind == "tin":
@@ -131,16 +140,28 @@ def match(title, products, sets, photo=False):
         if len(kinds) != 1:
             return None
         kind = kinds.pop()
-    cands = [p for p in by_kind(kind) if p["set_id"] == sid]
+    in_set = [p for p in by_kind(kind) if p["set_id"] == sid]
+    cands = [p for p in in_set if not p.get("parent_id")]          # set-level entries (and decks without a parent)
+    bare = t.replace(" naruto ", " ", 1)            # the brand word isn't the Naruto deck's/art's name
+    # a bare "naruto" (the Naruto theme deck) must survive the brand word; "naruto art" etc. can be looked up as is
+    said = lambda w: norm(w) in (bare if norm(w) == " naruto " else t)
+    named = lambda ps: [p for p in ps if any(said(w) for w in p.get("match_words") or [])]
     if len(cands) > 1:                              # several decks in one set: the deck's own name decides
-        bare = t.replace(" naruto ", " ", 1)        # the brand word isn't the Naruto deck's name
-        named = [p for p in cands if any(norm(w) in bare for w in p.get("match_words") or [])]
-        if len(named) != 1:
+        hit = named(cands)
+        if len(hit) != 1:
             return None
-        cands = named
-        how += f", deck name '{named[0]['match_words'][0]}'"
+        cands = hit
+        how += f", deck name '{hit[0]['match_words'][0]}'"
     if not cands:
         return None
+    kids = [p for p in in_set if p.get("parent_id") == cands[0]["id"]]
+    if kids:                                        # pack arts / decks under a set-level entry
+        hit = named(kids)
+        if len(hit) == 1:                           # the title names exactly one: that art or deck
+            how += f", {'art' if hit[0].get('art') and kind != 'starter' else 'deck'} '{hit[0].get('art') or hit[0]['name']}'"
+            cands = hit
+        else:                                       # names none (or several): the set-level entry (David 2026-11-27)
+            how += ", art not stated" if kind in ("booster_pack", "blister_pack") else ", deck not stated"
     conf = 0.75 if inferred else 0.9
     sealed_word = re.search(r"\b(sealed|factory sealed|new)\b", low)
     if not sealed_word:

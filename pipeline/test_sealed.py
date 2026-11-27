@@ -39,6 +39,41 @@ def test_decks():
     assert pid("Naruto CCG Tournament Pack 1 sealed") == "tp1-pack"
 
 
+ARTS = [{"id": "1-booster-pack-silver-naruto", "set_id": "1", "kind": "booster_pack", "parent_id": "1-booster-pack", "art": "Silver Naruto", "match_words": ["silver"]},
+        {"id": "1-booster-pack-gold-naruto", "set_id": "1", "kind": "booster_pack", "parent_id": "1-booster-pack", "art": "Gold Naruto", "match_words": ["gold", "yellow"]},
+        {"id": "4-booster-pack-sasuke", "set_id": "4", "kind": "booster_pack", "parent_id": "4-booster-pack", "art": "Sasuke", "match_words": ["sasuke"]},
+        {"id": "12-blister-pack", "set_id": "12", "kind": "blister_pack", "match_words": []},
+        {"id": "12-blister-pack-naruto", "set_id": "12", "kind": "blister_pack", "parent_id": "12-blister-pack", "art": "Naruto", "match_words": ["naruto art", "naruto pack art"]},
+        {"id": "12-blister-pack-sakura", "set_id": "12", "kind": "blister_pack", "parent_id": "12-blister-pack", "art": "Sakura", "match_words": ["sakura"]},
+        {"id": "12-blister-box", "set_id": "12", "kind": "blister_box", "match_words": []},
+        {"id": "1-starter-naruto", "set_id": "1", "kind": "starter", "parent_id": "1-starter", "art": "Naruto", "match_words": ["naruto deck", "naruto starter", "uzumaki"]},
+        {"id": "1-starter-sasuke", "set_id": "1", "kind": "starter", "parent_id": "1-starter", "art": "Sasuke", "match_words": ["sasuke"]}]
+
+
+def apid(title):
+    m = sealed.match(title, P + ARTS, SETS)
+    return m and m[0]["id"]
+
+
+def test_arts_blisters_and_decks():
+    assert apid("Naruto CCG The Path to Hokage Booster Pack Silver Naruto Art Sealed") == "1-booster-pack-silver-naruto"
+    assert apid("2006 Bandai Naruto Path To Hokage sealed booster pack yellow/gold cover art") == "1-booster-pack-gold-naruto"
+    assert apid("2007 Naruto CCG Revenge and Rebirth Booster Pack [SASUKE ART] - New, Sealed") == "4-booster-pack-sasuke"
+    assert apid("Naruto CCG The Path to Hokage Booster Pack Sealed 1st Edition") == "1-booster-pack"   # art not named
+    assert apid("Naruto Path to Hokage booster pack silver and gold sealed") == "1-booster-pack"      # names both
+    assert apid("Naruto Path to Hokage Booster Pack Art Set (2 Packs) sealed") is None                # pair: singles only
+    assert apid("A New Chronicle - Set 12 - Blister Booster Pack x1 - Sakura Art - Naruto CCG Sealed") == "12-blister-pack-sakura"
+    assert apid("A New Chronicle Blister Booster Pack Naruto Art Naruto CCG Sealed") == "12-blister-pack-naruto"
+    assert apid("2009 Naruto CCG A New Chronicle (Set 12) 1st Edition Blister Booster Pack Sealed") == "12-blister-pack"
+    assert apid("Naruto A New Chronicle TCG CCG Blister Booster Pack Box 15 Packs sealed") == "12-blister-box"
+    assert apid("Naruto CCG A New Chronicle Booster Packs in Blister SET OF 2") is None
+    assert apid("Naruto CCG Path to Hokage Booster Box 24 Packs factory sealed") == "1-booster-box"     # box contents
+    assert apid("Naruto A New Chronicle booster pack sealed") == "12-booster-pack"                    # loose pack, not blister
+    assert apid("Naruto CCG TCG The Path to Hokage Sasuke Uchiha Starter Deck sealed") == "1-starter-sasuke"
+    assert apid("Naruto CCG TCG The Path to Hokage Naruto Uzumaki Starter Deck sealed") == "1-starter-naruto"
+    assert apid("Naruto Path to Hokage starter deck sealed") == "1-starter"                           # deck not named
+
+
 def test_not_sealed():
     assert pid("Naruto CCG Path to Hokage booster pack opened empty wrapper") is None
     assert pid("Naruto N-001 Path to Hokage pack fresh") is None

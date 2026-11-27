@@ -37,7 +37,20 @@ jobs:
           R2_ENDPOINT: https://f6d20bce1fc2f76725b857ef0fed6d10.r2.cloudflarestorage.com
           R2_BUCKET: jonin-scans
         run: cd pipeline && python mirror_images.py
-      - name: Copy sealed photos David picked into R2
+      - name: Count sealed photos waiting to be cleaned
+        id: sealedphotos
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: echo "n=$(cd pipeline && python find_sealed_images.py --pending 2>/dev/null | tail -1 || echo 0)" >> "$GITHUB_OUTPUT"
+      - name: Cache the background-removal model (sealed photos)
+        if: steps.sealedphotos.outputs.n != '0' && steps.sealedphotos.outputs.n != ''
+        uses: actions/cache@v4
+        with: { path: "~/.u2net\n~/.rembg", key: rembg-isnet-general-use-v2 }
+      - name: Install photo cleanup (only when a sealed photo is waiting)
+        if: steps.sealedphotos.outputs.n != '0' && steps.sealedphotos.outputs.n != ''
+        run: pip install -q "rembg[cpu]" opencv-python-headless || echo "cleanup tools not installed: photos copied as they are"
+      - name: Copy sealed photos David picked into R2 (cut out and cleaned)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

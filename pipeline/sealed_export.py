@@ -40,7 +40,7 @@ def build(products, sets, ranges, sales, listings, now=None):
             continue
         ss, ll = sold.get(p["id"], []), live.get(p["id"], [])
         img = p.get("image_url") or ""
-        credit = "Seller photo" if "/site/sealed/" in img else ""     # picked in the Hub from an eBay listing
+        credit = "Seller photo" if ("/site/sealed/" in img or "/img/sealed/" in img) else ""   # picked in the Hub from an eBay listing
         if not img:
             img = next((x[5] for x in ss if x[5]), "") or next((x["img"] for x in ll if x["img"]), "")
             credit = "Seller photo" if img else ""
@@ -48,6 +48,7 @@ def build(products, sets, ranges, sales, listings, now=None):
                     "set_name": set_name.get(p["set_id"], ""), "released": p.get("released") or "",
                     "contents": p.get("contents") or "", "msrp": float(p["msrp"]) if p.get("msrp") is not None else None,
                     "confirmed": bool(p.get("confirmed")), "img": img, "credit": credit,
+                    "art": p.get("art") or "", "parent": p.get("parent_id") or "",
                     "ranges": sorted(rng.get(p["id"], []), key=lambda r: r["ed"]),
                     "recent": [x[:5] for x in ss[:RECENT]], "live": ll[:LIVE], "live_n": len(ll)})
     return {"products": out}

@@ -144,11 +144,17 @@ def mirror():
                 r = requests.get(c["image_url"], timeout=60)
                 r.raise_for_status()
                 im = Image.open(io.BytesIO(r.content)).convert("RGB")
-                im.thumbnail((1200, 1200))
-                buf = io.BytesIO()
-                im.save(buf, "WEBP", quality=86)
-                key = f"site/sealed/{c['product_id'].lower()}-{hashlib.sha1(c['image_url'].encode()).hexdigest()[:10]}.webp"
-                r2.put(key, buf.getvalue(), "image/webp")
+                try:                                # cut out and cleaned (sealed_photo.py) when rembg is installed
+                    import sealed_photo
+                    data, tag = sealed_photo.webp(sealed_photo.clean(im)), "c"
+                except Exception as e:
+                    print("photo cleanup skipped:", e)
+                    im.thumbnail((1200, 1200))
+                    buf = io.BytesIO()
+                    im.save(buf, "WEBP", quality=86)
+                    data, tag = buf.getvalue(), ""
+                key = f"site/sealed/{c['product_id'].lower()}-{tag}{hashlib.sha1(c['image_url'].encode()).hexdigest()[:10]}.webp"
+                r2.put(key, data, "image/webp")
                 url = r2.PUBLIC + key
                 supa.update("sealed_image_candidates", {"id": c["id"]}, {"r2_url": url})
                 supa.update("products", {"id": c["product_id"]}, {"image_url": url, "updated_at": "now()"})
@@ -159,5 +165,13 @@ def mirror():
         print(run.stats)
 
 
+def pending():
+    """How many picked photos are waiting to be copied (the Sync workflow installs rembg only when > 0)."""
+    return len(supa.select("sealed_image_candidates", {"select": "id", "status": "eq.approved", "r2_url": "is.null"}))
+
+
 if __name__ == "__main__":
-    mirror() if "--mirror" in sys.argv else find()
+    if "--pending" in sys.argv:
+        print(pending())
+    else:
+        mirror() if "--mirror" in sys.argv else find()

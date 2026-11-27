@@ -10,12 +10,14 @@ import shutil
 B = None   # build_pages module, set by setup()
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sealed.json')
 EPN = '&mkevt=1&mkcid=1&mkrid=711-53200-19255-0&campid=5339262225&toolid=10001&customid=jonin-sealed'
-KIND = {'booster_box': 'Booster box', 'booster_pack': 'Booster pack', 'theme': 'Theme deck',
+KIND = {'booster_box': 'Booster box', 'booster_pack': 'Booster pack', 'blister_pack': 'Blister pack',
+        'blister_box': 'Blister box', 'theme': 'Theme deck',
         'starter': 'Starter deck', 'tin': 'Tin', 'tournament_pack': 'Tournament pack'}
-KIND_PLURAL = {'booster_box': 'Booster boxes', 'booster_pack': 'Booster packs', 'theme': 'Theme decks',
+KIND_PLURAL = {'booster_box': 'Booster boxes', 'booster_pack': 'Booster packs', 'blister_pack': 'Blister packs',
+               'blister_box': 'Blister boxes', 'theme': 'Theme decks',
                'starter': 'Starter decks', 'tin': 'Tins', 'tournament_pack': 'Tournament packs'}
-KIND_ORDER = ['booster_box', 'booster_pack', 'theme', 'starter', 'tin', 'tournament_pack']
-ICON = {'booster_box': '📦', 'booster_pack': '🎴', 'theme': '🃏', 'starter': '🃏', 'tin': '🥫', 'tournament_pack': '🏆'}
+KIND_ORDER = ['booster_box', 'booster_pack', 'blister_box', 'blister_pack', 'theme', 'starter', 'tin', 'tournament_pack']
+ICON = {'booster_box': '📦', 'booster_pack': '🎴', 'blister_box': '📦', 'blister_pack': '🎴', 'theme': '🃏', 'starter': '🃏', 'tin': '🥫', 'tournament_pack': '🏆'}
 
 
 _BY_SET = None
@@ -48,9 +50,11 @@ def load():
 def short(p):
     """'Booster box', 'Theme deck: Tidal Wave' (the name without the set in front)."""
     n = p['name']
+    if p.get('art') and p['kind'] in ('booster_pack', 'blister_pack'):
+        return f"{KIND[p['kind']]}: {p['art']} art"
     if p['kind'] in ('theme', 'starter') and ':' in n:
         return KIND[p['kind']] + ': ' + n.split(':', 1)[1].strip()
-    if p['kind'] in ('booster_box', 'booster_pack'):
+    if p['kind'] in ('booster_box', 'booster_pack', 'blister_box', 'blister_pack'):
         return KIND[p['kind']]
     return n
 
@@ -194,7 +198,22 @@ def product_page(p, ps, sets_by_id):
     facts_html = ''.join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in facts)
     note = '' if p.get('confirmed') else '<p class="mt snote">Product details are still being checked. Know what came in it? <button class="linkbtn" type="button" data-fb>Tell us</button>.</p>'
     val = (f'<a class="valline" href="#prices"><span>Sealed value</span><b>{e(span_text(sp))}</b><small>all editions · sales ↓</small></a>' if sp else '')
-    same = [x for x in ps if x['set'] == p['set'] and x['id'] != p['id']]
+    kids = [x for x in ps if x.get('parent') == p['id']]
+    up = next((x for x in ps if x['id'] == p.get('parent')), None)
+    word = 'art' if p['kind'] in ('booster_pack', 'blister_pack') else 'deck'
+    family = ''
+    if kids:
+        family = (f'<section class="others"><h2>{"Pack arts" if word == "art" else "Decks"}<span>each tracked on its own</span></h2>'
+                  f'<p class="mt">The price above counts every sale of this {e(KIND.get(p["kind"], "item").lower())}, including listings that don\'t say which {word} it is. '
+                  f'Each {word} also has its own page with only the sales that name it.</p>'
+                  f'<div class="grid sgrid">{"".join(tile(x) for x in kids)}</div></section>')
+    elif up:
+        sib = [x for x in ps if x.get('parent') == up['id'] and x['id'] != p['id']]
+        family = (f'<section class="others"><h2>Other {word}s<span>{e(up["name"])}</span></h2>'
+                  f'<p class="mt">This page only counts sales that name this {word}. <a href="/sealed/{e(up["slug"])}/">Every sale of the {e(KIND.get(up["kind"], "item").lower())}, any {word} →</a></p>'
+                  + (f'<div class="grid sgrid">{"".join(tile(x) for x in sib)}</div>' if sib else '') + '</section>')
+    fam_ids = {x['id'] for x in kids} | ({up['id']} | {x['id'] for x in ps if x.get('parent') == up['id']} if up else set())
+    same = [x for x in ps if x['set'] == p['set'] and x['id'] != p['id'] and x['id'] not in fam_ids and not x.get('parent')]
     others = (f'<section class="others"><h2>More sealed from {e(p["set_name"])}</h2><div class="grid sgrid">{"".join(tile(x) for x in same)}</div></section>' if same else '')
     credit = f'<p class="mt scred">{e(p["credit"])} from an eBay listing</p>' if p.get('credit') else ''
     body = f'''<nav class="crumb"><a href="/">All cards</a> › <a href="/sealed/">Sealed</a> › {e(p["name"])}</nav>
@@ -202,8 +221,10 @@ def product_page(p, ps, sets_by_id):
 <div class="info"><h1>{e(p["name"])}</h1>
 <p class="mt">Sealed {e(KIND.get(p["kind"], "product").lower())} · Bandai Naruto CCG{" · " + e(yr) if yr else ""}</p>
 {val}<dl class="sfacts">{facts_html}</dl>{note}
+<section class="scoll" id="scoll" data-product="{e(p["id"])}" data-name="{e(p["name"])}"><h4>Your sealed collection</h4><p class="mt">Sign in to mark this as one you have or want.</p></section>
 {live_block(p)}</div></section>
 <section class="market one">{price_block(p)}</section>
+{family}
 {f'<p class="btns"><a class="ghostbtn" href="/set/{e(B.set_slug(s))}/">Every card in {e(s["name"])} →</a></p>' if s else ''}
 {others}
 <section class="others"><h2>All sealed</h2><p class="mt"><a href="/sealed/">Every Naruto CCG sealed product and its price →</a></p></section>
@@ -219,6 +240,7 @@ def product_page(p, ps, sets_by_id):
                           'highPrice': max(x['p'] for x in ll), 'offerCount': p.get('live_n') or len(ll)}
         graph.append(prod)
     ld = B.ld_json({'@context': 'https://schema.org', '@graph': graph})
+    body += f'<script src="/sealed-coll.js?v={B.file_version("sealed-coll.js")}" defer></script>\n'
     return B.HEAD.format(title=e(title), desc=e(desc), url=url, img=e(p.get('img') or B.SITE + '/og.png'),
                          tw='summary_large_image', ld=ld) + body + B.FOOT
 
