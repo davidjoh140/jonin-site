@@ -111,6 +111,18 @@ PHOTO_SKIP_RE = re.compile(r"\b(?:japanese|japan|kayou|mythos|boruto|proxy|custo
                            r"mystery|repack|you pick|choose|pulls|pulled|wrapper|wrappers|binder|playmat|sleeves)\b")
 
 
+# Strict mode (listings and sales, David 2026-11-27: "only pass through if they match that exact item"):
+STRICT_SKIP_RE = re.compile(
+    r"\b(?:french|fr|ita|italian|italiano|panini|bustina|german|deutsch|spanish|espanol|español|portuguese|korean|chinese|"
+    r"smriti|mayou|chapter jin|little dino|doujin|hy-?\d{3,4}|collector box|promo box|one piece|yu-?gi-?oh|pokemon|dragon ball|"
+    r"incomplete|only|not included|missing|damaged|display stand|card display|stand only|"
+    r"promo|foil|holo|holographic|super rare|uncommon|common|rare card|psa|cgc|bgs|beckett|graded|gem mint|"
+    r"nm|lp|mp|hp|near mint|lightly played|played)\b")
+PLURAL_ITEMS = {"booster_pack": r" (?:packs|boosters) ", "blister_pack": r" (?:packs|boosters|blisters) ",
+                "theme": r" decks ", "starter": r" decks ", "booster_box": r" boxes ", "blister_box": r" boxes ",
+                "tin": r" tins "}
+
+
 def match(title, products, sets, photo=False):
     """One sealed product for a listing title -> (product, confidence, reason) or None.
     photo=True: looser rules for finding a product photo (opened/empty items allowed)."""
@@ -124,16 +136,29 @@ def match(title, products, sets, photo=False):
         return None
     if CARD_NUMBER.search(title or ""):
         return None
+    strict = not photo
+    if strict and STRICT_SKIP_RE.search(low):
+        return None
     t = norm(title).replace(" the ", " ")
+    if strict and re.search(r" tournament (?:series|set) (\d) ", t):     # "Chibi Tournament Series 3" = Tournament Pack 3
+        t = re.sub(r" tournament (?:series|set) (\d) ", r" tournament pack \1 ", t)
     kind, inferred = find_kind(t)
     if not kind:
         return None
+    if strict and kind in PLURAL_ITEMS and re.search(PLURAL_ITEMS[kind], t) and not (
+            kind in ("booster_box", "blister_box") and False):
+        # a pack listing that says "packs" (or decks/boxes/tins) is several items, e.g. "10 Factory-Sealed Booster Packs";
+        # a box's own contents ("Booster Box (24 Packs)") are fine
+        if kind not in ("booster_box", "blister_box"):
+            return None
     multi = MULTI.search(low)
     own_count = kind in ("booster_box", "blister_box") or (kind == "blister_3pack" and multi and multi.group(0).strip().startswith("3"))
     if multi and not (own_count and PACK_COUNT.fullmatch(multi.group(0).strip())):
         return None
     # hidden entries (template slots not on the site yet) still collect sales, so a sale shows David the item exists
     by_kind = lambda k: [p for p in products if p["kind"] == k]
+    if strict and kind in ("tin", "tournament_pack") and not re.search(r"\bsealed\b", low):
+        return None                                 # single promo cards from tins / tournament packs name them too
     if kind == "tin":
         for p in by_kind("tin"):
             for w in p.get("match_words") or []:
@@ -145,7 +170,7 @@ def match(title, products, sets, photo=False):
         p = next((p for p in by_kind("tournament_pack") if m and p["set_id"] == f"TP{m.group(1)}"), None)
         return (p, 0.9, f"tournament pack {m.group(1)}") if p else None
     sid, how = find_set(t, set_keys(sets))
-    if not sid:
+    if not sid or (strict and how != "set name"):
         return None
     if kind == "deck":
         decks = [p for p in products if p["set_id"] == sid and p["kind"] in ("theme", "starter")]
@@ -173,9 +198,14 @@ def match(title, products, sets, photo=False):
         how += f", deck name '{hit[0]['match_words'][0]}'"
     if not cands:
         return None
+    if strict and kind in ("booster_pack", "blister_pack") and (re.search(r" set (?!\d|of )", t + " ")
+                                                               or re.search(r" (?:naruto and sasuke|sasuke and naruto|both) ", t)):
+        return None                                 # an art set / both arts: singles only
     kids = [p for p in in_set if p.get("parent_id") == cands[0]["id"]]
     if kids:                                        # pack arts / decks under a set-level entry
         hit = named(kids)
+        if strict and kind in ("booster_pack", "blister_pack") and len(hit) > 1:
+            return None                             # both arts named: a pair, singles only
         if len(hit) == 1:                           # the title names exactly one: that art or deck
             how += f", {'art' if hit[0].get('art') and kind != 'starter' else 'deck'} '{hit[0].get('art') or hit[0]['name']}'"
             cands = hit
@@ -183,6 +213,8 @@ def match(title, products, sets, photo=False):
             how += ", art not stated" if kind in ("booster_pack", "blister_pack") else ", deck not stated"
     conf = 0.75 if inferred else 0.9
     sealed_word = re.search(r"\b(sealed|factory sealed|new)\b", low)
+    if strict and not sealed_word:
+        return None                                 # strict: the title has to say sealed (or new)
     if not sealed_word:
         conf -= 0.1
     reason = f"{how}, {KIND_LABEL.get(kind, kind).lower()}" + ("" if not inferred else " (guessed from 'box'/'pack')") \

@@ -27,7 +27,8 @@ def test_packs_and_boxes():
     assert pid("NARUTO CCG PATH TO HOKAGE BOOSTER BOX FACTORY SEALED") == "1-booster-box"
     assert pid("Naruto Kage Summit booster box sealed Bandai") == "25-booster-box"
     assert pid("Naruto CCG Revenge & Rebirth Booster Pack New") == "4-booster-pack"
-    assert pid("Naruto CCG Series 12 booster pack sealed") == "12-booster-pack"
+    assert pid("Naruto CCG Series 12 booster pack sealed") is None              # strict: needs the set name
+    assert sealed.match("Naruto CCG Series 12 booster pack sealed", P, SETS, photo=True)[0]["id"] == "12-booster-pack"
     assert pid("Naruto The Chosen sealed box") == "9-booster-box"
 
 
@@ -62,7 +63,7 @@ def test_arts_blisters_and_decks():
     assert apid("2006 Bandai Naruto Path To Hokage sealed booster pack yellow/gold cover art") == "1-booster-pack-gold-naruto"
     assert apid("2007 Naruto CCG Revenge and Rebirth Booster Pack [SASUKE ART] - New, Sealed") == "4-booster-pack-sasuke"
     assert apid("Naruto CCG The Path to Hokage Booster Pack Sealed 1st Edition") == "1-booster-pack"   # art not named
-    assert apid("Naruto Path to Hokage booster pack silver and gold sealed") == "1-booster-pack"      # names both
+    assert apid("Naruto Path to Hokage booster pack silver and gold sealed") is None                  # both arts: a pair
     assert apid("Naruto Path to Hokage Booster Pack Art Set (2 Packs) sealed") is None                # pair: singles only
     assert apid("A New Chronicle - Set 12 - Blister Booster Pack x1 - Sakura Art - Naruto CCG Sealed") == "12-blister-pack-sakura"
     assert apid("A New Chronicle Blister Booster Pack Naruto Art Naruto CCG Sealed") == "12-blister-pack-naruto"
@@ -70,7 +71,7 @@ def test_arts_blisters_and_decks():
     assert apid("Naruto A New Chronicle TCG CCG Blister Booster Pack Box 15 Packs sealed") == "12-blister-box"
     assert apid("Naruto CCG A New Chronicle Booster Packs in Blister SET OF 2") is None
     assert apid("Naruto CCG A New Chronicle 3 Pack Blister factory sealed") == "12-blister-3pack"       # hidden slot still matches
-    assert apid("Naruto CCG A New Chronicle 3 Booster Blister + promo sealed") == "12-blister-3pack"
+    assert apid("Naruto CCG A New Chronicle 3 Booster Blister factory sealed") == "12-blister-3pack"
     assert apid("Naruto CCG Path to Hokage Booster Box 24 Packs factory sealed") == "1-booster-box"     # box contents
     assert apid("Naruto A New Chronicle booster pack sealed") == "12-booster-pack"                    # loose pack, not blister
     assert apid("Naruto CCG TCG The Path to Hokage Sasuke Uchiha Starter Deck sealed") == "1-starter-sasuke"
@@ -84,6 +85,35 @@ def test_seller_spellings():
     m = lambda t: (sealed.match(t, ps, SETS) or [{}])[0].get("id")
     assert m("Shattered Truth Blister Pack Sealed-Bandai Naruto Ccg") == "21-blister-pack"
     assert m("Naruto Shippuden CCG Foretold Prophecy Spiral of the Fury Starter Deck Sealed") == "15-fury"
+
+
+def test_strict_exact_items():
+    """Real wrong matches from the live listings (Nov 27) stay out; real single items still match."""
+    SS = SETS + [{"id": "2", "name": "Coils of the Snake", "kind": "Main"}, {"id": "28", "name": "Ultimate Ninja Storm 3", "kind": "Main"},
+                 {"id": "17", "name": "Will of Fire", "kind": "Main"}, {"id": "8", "name": "Battle of Destiny", "kind": "Main"}]
+    PP = P + ARTS + [{"id": f"{s}-booster-{k}", "set_id": s, "kind": f"booster_{k}", "match_words": []} for s in ("2", "28", "17", "8") for k in ("pack", "box")] \
+        + [{"id": "tp3-pack", "set_id": "TP3", "kind": "tournament_pack", "match_words": []}]
+    SS += [{"id": "TP3", "name": "Tournament Pack 3", "kind": "Tournament pack"}]
+    m = lambda t: (sealed.match(t, PP, SS) or [{}])[0].get("id")
+    for bad in ["Naruto Smriti CCG Earth Scroll Series 2 Collector Box 5 Booster Packs Sealed New",
+                "Naruto Uzumaki 9 Tails Cloak 1646 S28 Extended Art Display CARD NOT INCLUDED",
+                "NARUTO Card Game Series 2 Le Spire del Serpente Bustina Pack Panini BANDAI",
+                "Naruto CCG The Path to Hokage – 10 Factory-Sealed Booster Packs",
+                "The Chosen Booster Pack - Naruto CCG - 2 SASUKE Packs!",
+                "Bandai Naruto CCG The Chosen Booster pack 2008 Naruto and Sasuke Sealed!",
+                "Naruto Will of Fire 30 Pack Trading Card Booster Box Anime CCG TCG New HY-1602",
+                "Naruto CCG Naruto Uzumaki Ultimate Battle Tins Chibi Foil Promo PR 072 NM",
+                "Naruto CCG Sasuke Uchiha 1st Edition Tournament Pack 2 Chibi Vintage Bandai",
+                "Naruto The Path to Hokage, Starter Deck, Sasuke edition. Set Box & 50Cards Only",
+                "Naruto CCG Card Game The Chosen TIDAL WAVE  Deck INCOMPLETE*READ*",
+                "Bandai Naruto CCG Ultimate Ninja Storm 3 2 Booster Packs Sealed Blister French",
+                "Bandai Naruto CCG Coils of the Snake Booster Pack English 10 Cards"]:      # doesn't say sealed/new
+        assert m(bad) is None, bad
+    assert m("2006 Bandai Naruto CCG The Path To Hokage (Set 1) Factory Sealed Booster Pack") == "1-booster-pack"
+    assert m("2006 BANDAI NARUTO COILS OF THE SNAKE BOOSTER BOX (24 PACKS) NEW SEALED U.S.") == "2-booster-box"
+    assert m("Naruto CCG Battle of Destiny Booster Pack Factory Sealed Bandai - Sasuke Art") == "8-booster-pack"
+    assert m("Naruto Chibi Tournament Series 3 Booster Box - Factory Sealed 24 Packs") is None   # a box of them, not one pack
+    assert m("Naruto - Chibi Tournament Series 3 - Booster Pack -Sealed - Bandai") == "tp3-pack"
 
 
 def test_not_sealed():
