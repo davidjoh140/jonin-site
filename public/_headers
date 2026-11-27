@@ -1,0 +1,15 @@
+# Caching (2026-11-26). Card scans have a fingerprint (or eBay item id) in the file name, so a file never changes:
+# browsers keep them for a year instead of re-checking all of them on every visit.
+/img/scans/*
+  Cache-Control: public, max-age=31536000, immutable
+# Small site images that can be replaced in place: use the copy you have for an hour, then refresh in the background.
+/img/sales/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+/symbols/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+/chars/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+/char-art/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+/theme-faces/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
