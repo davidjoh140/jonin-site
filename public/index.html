@@ -292,6 +292,7 @@ h1.ph{display:flex;align-items:center;gap:12px}h1.ph img.avatar{border:2px solid
 .wt[aria-pressed=true]{background:#3a1622;border-color:#6b2f3c;color:#ff9db0}
 .authbox{position:relative;width:min(420px,100%);background:var(--deep);border:1px solid var(--edge2);border-radius:18px;padding:24px;display:grid;gap:12px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
 .authbox h2{margin:0;font:800 24px "Baloo 2",sans-serif}
+.authbox .go:disabled{opacity:.5;cursor:not-allowed}
 .authbox label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
 .authbox input{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px 14px;color:var(--ink);font:15px Inter,sans-serif;outline:none}
 .authbox input:focus{border-color:var(--red)}
@@ -767,7 +768,7 @@ function qtyOf(c,kind){let n=0;for(const [k,v] of COLL)if(k.startsWith(cid(c)+'|
 function marks(c){if(!ME&&!COLL.size&&!SLABS.length)return '<span class="mk"></span>';const h=qtyOf(c,'have'),w=qtyOf(c,'want');const sl=SLABS.filter(x=>x.card_id===cid(c));return `<span class="mk">${h?`<span class="h" title="You have ${h}">✓ ${h}</span>`:''}${w?'<span class="w" title="On your wants">♡</span>':''}${sl.length?`<span class="sl" title="${esc(sl.map(x=>x.grader+' '+x.grade).join(', '))}">▣ ${esc(sl[0].grader+' '+sl[0].grade)}${sl.length>1?' +'+(sl.length-1):''}</span>`:''}</span>`}
 function refreshMarks(){if(VIEW==='sets'&&D)renderSets();document.querySelectorAll('.card[data-i]').forEach(b=>{const c=list[+b.dataset.i];const m=b.querySelector('.mk');if(c&&m)m.outerHTML=marks(c)})}
 function sbc(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPA,SUPA_KEY);return sb}
-async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;const guest=!ME?{items:[...COLL],conds:new Map(CONDS),slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();CONDS.clear();COMPS.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;MYBADGE=null;NMNEXT=undefined;NMEDIT=false;LISTS=[];LITEMS=new Map();OPENL='';
+async function setUser(u){if((u&&u.id)===(ME&&ME.id))return;if(u)sentClear();const guest=!ME?{items:[...COLL],conds:new Map(CONDS),slabs:SLABS.slice(),slabsHave:GSH}:null;ME=u;COLL.clear();CONDS.clear();COMPS.clear();SLABS=[];SLABFORM='';MYP=null;MEMBER=false;MYBADGE=null;NMNEXT=undefined;NMEDIT=false;LISTS=[];LITEMS=new Map();OPENL='';
   if(u){const [p,it,mb,sl]=await Promise.all([sb.from('profiles').select('*').eq('id',u.id).maybeSingle(),sb.from('collection_items').select('card_id,printing,edition,kind,qty,conds').limit(20000),sb.from('memberships').select('active,until,founding').eq('user_id',u.id).maybeSingle(),sb.from('collection_slabs').select('id,card_id,printing,edition,grader,grade,cert,counted,psa_status,psa_front').order('created_at').limit(5000)]);MYP=p.data;(it.data||[]).forEach(i=>{const k=ck(i.card_id,i.printing,i.edition,i.kind);COLL.set(k,i.qty);if(Array.isArray(i.conds))CONDS.set(k,i.conds)});SLABS=sl.data||[];const m=mb.data;MEMBER=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));MYBADGE=MEMBER?(m.founding?'founding':'premium'):null;loadFbPts();loadLists();
     if(guest&&(guest.items.length||guest.slabs.length||guest.slabsHave))await mergeGuest(guest);setTimeout(mileCheck,1500);
     // Theme follows the account across devices.
@@ -784,6 +785,7 @@ function paintAcct(){const n=ME?0:gCount(),el=$('#acct');if(el&&window.JoninAcct
   b.hidden=!!ME||off||hasSession();if(b.hidden)return;
   b.innerHTML=ctaHTML(n,offerOpen())}
 function openAuth(mode,msg,prog){const up=mode==='up',reset=mode==='reset';
+  if(up&&!msg){const p=sentGet();if(p){showSent(p.email);$('#authov').hidden=false;return}}
   $('#authform').innerHTML=`<h2>${reset?'Reset password':up?'Create your Jonin account':'Sign in'}</h2>
   <p class="mt" style="margin:0">${reset?'We will email you a link to set a new password.':up&&gCount()?`Save the ${plural(gCount(),'card')} you’ve marked so you don’t lose ${gCount()===1?'it':'them'}. It’s free.`:'Track your haves, wants and slabs, vote for the coolest cards, and share your list. It’s free.'}</p>
   ${up&&prog?`<p class="fprog">${esc(prog)}</p>`:''}${up?foundingLine():''}
@@ -803,6 +805,39 @@ new MutationObserver(paintOauth).observe(document.getElementById('authform'),{ch
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-oauth]');if(!b||!sbc())return;e.preventDefault();b.disabled=true;
   const r=await sb.auth.signInWithOAuth({provider:b.dataset.oauth,options:{redirectTo:location.origin+location.pathname}});
   if(r.error){b.disabled=false;const m=$('#amsg');if(m)m.textContent=r.error.message||'Could not start sign-in.'}});
+// "Check your inbox" screen after email sign-up (David, 2026-11-27). Replaces the form so it can't be re-submitted;
+// Resend unlocks after 60s (Supabase allows one email per person per 60s, and each new email cancels the last link).
+// Remembered in this tab for 30 min so reopening Sign up shows this screen, not a fresh form.
+const RESEND_WAIT=60,SENT_KEEP=30*60e3;let SENTT=0;
+function sentGet(){try{const p=JSON.parse(sessionStorage.getItem('jsent')||'null');return p&&p.email&&Date.now()-p.at<SENT_KEEP?p:null}catch(_){return null}}
+function sentSet(email,at){try{sessionStorage.setItem('jsent',JSON.stringify({email,at:at||Date.now(),last:Date.now()}))}catch(_){}}
+function sentClear(){try{sessionStorage.removeItem('jsent')}catch(_){}}
+function showSent(email){const f=$('#authform');f.dataset.mode='sent';clearInterval(SENTT);
+  f.innerHTML=`<h2>Check your inbox</h2>
+  <p style="margin:0">We sent a link to <b>${esc(email)}</b>. Tap it to finish signing up.</p>
+  <ul class="mt" style="margin:0;padding-left:18px;display:grid;gap:4px;font-size:13px">
+    <li>It can take a minute to arrive. Check spam and Promotions too.</li>
+    <li>Use the <b>newest</b> email. Sending a new one cancels the link in the old one.</li>
+    ${gCount()?'<li>Your marked cards stay on this device and move into your account when you come back.</li>':''}
+  </ul>
+  <button class="go" type="button" id="aresend" disabled>Resend email</button>
+  <div class="msg" id="amsg"></div>
+  <div class="tabs"><button type="button" class="clear" id="adiff">Use a different email</button><button type="button" class="clear" data-auth="in">I already confirmed, sign in</button></div>`;
+  const b=$('#aresend'),m=$('#amsg');
+  const tick=()=>{let last=0;try{last=(JSON.parse(sessionStorage.getItem('jsent')||'{}').last)||0}catch(_){}
+    const left=Math.ceil(RESEND_WAIT-(Date.now()-last)/1e3);if(left>0){b.disabled=true;b.textContent='Resend email in '+left+'s'}else{b.disabled=false;b.textContent='Resend email';clearInterval(SENTT)}};
+  tick();SENTT=setInterval(tick,1000);
+  b.onclick=async()=>{if(!sbc())return;b.disabled=true;m.className='msg';m.textContent='Sending…';
+    const r=await sb.auth.resend({type:'signup',email,options:{emailRedirectTo:location.origin+'/#mine'}});
+    if(r.error){const wait=/second|rate|429/i.test(r.error.message||'');if(wait){const p=sentGet();sentSet(email,p&&p.at)}m.className='msg err';m.textContent=wait?'Almost: wait a few more seconds, then try again.':(r.error.message||'Could not resend. Try again in a minute.');tick();clearInterval(SENTT);SENTT=setInterval(tick,1000);return}
+    const p=sentGet();sentSet(email,p&&p.at);m.textContent='Sent a new email. Use that one: the earlier link no longer works.';tick();clearInterval(SENTT);SENTT=setInterval(tick,1000);if(window.jtrack)jtrack('signup-email-resend',{})};
+  $('#adiff').onclick=()=>{clearInterval(SENTT);sentClear();openAuth('up')}}
+// Clicking an old or expired email link lands here with an error in the address: explain and offer the next step.
+(()=>{const h=location.hash||'';if(!/error_code=|error=access_denied/.test(h))return;const q=new URLSearchParams(h.slice(1)),code=q.get('error_code')||'';
+  history.replaceState(null,'',location.pathname+location.search);
+  setTimeout(()=>{if(ME)return;const p=sentGet();
+    if(p&&/otp_expired|access_denied/.test(code+q.get('error'))){showSent(p.email);$('#authov').hidden=false;const m=$('#amsg');if(m){m.className='msg err';m.textContent='That link expired or was replaced by a newer email. Open the newest email, or resend below.'}}
+    else openAuth('in',code==='otp_expired'?'That email link expired or was replaced by a newer one. If you already confirmed, sign in. Otherwise sign up again to get a fresh link.':'That link didn’t work. Try signing in, or sign up again for a fresh link.')},400)})();
 $('#authform').addEventListener('submit',async e=>{e.preventDefault();const f=e.target,mode=f.dataset.mode,m=$('#amsg'),btn=f.querySelector('.go');
   const email=f.email.value.trim(),pw=f.password?f.password.value:'',handle=f.handle?f.handle.value.trim():'';
   const err=t=>{m.className='msg err';m.textContent=t};m.className='msg';
@@ -813,7 +848,10 @@ $('#authform').addEventListener('submit',async e=>{e.preventDefault();const f=e.
   btn.disabled=true;m.textContent='One moment…';
   try{let r;
     if(mode==='up'){r=await sb.auth.signUp({email,password:pw,options:{data:{handle},emailRedirectTo:location.origin+'/#mine'}});if(r.error)throw r.error;
-      if(!r.data.session){m.textContent='Check your email and click the link to finish signing up.'+(gCount()?' Your marked cards stay on this device and move into your account when you come back.':'');btn.disabled=false;return}}
+      if(!r.data.session){const u=r.data.user;
+        // Supabase answers "success" for an email that already has a confirmed account (no identities): send them to sign in.
+        if(u&&Array.isArray(u.identities)&&!u.identities.length){btn.disabled=false;openAuth('in','That email already has an account. Sign in below, or use Forgot password.');const ie=$('#authform').querySelector('[name=email]');if(ie)ie.value=email;return}
+        sentSet(email);showSent(email);if(window.jtrack)jtrack('signup-email-sent',{});return}}
     else if(mode==='in'){r=await sb.auth.signInWithPassword({email,password:pw});if(r.error)throw r.error}
     else{r=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/#reset'});if(r.error)throw r.error;m.textContent='If that email has an account, a reset link is on its way.';btn.disabled=false;return}
     $('#authov').hidden=true}
