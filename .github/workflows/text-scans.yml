@@ -1,0 +1,34 @@
+# Readable enhanced scans for the card-text scheduled tasks (see pipeline/text_scans.py). Rebuilds the `text-scans`
+# branch as one fresh commit (never on main, never deployed). Every 30 minutes and on demand.
+name: Text scans
+on:
+  schedule: [{ cron: "7,37 * * * *" }]
+  workflow_dispatch:
+concurrency: { group: text-scans, cancel-in-progress: false }
+permissions:
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q pillow boto3 requests
+      - name: Export
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://f6d20bce1fc2f76725b857ef0fed6d10.r2.cloudflarestorage.com
+          R2_BUCKET: jonin-scans
+        run: python pipeline/text_scans.py
+      - name: Push branch
+        run: |
+          cd out
+          git init -q -b text-scans
+          git config user.name "jonin-bot"; git config user.email "bot@jonin.cards"
+          git add -A && git commit -qm "Text scans $(date -u +%FT%TZ)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" text-scans
