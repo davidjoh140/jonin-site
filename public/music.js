@@ -7,7 +7,7 @@
    PLACEHOLDERS for David: playlist id, button corner (bottom-right), card size. */
 (function(){
   if(window.__jmusic)return;window.__jmusic=1;
-  var LIST='PLF7A13C44809B5893';
+  var LIST='PLRW80bBvVD3VGlhepFny5ABfb4ZqY4yGI';
   var p=location.pathname;
   if(/^\/admin(\/|$)/.test(p))return;
   function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(_){}}
