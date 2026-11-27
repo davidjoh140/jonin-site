@@ -1,5 +1,5 @@
 /premium /club/ 301
 /premium/ /club/ 301
 /premium/* /club/:splat 301
-/u/* /u/index.html 200
-/join/* /join/index.html 200
+/u/* /u/ 200
+/join/* /join/ 200
