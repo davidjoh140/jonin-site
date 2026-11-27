@@ -69,6 +69,29 @@ def price_band(rows, cuts=PRICE_BAND_CUTOFFS):
     return sum(1 for c in cuts if top >= c)
 
 
+def _round_sig(v, up):
+    """Round to 2 significant figures (whole dollars under $10), down for a low end, up for a high end."""
+    import math
+    if v <= 0:
+        return 0
+    step = 1 if v < 10 else 10 ** (int(math.floor(math.log10(v))) - 1)
+    return int((math.ceil if up else math.floor)(v / step) * step) or 1
+
+
+def price_range(rows):
+    """Free price range for a card: [low, high] across every recorded sale of every version
+    (raw to graded), rounded so exact comps stay Jonin Club only. None with no sales.
+    PLACEHOLDER rule (all versions, 2-significant-figure rounding) for David to revisit."""
+    if not rows:
+        return None
+    lo = min(min(r[4], r[5]) for r in rows)
+    hi = max(max(r[4], r[5]) for r in rows)
+    if lo <= 0 or hi <= 0:
+        return None
+    a, b = _round_sig(lo, False), _round_sig(hi, True)
+    return [a, max(a, b)]
+
+
 def version_label(sale):
     """'1st Edition · Full foil · PSA 10' for a sale (blank parts left out)."""
     gr = sale.get("grader") or "Raw"
@@ -310,6 +333,9 @@ def build(sets, cards, scans=(), url_for=lambda p: p, products=(), version=None,
             o["img"] = url_for(u[len("storage:scans/"):]) if u.startswith("storage:scans/") else u
         if c["id"] in px:
             o["pb"] = price_band(px[c["id"]])   # free price band only; exact prices stay in Supabase (Jonin Club)
+            pr = price_range(px[c["id"]])
+            if pr:
+                o["pr"] = pr                    # free rounded low–high across all versions (card pages, Google)
         if c["id"] in tops:
             o["top"] = tops[c["id"]]
         if c["id"] in am:

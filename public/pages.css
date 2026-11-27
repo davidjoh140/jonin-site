@@ -237,3 +237,5 @@ a.ghostbtn{display:inline-flex;align-items:center;padding:9px 14px;border:1px so
 /* For sale now, top right on card pages (2026-11-26) */
 .fsslot:empty{display:none}.fsslot{margin:4px 0 16px}.fsslot .fs{margin:0;padding:14px 16px;border-radius:14px;border:1px solid color-mix(in srgb,var(--acc) 45%,var(--line));background:color-mix(in srgb,var(--acc) 6%,var(--panel))}
 .fsslot .fs h3{margin-top:0}.market.one{grid-template-columns:1fr}.market .soldslab{margin:0}
+
+.cardpage .slabname{font-size:12.5px;margin-top:-4px;opacity:.85}

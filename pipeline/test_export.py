@@ -42,3 +42,11 @@ def test_load_skips_reviewed():
                 ("1:N-2", "element"): {"status": "pending", "guess": "Water", "sure": False}}
     sent = la.to_send(rows, existing, {"1:N-1", "1:N-2", "1:N-3"})
     assert [r["card_id"] for r in sent] == ["1:N-3"]
+
+
+def test_price_range_rounds_out_and_spans_versions():
+    from export_cards import price_range
+    rows = [["Normal", "1st Edition", "Raw", "", 13.5, 22, 3, ""], ["Normal", "1st Edition", "PSA", "10", 1247, 1247, 1, ""]]
+    assert price_range(rows) == [13, 1300]
+    assert price_range([["", "", "Raw", "", 7.4, 7.4, 1, ""]]) == [7, 8]
+    assert price_range([]) is None

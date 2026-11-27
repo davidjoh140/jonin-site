@@ -43,6 +43,48 @@ def set_label(s):
     return 'Set ' + s['id'] if s.get('kind') == 'Main' else 'Promo' if s.get('kind') == 'Promo' else s['id']
 
 
+def set_year(s):
+    """Year as PSA prints it on the slab (from the PSA pop path), else the first year in the release date."""
+    p = PSA.get(s['id'], '')
+    if re.match(r'^\d{4}/', p):
+        return p[:4]
+    if s.get('kind') == 'Promo':
+        return ''                     # promos span 2006–2013; no single year
+    m = re.search(r'(19|20)\d\d', s.get('rel') or '')
+    return m.group(0) if m else ''
+
+
+def slab_set(s):
+    """Set the way PSA labels it: 'Series 18: Fangs of the Snake', 'Tournament Pack 4', 'Untouchables Tin', 'Promo'."""
+    if s.get('kind') == 'Main':
+        return f"Series {s['id']}: {s['name']}"
+    if s.get('kind') == 'Tin':
+        return re.sub(r'\s*\(tin\)\s*$', '', s['name'], flags=re.I) + ' Tin'
+    if s.get('kind') == 'Promo':
+        return 'Promo'
+    return s['name']
+
+
+def slab_num(c):
+    """'#N934' as on a PSA label (our N-934)."""
+    return '#' + c['n'].replace('-', '')
+
+
+def slab_name(c, s):
+    """'2010 Naruto CCG Series 18: Fangs of the Snake Sasuke Uchiha (State 2) #N934', the PSA slab wording."""
+    y = set_year(s)
+    return f"{y + ' ' if y else ''}Naruto CCG {slab_set(s)} {c['name']} {slab_num(c)}"
+
+
+def range_text(c):
+    """Free price range '$190–$1,300' (or 'about $40' for a single price), or '' with no sales."""
+    pr = c.get('pr')
+    if not pr:
+        return ''
+    a, b = pr
+    return f'about {money(a)}' if a == b else f'{money(a)}–{money(b)}'
+
+
 def sold(q, kind):
     extra = ' (psa,bgs,cgc,sgc)' if kind == 'slab' else ' -psa -bgs -cgc -sgc'
     return SOLD + quote('naruto ' + q + extra + NOT_KO) + EPN
@@ -126,8 +168,13 @@ def price_block(c):
     pb = c.get('pb')
     lock = (f'<a class="pxt" href="/club/?card={quote(c["s"] + ":" + c["n"])}&amp;name={quote(c["name"])}" '
             'aria-label="See exact prices and sold listings with Jonin Club">'
-            '<div class="rows" aria-hidden="true"><div><span>1st Edition · Foil · PSA 9</span><b>$000.00</b></div><div><span>Unlimited · Raw · NM</span><b>$00.00</b></div><div><span>1st Edition · Raw · LP</span><b>$00.00</b></div></div><span class="cta"><span><svg class="lk" viewBox="0 0 14 17" aria-hidden="true"><defs><linearGradient id="lkt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE99A"/><stop offset=".45" stop-color="#F2C14E"/><stop offset="1" stop-color="#B07A1C"/></linearGradient></defs><g class="lift"><path class="sh" d="M4 8.5V5.5a3 3 0 0 1 6 0v3" fill="none" stroke="#E0B045" stroke-width="2.1" stroke-linecap="round"/></g><g class="bd"><rect x="1" y="8" width="12" height="9" rx="2.2" fill="url(#lkt)" stroke="#8C5F14" stroke-width=".6"/><circle cx="7" cy="11.7" r="1.35" fill="#5C3D0A"/><rect x="6.4" y="12" width="1.2" height="2.6" rx=".55" fill="#5C3D0A"/></g></svg>Exact prices &amp; sold listings</span><small>Every sale by edition, foil and grade</small></span>' '</a>')
+            '<div class="rows" aria-hidden="true" data-nosnippet><div><span>1st Edition · Foil · PSA 9</span><b class="ph w3"></b></div><div><span>Unlimited · Raw · NM</span><b class="ph"></b></div><div><span>1st Edition · Raw · LP</span><b class="ph"></b></div></div><span class="cta"><span><svg class="lk" viewBox="0 0 14 17" aria-hidden="true"><defs><linearGradient id="lkt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE99A"/><stop offset=".45" stop-color="#F2C14E"/><stop offset="1" stop-color="#B07A1C"/></linearGradient></defs><g class="lift"><path class="sh" d="M4 8.5V5.5a3 3 0 0 1 6 0v3" fill="none" stroke="#E0B045" stroke-width="2.1" stroke-linecap="round"/></g><g class="bd"><rect x="1" y="8" width="12" height="9" rx="2.2" fill="url(#lkt)" stroke="#8C5F14" stroke-width=".6"/><circle cx="7" cy="11.7" r="1.35" fill="#5C3D0A"/><rect x="6.4" y="12" width="1.2" height="2.6" rx=".55" fill="#5C3D0A"/></g></svg>Exact prices &amp; sold listings</span><small>Every sale by edition, foil and grade</small></span>' '</a>')
     guide = '<p class="mt pgl"><a href="/price-guide/">Naruto CCG price guide →</a></p>'
+    rt = range_text(c)
+    if rt:
+        return (f'<section class="px"><h3>Market price<span> across all versions</span></h3>'
+                f'<p class="band">{e(rt)}</p><p class="mt">What it sells for, depending on edition, foil and grade, from real sales.</p>'
+                f'{lock}{guide}</section>')
     if pb is None or not 0 <= pb < len(BANDS):
         return f'<section class="px"><h3>Market price</h3>{lock}{guide}</section>'
     return (f'<section class="px"><h3>Market price<span>across all versions</span></h3>'
@@ -690,12 +737,16 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
     img = c.get('img') if re.match(r'^https://', c.get('img') or '') else ''
     url = f'{SITE}/card/{slug(c)}/'
     eds = [x for x in (c.get('ed') or []) if x]
-    title = f"{c['name']} {c['n']} · {s['name']} · Naruto CCG card value | Jonin"
-    desc = (f"{c['name']} ({c['n']}) from {s['name']}"
-            f"{' (' + s['rel'] + ')' if s.get('rel') else ''}: {c['r']} {c['t']} card in the Bandai Naruto CCG. "
-            f"Printings: {', '.join(c.get('v') or [])}{'; ' + ' and '.join(eds) if eds else ''}."
-            + (f" Market price: {BANDS[c['pb']]}." if c.get('pb') is not None and 0 <= c['pb'] < len(BANDS) else '')
-            + " eBay sold prices for raw and PSA graded copies.")
+    title = f"{slab_name(c, s)} value | Jonin"
+    y = set_year(s)
+    rt = range_text(c)
+    band = BANDS[c['pb']] if c.get('pb') is not None and 0 <= c['pb'] < len(BANDS) else ''
+    desc = (f"What is the {y + ' ' if y else ''}{c['name']} {slab_num(c)} from {s['name']} worth? "
+            + (f"It sells for {rt}, depending on edition, foil and grade. " if rt else
+               f"Market price: {band}. " if band else '')
+            + f"{c['r']} {c['t']} card, {slab_set(s).split(':')[0]} of the Bandai Naruto CCG. "
+            f"Printings: {', '.join(c.get('v') or [])}{'; ' + ' and '.join(eds) if eds else ''}. "
+            "eBay sold prices for raw and PSA graded copies.")
     psa = (f'<a href="{e(PSA_POP + PSA[c["s"]])}" target="_blank" rel="noopener">PSA pop report · {e(set_label(s))}</a>'
            if c['s'] in PSA else '<a href="https://www.psacard.com/pop/tcg-cards" target="_blank" rel="noopener">PSA pop report</a>')
     art = (f'<img src="{e(img)}" alt="{e(card_alt(c, s))}" width="750" height="1050">'
@@ -734,6 +785,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 <div class="cnav">{f'<a href="/card/{slug(prev)}/" aria-label="Previous card: {e(prev["name"])} {e(prev["n"])}" data-key="prev">‹</a>' if prev else ''}{f'<a href="/card/{slug(nxt)}/" aria-label="Next card: {e(nxt["name"])} {e(nxt["n"])}" data-key="next">›</a>' if nxt else ''}</div>
 <h1>{e(c["name"])}</h1>
 <p class="mt">{e(s["name"])} · {e(c["n"])} · {e(c["r"])}</p>
+<p class="mt slabname">{e(slab_name(c, s))}</p>
 {quick_links(c, s, set_cards, char_lists or {}, chars_by_name or {})}
 {mv_badges(c, ranks, pops)}<div class="fsslot" data-fsslot></div><dl>{''.join(f'<dt>{k}</dt><dd>{v}</dd>' for k, v in rows)}</dl>
 {('<script src="/card-votes.js?v=' + file_version('card-votes.js') + '" defer></script>') if cl else ''}

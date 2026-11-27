@@ -538,7 +538,7 @@ function match(c){
   if(S.q){const {ws}=qPrep();if(ws.length>1&&phraseOn()){if(!flatC(c).includes(PH.k))return false}else{const hay=hayOf(c);if(!ws.every(o=>numHit(o.w,c.n)||(!o.num&&(o.re?o.re.test(hay):hay.includes(o.w)))))return false}}
   return true}
 // Price band on each grid tile (free). Exact prices are Jonin Club only.
-const BANDS0=['Under $10','$10–50','$50–200','$200+'],band=c=>{const b=(D&&D.bands)||BANDS0;return c.pb==null?null:b[c.pb]??null};
+const BANDS0=['Under $10','$10–50','$50–200','$200+'],money0=v=>'$'+(v>=100?Math.round(v).toLocaleString('en-US'):String(v)),band=c=>{if(c.pr&&c.pr.length===2)return c.pr[0]===c.pr[1]?'about '+money0(c.pr[0]):money0(c.pr[0])+'–'+money0(c.pr[1]);const b=(D&&D.bands)||BANDS0;return c.pb==null?null:b[c.pb]??null};
 const tpx=c=>{if(MEMBER&&EST){const e=tileEst(c);return e?`<div class="tpx est">≈ ${money(e.estimate)}</div>`:'<div class="tpx none"></div>'}
   const bd=band(c);return bd?`<div class="tpx">${esc(bd)}</div>`:'<div class="tpx none"></div>'};
 // Jonin Club: price estimates per exact version (weighted toward the newest sales), loaded once for members.
