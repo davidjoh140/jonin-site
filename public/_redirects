@@ -3,3 +3,6 @@
 /premium/* /club/:splat 301
 /u/* /u/ 200
 /join/* /join/ 200
+# Card scans and grid thumbnails moved to R2 (audit fix 2026-11-27); old links and Google Images go to the new address.
+/img/scans/* https://img.jonin.cards/site/scans/:splat 301
+/img/t/* https://img.jonin.cards/site/t/:splat 301

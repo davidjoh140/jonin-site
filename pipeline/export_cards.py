@@ -426,7 +426,11 @@ SITE = "https://jonin.cards"
 
 
 def image_url(path):
-    """A scan's address: the copy on jonin.cards (Cloudflare Pages) when mirrored, else Supabase Storage."""
+    """A scan's address: the R2 copy (img.jonin.cards) once mirror_images.py has copied it (audit fix 2026-11-27),
+    else a legacy copy on jonin.cards, else Supabase Storage."""
+    import r2
+    if path in r2.manifest()["scans"]:
+        return r2.scan_url(path)
     if (MIRROR / path).is_file():
         return f"{SITE}/img/scans/{path}"
     import supa

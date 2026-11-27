@@ -19,13 +19,26 @@ MANIFEST = Path(__file__).resolve().parent / "r2_site.json"
 IMMUTABLE = "public, max-age=31536000, immutable"
 
 
+_cache = {}
+
+
 def manifest():
-    """{"scans": set of storage paths, "t": set of thumbnail file names} already in R2."""
+    """{"scans": storage paths, "t": thumbnail file names} already in R2, read-only (cached until the file changes).
+    Scripts that upload use manifest_copy() and save_manifest()."""
     try:
-        d = json.loads(MANIFEST.read_text())
+        mt = MANIFEST.stat().st_mtime_ns
     except FileNotFoundError:
-        d = {}
-    return {"scans": set(d.get("scans", [])), "t": set(d.get("t", []))}
+        return {"scans": set(), "t": set()}
+    if _cache.get("mt") != mt:
+        d = json.loads(MANIFEST.read_text())
+        _cache.update(mt=mt, m={"scans": frozenset(d.get("scans", [])), "t": frozenset(d.get("t", []))})
+    return _cache["m"]
+
+
+def manifest_copy():
+    """A changeable copy of the manifest, for scripts that upload and then save_manifest()."""
+    m = manifest()
+    return {"scans": set(m["scans"]), "t": set(m["t"])}
 
 
 def save_manifest(m):

@@ -21,7 +21,7 @@ LOCAL = "https://jonin.cards/img/scans/"
 
 
 def main():
-    m = r2.manifest()
+    m = r2.manifest_copy()
     have = r2.existing("site/")
     m["scans"] |= {k[len("site/scans/"):] for k in have if k.startswith("site/scans/")}
     m["t"] |= {k[len("site/t/"):] for k in have if k.startswith("site/t/")}

@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install requests pillow
+      - run: pip install requests pillow boto3
       - name: Move Card Index scan uploads into Storage
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -28,10 +28,14 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: cd pipeline && python shrink_queue_photos.py || echo "photo shrink skipped"
-      - name: Copy card images to the site (served by Cloudflare, not Supabase)
+      - name: Copy new card scans to R2 (img.jonin.cards, served by Cloudflare, not Supabase)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://f6d20bce1fc2f76725b857ef0fed6d10.r2.cloudflarestorage.com
+          R2_BUCKET: jonin-scans
         run: cd pipeline && python mirror_images.py
       - name: Load scan-read card details (pending until approved on /admin/)
         env:
@@ -43,7 +47,12 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python pipeline/export_cards.py
-      - name: Make grid thumbnails (small copies of each card image)
+      - name: Make grid thumbnails in R2 (small copies of each card image)
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://f6d20bce1fc2f76725b857ef0fed6d10.r2.cloudflarestorage.com
+          R2_BUCKET: jonin-scans
         run: python pipeline/thumbs.py
       - name: Count new slab photos to crop and flatten
         id: slabs
@@ -62,7 +71,7 @@ jobs:
         run: python pipeline/build_pages.py
       - name: Commit if changed
         run: |
-          OUT="public/cards.json public/404.html public/card public/set public/sitemap.xml public/robots.txt public/img public/index.html pipeline/lastmod.json public/character public/characters public/news public/privacy public/terms public/articles pipeline/article_sales.json pipeline/card_recent_sales.json pipeline/card_price_history.json public/battle public/missions public/most-valuable public/lists public/most-popular pipeline/votes.json pipeline/slab_tiles.json pipeline/sale_photos_raw"
+          OUT="public/cards.json public/404.html pipeline/r2_site.json public/card public/set public/sitemap.xml public/robots.txt public/img public/index.html pipeline/lastmod.json public/character public/characters public/news public/privacy public/terms public/articles pipeline/article_sales.json pipeline/card_recent_sales.json pipeline/card_price_history.json public/battle public/missions public/most-valuable public/lists public/most-popular pipeline/votes.json pipeline/slab_tiles.json pipeline/sale_photos_raw"
           if [ -z "$(git status --porcelain $OUT)" ]; then echo "No change"; exit 0; fi
           git config user.name "jonin-bot"
           git config user.email "jonin-bot@users.noreply.github.com"
