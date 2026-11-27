@@ -22,6 +22,8 @@
   }
   apply(get());
   window.JONIN_THEMES=T;
+  /* Naruto music pop-out button (bottom-right) on every page */
+  try{var ms=document.createElement('script');ms.src='/music.js?v=1';ms.defer=true;document.head.appendChild(ms)}catch(_){}
   window.joninSetTheme=function(id){var t=apply(id);try{localStorage.setItem(K,t.id)}catch(_){}var b=document.querySelector('.tp .tpb');if(b){b.querySelector('.tsw').setAttribute('style',st(t));b.querySelector('.tpn').textContent=t.n;document.querySelectorAll('.tp [data-t]').forEach(function(y){y.setAttribute('aria-checked',y.getAttribute('data-t')===t.id)})}return t.id};
   function st(t){return '--a:'+t.bg+';--b:'+t.a+';--c:'+t.c+";--f:url('"+t.f+"')"}
   function sw(t){return 'style="'+st(t)+'"'}
