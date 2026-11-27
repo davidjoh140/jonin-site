@@ -7,6 +7,13 @@ Public card database for the original Bandai Naruto CCG (2006–2013).
 - `db/schema.sql` — Supabase tables (sets, cards, scans, sales, listings) with public read access only for sets, cards and approved scans.
 - `db/seed.sql` — initial import of all sets and cards.
 
+## Homepage code
+
+The homepage's app code is in `public/home.js` (moved out of `index.html` on 2026-11-27 so browsers keep it between
+visits). Edit it there. `build_pages.py` updates the `?v=` on its `<script>` tag in `index.html` whenever the file
+changes. Small inline scripts that must run early (embed detection, the character list `QUICK`, which build_pages.py
+reads) stay in `index.html`.
+
 ## One card list, everywhere
 
 Supabase is the only master card list. Nothing else is edited by hand.

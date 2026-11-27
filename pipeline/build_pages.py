@@ -1258,6 +1258,8 @@ def main():
     hs2 = re.sub(r'<!--setlinks-->.*?<!--/setlinks-->', lambda m: set_links(sets), hs, flags=re.S)
     if hs2 == hs and '<!--setlinks-->' not in hs:
         hs2 = hs.replace('</main>', set_links(sets) + '\n</main>', 1)
+    # Homepage app code lives in /home.js (audit fix 2026-11-27); keep its ?v= in step so browsers never run a stale copy.
+    hs2 = re.sub(r'/home\.js\?v=[0-9a-f]+', '/home.js?v=' + file_version('home.js'), hs2)
     changed += write(home, hs2)
     urls = [SITE + '/'] + ([SITE + '/news/'] + [f"{SITE}/news/{a['slug']}/" for a in arts] if arts else []) + [SITE + '/characters/', SITE + '/missions/', SITE + '/leaderboard/', SITE + '/battle/', SITE + '/giveaway/', SITE + '/articles/', SITE + '/sell/'] + [f'{SITE}/articles/{a["slug"]}/' for a in articles if not a['draft']] + [f'{SITE}/character/{ch["slug"]}/' for ch in chars] + \
            list_urls + sealed_urls + [SITE + '/price-guide/', f'{SITE}/{VP.GUIDE_SLUG}/'] + [f'{SITE}/year/{y}/' for y in years] + ([SITE + '/most-valuable/'] if mv_chars else []) + [f'{SITE}/character/{ch["slug"]}/most-valuable/' for ch in mv_chars] + \
