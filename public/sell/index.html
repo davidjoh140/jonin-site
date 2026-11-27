@@ -50,6 +50,20 @@
 .done{text-align:center;padding:30px 10px}
 .done h2{font-family:'Baloo 2',sans-serif}
 @media (max-width:560px){.steps{grid-template-columns:1fr}}
+/* Light card so the form reads clearly on every theme */
+.sellcard{--ink:#1D1620;--mute:#6B5A50;--line2:#DCCAB4;--bg:#FFFFFF;--panel:#FFF1DE;background:#FFF8EF;color:var(--ink);border-radius:18px;padding:28px 28px 22px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.sellcard h1{color:#1D1620}
+.sellcard a{color:#B5121B}
+.sellcard .sf label{font-size:15px;color:#1D1620}
+.sellcard .sf input[type=text],.sellcard .sf input[type=email],.sellcard .sf input[type=tel],.sellcard .sf textarea,.sellcard .sf select{border-color:#CDB89E;font-size:16px}
+.sellcard .sf input:focus,.sellcard .sf textarea:focus,.sellcard .sf select:focus{outline:2px solid var(--acc,#E8743B);outline-offset:1px;border-color:transparent}
+.sellcard .chips span{background:#fff;border-color:#CDB89E;color:#1D1620;font-weight:500}
+.sellcard .chips input:checked+span{background:var(--acc,#E8743B);border-color:var(--acc,#E8743B);color:#fff;font-weight:600}
+.sellcard .drop{background:#fff;border-color:#CDB89E;color:#1D1620}
+.sellcard .steps li{border-color:#EAD9C2;color:#1D1620}
+.sellcard .err{color:#C0141C}
+.sellcard .err:empty{display:none}
+@media (max-width:560px){.sellcard{padding:20px 16px 16px;border-radius:14px}}
 </style>
 </head>
 <body>
@@ -58,6 +72,7 @@
 <main>
 <div class="sellw">
 <nav class="crumb"><a href="/">All cards</a> › Sell your cards</nav>
+<div class="sellcard">
 <h1>Cash for your Naruto cards</h1>
 <p class="pay">Cash, Zelle, Venmo or PayPal.</p>
 <ol class="steps"><li>Send photos of your cards.</li><li>Get a cash offer from Jonin or a trusted buyer.</li><li>Get paid: meet up locally or ship.</li></ol>
@@ -86,6 +101,7 @@
 <div><button class="sbtn" id="sbtn" type="submit">Get my cash offer</button></div>
 <p class="fine">No obligation. Your info goes only to Jonin or one trusted buyer, and only with your OK. Questions: <a href="mailto:buy@jonin.cards">buy@jonin.cards</a></p>
 </form>
+</div>
 </div>
 </div>
 </main>
