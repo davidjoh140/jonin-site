@@ -21,7 +21,7 @@
     '.jbt .f:hover{border-color:var(--acc);transform:translateY(-1px)}.jbt .f:focus-visible{outline:2px solid var(--acc)}'+
     '.jbt .f .art{position:relative;display:block;width:100%;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:rgba(0,0,0,.25)}.jbt .f .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%;transition:transform .25s}.jbt .f:hover .art img{transform:scale(1.04)}.jbt .f.done .art img{transform:none}.jbt .f>span.nm{font:800 15px/1.1 \"Baloo 2\",sans-serif;letter-spacing:.2px}'+
     '.jbt .f.done{cursor:default;transform:none}.jbt .f.mine{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}.jbt .f.done:not(.mine){opacity:.75}'+
-    '.jbt .bar{height:6px;width:100%;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.jbt .bar i{display:block;height:100%;background:var(--acc)}'+
+    '.jbt .jbar{height:6px;width:100%;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.jbt .jbar i{display:block;height:100%;background:var(--acc)}'+
     '.jbt .f em{font:700 13px Inter,sans-serif;font-style:normal;color:var(--acc)}.jbt .ft{margin:0;font-size:12px;color:var(--mute)}.jbt .ft a{color:var(--acc)}'+
     '.jbt.big{padding:18px;gap:14px}.jbt.big h3{font-size:24px}.jbt.big .f>span.nm{font-size:20px}.jbt.big .vs{gap:14px}';
   var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
@@ -33,7 +33,7 @@
     var voted=!!D.mine,t=D.votes?D.votes.a+D.votes.b:0,s=D.scrolls||0;
     var side=function(c,k){var n=D.votes?D.votes[k]:0,p=pct(n,t);
       return '<button type="button" class="f'+(voted?' done':'')+(D.mine===c.slug?' mine':'')+'" data-pick="'+esc(c.slug)+'"'+(voted?' disabled':'')+' aria-label="Vote '+esc(c.label)+'">'+face(c)+'<span class="nm">'+esc(c.label)+'</span>'+
-        (voted?'<div class="bar" aria-hidden="true"><i style="width:'+p+'%"></i></div><em>'+p+'%</em>':'')+'</button>'};
+        (voted?'<div class="jbar" aria-hidden="true"><i style="width:'+p+'%"></i></div><em>'+p+'%</em>':'')+'</button>'};
     var y=D.yesterday,yt=y?(+y.va)+(+y.vb):0,yl='';
     if(y&&yt){var w=+y.va>=+y.vb?[y.a,y.va,y.b]:[y.b,y.vb,y.a];yl=(+y.va===+y.vb?'Yesterday: '+esc(nice(y.a))+' vs '+esc(nice(y.b))+' was a tie.':'Yesterday: '+esc(nice(w[0]))+' beat '+esc(nice(w[2]))+' with '+pct(+w[1],yt)+'% of the vote.')}
     el.innerHTML='<h3>⚔️ Daily battle'+(s?'<small>+'+s+' scrolls</small>':'')+'</h3>'+
