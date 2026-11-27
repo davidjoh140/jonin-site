@@ -1113,14 +1113,31 @@ def page_path(u):
     return os.path.join(ROOT, rel, 'index.html') if rel else os.path.join(ROOT, 'index.html')
 
 
+def content_fingerprint(html):
+    """What counts as a page's own content for <lastmod>: its title, meta description and the text a
+    reader sees inside <main> (plus image alt text). The shared header, footer, scripts, styles and
+    markup (classes, image URLs, link targets) are left out, so a site-wide or layout tweak doesn't
+    mark every page as changed (Google stops trusting lastmod when every page claims to change at once)."""
+    t = re.search(r'<title>(.*?)</title>', html, re.S)
+    d = re.search(r'<meta name="description" content="([^"]*)"', html)
+    m = re.search(r'<main\b[^>]*>(.*)</main>', html, re.S)
+    body = m.group(1) if m else html
+    body = re.sub(r'<script\b.*?</script>|<style\b.*?</style>|<svg\b.*?</svg>|<!--.*?-->', ' ', body, flags=re.S)
+    body = re.sub(r'<img\b[^>]*?\balt="([^"]*)"[^>]*>', r' \1 ', body)
+    body = re.sub(r'<[^>]+>', ' ', body)
+    body = re.sub(r'\s+', ' ', body).strip()
+    return '\n'.join((t.group(1) if t else '', d.group(1) if d else '', body))
+
+
 def lastmods(urls):
     """Sitemap <lastmod> per page: the date a page's content last changed. pipeline/lastmod.json keeps a
-    hash and date per URL; the date only moves when the hash does, so unchanged builds stay identical."""
+    content hash and date per URL; the date only moves when the hash does, so unchanged builds stay identical."""
     old = json.load(open(LASTMOD)) if os.path.exists(LASTMOD) else {}
     today, new = datetime.date.today().isoformat(), {}
     for u in urls:
         p = page_path(u)
-        h = hashlib.sha1(open(p, 'rb').read()).hexdigest()[:16] if os.path.exists(p) else ''
+        h = ('c' + hashlib.sha1(content_fingerprint(open(p, encoding='utf-8').read()).encode()).hexdigest()[:15]
+             if os.path.exists(p) else '')
         prev = old.get(u)
         new[u] = prev if prev and prev[0] == h else [h, today]
     return new
