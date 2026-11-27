@@ -46,10 +46,14 @@ jobs:
       - name: Cache the background-removal model (sealed photos)
         if: steps.sealedphotos.outputs.n != '0' && steps.sealedphotos.outputs.n != ''
         uses: actions/cache@v4
-        with: { path: "~/.u2net\n~/.rembg", key: rembg-isnet-general-use-v2 }
+        with:
+          path: |
+            ~/.u2net
+            ~/.rembg
+          key: rembg-isnet-general-use-v2
       - name: Install photo cleanup (only when a sealed photo is waiting)
         if: steps.sealedphotos.outputs.n != '0' && steps.sealedphotos.outputs.n != ''
-        run: pip install -q "rembg[cpu]" opencv-python-headless || echo "cleanup tools not installed: photos copied as they are"
+        run: pip install -q "rembg[cpu]" opencv-python-headless || echo "cleanup tools not installed, photos copied as they are"
       - name: Copy sealed photos David picked into R2 (cut out and cleaned)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
