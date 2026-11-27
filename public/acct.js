@@ -228,10 +228,35 @@
       var p=r[0]&&r[0][0],m=r[1]&&r[1][0];
       if(p){base.handle=p.handle||base.handle;base.fav=p.fav_character||null;base.avatar=p.avatar||null}
       var on=false;if(r[1]){on=!!(m&&m.active&&(!m.until||new Date(m.until)>new Date()));base.badge=on?(m.founding?'founding':'premium'):null}
-      if(r[2])base.pts=r[2];
+      if(r[2]){base.pts=r[2];rankCheck(s.user.id,r[2])}
       paint(base);cache(base);if(r[1]&&!on)freeUI(true);if(!(on&&m.upgrade_notice&&upgradeShow(m.upgrade_notice,tok)))introMaybe(base);
     });
   }
+  // ---- Rank-up popups (David, 2026-11-27) ----
+  // The last rank we've seen for this account is kept in this browser. When my_xp comes back with a higher rank, a
+  // celebration popup shows once. The first time we see an account we just remember its rank (no popup for ranks
+  // earned before this existed). Scroll-earning actions fire a 'jonin:xp' event (battle.js) so it can show right away.
+  // PLACEHOLDER wording for David.
+  var RK='jonin_rank_v1';
+  function rankCheck(uid,pts){
+    if(!pts||pts.rank==null)return;var at=+pts.prev_at||0,old=ls(RK);
+    try{localStorage.setItem(RK,JSON.stringify({uid:uid,rank:pts.rank,at:at}))}catch(_){}
+    if(!old||old.uid!==uid||!(at>(+old.at||0)))return;
+    rankPopup(pts);
+  }
+  function rankPopup(p){
+    var free=p.rank==='Jonin'||p.rank==='Kage';
+    var d=document.createElement('div');d.className='jmo jsi jrk';
+    d.innerHTML='<div class="jmbox" role="dialog" aria-modal="true" aria-labelledby="jrkh"><button class="jmx" type="button" aria-label="Close">×</button>'+
+      '<div class="jrkb" aria-hidden="true">📜</div><h2 id="jrkh">You’re now a '+esc(p.rank)+'!</h2>'+
+      '<p class="jsr">You’ve earned '+(+p.xp||0).toLocaleString('en-US')+' scrolls.'+(p.next?' Next up: <b>'+esc(p.next)+'</b> at '+p.next_at+' scrolls.':' That’s the top rank.')+'</p>'+
+      (free?'<p class="jsr">Reaching '+esc(p.rank)+' earns a free month of Jonin Club. <a href="/club/">See what’s included →</a></p>':'')+
+      '<div class="jsb"><a class="jmgo" href="/missions/">Keep earning scrolls</a><button type="button" class="jsl">Nice!</button></div></div>';
+    var go=function(){if(!document.body)return setTimeout(go,50);document.body.appendChild(d);if(window.jtrack)jtrack('rank-up',{rank:p.rank})};go();
+    d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.jmx,.jsl'))d.remove()});
+  }
+  window.addEventListener('jonin:xp',function(){var s=session();if(!s)return;
+    rest('/rest/v1/rpc/my_xp',s.access_token,{}).then(function(x){if(!x)return;rankCheck(s.user.id,x);var c=ls(CK);if(c&&c.uid===s.user.id){c.pts=x;try{localStorage.setItem(CK,JSON.stringify(c))}catch(_){}}LAST='';load()}).catch(function(){})});
   function signOut(){
     var s=session();
     if(s&&s.access_token)fetch(SUPA+'/auth/v1/logout',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+s.access_token}}).catch(function(){});
@@ -349,6 +374,7 @@
   (function(){var c=document.createElement('style');c.textContent=
     '.jdot{position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:#E5322D;box-shadow:0 0 0 2px var(--bg,#1B1622)}.jdot[hidden],.jmn[hidden]{display:none}'+
     '.jmn{display:inline-block;margin-left:6px;min-width:17px;padding:0 5px;border-radius:99px;background:#E5322D;color:#fff;font:700 11px/17px Inter,system-ui,sans-serif;text-align:center;vertical-align:1px}'+
+    '.jrk .jrkb{font-size:44px;text-align:center;line-height:1;margin:4px 0 6px;animation:jrkpop .5s ease-out}@keyframes jrkpop{0%{transform:scale(.3) rotate(-20deg);opacity:0}70%{transform:scale(1.15) rotate(6deg);opacity:1}100%{transform:none}}.jrk h2{text-align:center}'+
     '.jmo{position:fixed;inset:0;z-index:1000;background:rgba(10,7,14,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px}'+
     '.jmo[hidden]{display:none}.jmbox{position:relative;width:min(480px,100%);max-height:100%;display:flex;flex-direction:column;gap:10px;background:var(--deep,#17121D);border:1px solid var(--edge2,#30283A);border-radius:18px;padding:20px;color:var(--ink,#FFF4E6);font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}'+
     '.jmbox h2{margin:0;font:800 24px "Baloo 2",sans-serif}.jmbox p{margin:0;color:var(--mute,#B8AEA6)}.jmx{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--mute,#B8AEA6);font-size:20px;cursor:pointer;padding:6px}'+
@@ -399,6 +425,6 @@
   function hashOpen(){if(location.hash==='#messages'){if(session())openMsgs();try{history.replaceState(null,'',location.pathname+location.search)}catch(_){}}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hashOpen);else setTimeout(hashOpen,0);
 
-  window.JoninAcct={html:html,cache:cache,cached:function(){return ls(CK)},icon:ICON,label:LABEL,refresh:function(){LAST='';load()}};
+  window.JoninAcct={rankCheck:rankCheck,html:html,cache:cache,cached:function(){return ls(CK)},icon:ICON,label:LABEL,refresh:function(){LAST='';load()}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',auto);else auto();
 })();

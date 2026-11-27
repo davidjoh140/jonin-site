@@ -1011,7 +1011,8 @@ function listView(el,title,src,ro){LAST=[el,title,src,ro];const st=collStats(src
   ${MTAB==='lists'&&!ro?'':`${ms?'':cfBar(base,SL)}<div class="grid" id="mgrid">${mGrid(items,SL,ro,base.length)}</div>`}`}
 // Scrolls (stored as xp, 2026-11-26): from accepted feedback notes and first votes per character; amounts and ranks are placeholders set in Supabase xp_rules()/xp_rank().
 let FBPTS=null;
-function loadFbPts(){if(!ME||!sbc())return;sb.rpc('my_xp').then(r=>{if(!r.error&&r.data){FBPTS=r.data;paintAcct();const el=$('#v-mine');if(el&&el.innerHTML)renderMine()}}).catch(()=>{})}
+window.addEventListener('jonin:xp',()=>loadFbPts());   // daily battle vote etc. (rank-up popup, header scrolls)
+function loadFbPts(){if(!ME||!sbc())return;sb.rpc('my_xp').then(r=>{if(!r.error&&r.data){FBPTS=r.data;if(window.JoninAcct&&JoninAcct.rankCheck)JoninAcct.rankCheck(ME.id,r.data);paintAcct();const el=$('#v-mine');if(el&&el.innerHTML)renderMine()}}).catch(()=>{})}
 function rankRow(){if(!FBPTS)return '';const p=FBPTS.xp!=null?FBPTS.xp:(FBPTS.points||0),lo=FBPTS.prev_at||0;const pct=FBPTS.next_at?Math.min(100,Math.round((p-lo)/(FBPTS.next_at-lo)*100)):100;
   return `<div class="share fbrank"><span>Rank:</span><b>${esc(FBPTS.rank)}</b><span class="mt">📜 ${p} ${p===1?'scroll':'scrolls'}${FBPTS.next?` · ${FBPTS.next_at-p} ${FBPTS.next_at-p===1?'scroll':'scrolls'} to ${esc(FBPTS.next)}`:''}</span><span class="fbbar" aria-hidden="true"><i style="width:${pct}%"></i></span><a class="clear" href="/missions/" style="text-decoration:none">Missions: earn scrolls</a></div>`}
 function renderMine(){const el=$('#v-mine');if(ME)setTimeout(slabAsk,800);if(!ME){const n=gCount();if(!n){el.innerHTML='<h1>My collection</h1><p class="mt">Sign up or sign in to track your haves, wants and slabs.</p><div class="row"><button class="pill" data-auth="up">Sign up</button><button class="clear" data-auth="in">Sign in</button></div>'+sellBox();return}
@@ -1223,6 +1224,6 @@ fetch('cards.json').then(r=>r.json()).then(async d=>{D=d;const live=await Promis
 <button class="totop" id="totop" type="button" aria-label="Back to top"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script>(function(){var b=document.getElementById('totop');function u(){b.classList.toggle('on',window.scrollY>500)}addEventListener('scroll',u,{passive:true});u();b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})})})();</script>
 <script src="/feedback.js?v=5e872c82" defer></script>
-<script src="/battle.js?v=3" defer></script>
+<script src="/battle.js?v=4" defer></script>
 </body>
 </html>

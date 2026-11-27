@@ -85,6 +85,12 @@
     if (sh) sh.onclick = function () { navigator.share({ title: 'Jonin', text: 'Track your Naruto CCG collection on Jonin', url: url }).catch(function () {}); };
   }
 
+  // Battle streak line (2026-11-27): milestone bonuses from xp_rules, plus your current streak when signed in.
+  function paintStreak(R, me) {
+    var el = document.querySelector('#m-battle .mstreak'); if (!el) return;
+    var parts = [3, 7, 30].filter(function (d) { return R['streak_' + d] != null; }).map(function (d) { return d + ' days +' + R['streak_' + d]; });
+    el.textContent = (parts.length ? '🔥 Streak bonuses: ' + parts.join(' · ') + '.' : '') + (me && me.streak ? ' Your streak: ' + me.streak + ' day' + (me.streak === 1 ? '' : 's') + '.' : '');
+  }
   function load() {
     var s = session();
     Promise.all([
@@ -92,7 +98,7 @@
       rpc('xp_ranks').catch(function () { return []; }),
       s ? rpc('my_xp', s.access_token).catch(function () { return null; }) : Promise.resolve(null)
       , s ? rpc('my_invite', s.access_token).catch(function () { return null; }) : Promise.resolve(null)
-    ]).then(function (r) { paint(r[0] || {}, r[1] || [], r[2]); paintInvite(r[3]); });
+    ]).then(function (r) { paint(r[0] || {}, r[1] || [], r[2]); paintInvite(r[3]); paintStreak(r[0] || {}, r[2]); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load); else load();
   window.addEventListener('storage', function (e) { if (e.key === TK) load(); });

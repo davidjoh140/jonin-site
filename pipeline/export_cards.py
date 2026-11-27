@@ -237,6 +237,38 @@ CARD_SALES = Path(__file__).resolve().parent / "card_recent_sales.json"
 CARD_PAGE_SALES = 5   # PLACEHOLDER (David, 2026-11-27): recent sales built into every card page, so Google sees them
 
 
+CARD_HISTORY = Path(__file__).resolve().parent / "card_price_history.json"
+HISTORY_MIN_SALES = 3     # PLACEHOLDER (David, 2026-11-27): a card needs 3+ sales of one version to get a chart
+HISTORY_MAX_SALES = 60    # newest sales kept per chart
+
+
+def write_card_history(sales, min_sales=HISTORY_MIN_SALES, keep=HISTORY_MAX_SALES):
+    """Price history for the card pages (David, 2026-11-27): every approved sale of the card's most-sold version
+    (edition + foil + grade), oldest first. With only a few months of sales logged, each sale is its own point;
+    switch to monthly averages once there's a year or more of data.
+    {card_id: {"v": "Unlimited · Normal · Raw", "s": [["2026-09-14", 12.5], ...]}}"""
+    by = {}
+    for x in sales:
+        cid = x.get("card_id")
+        if not cid or x.get("status") != "approved" or float(x.get("price") or 0) <= 0 or not x.get("sold_at"):
+            continue
+        if (x.get("printing") or "") == "?" or (x.get("edition") or "") == "?":
+            continue
+        key = (x.get("printing") or "", x.get("edition") or "", x.get("grader") or "Raw", x.get("grade") or "")
+        by.setdefault(cid, {}).setdefault(key, []).append(x)
+    out = {}
+    for cid, vers in by.items():
+        key, xs = max(vers.items(), key=lambda kv: (len(kv[1]), max(s["sold_at"] for s in kv[1])))
+        if len(xs) < min_sales:
+            continue
+        xs = sorted(xs, key=lambda s: s["sold_at"])[-keep:]
+        out[cid] = {"v": version_label(xs[0]), "s": [[s["sold_at"][:10], _num(s["price"])] for s in xs]}
+    text = json.dumps(out, separators=(",", ":"), sort_keys=True) + "\n"
+    if not CARD_HISTORY.exists() or CARD_HISTORY.read_text() != text:
+        CARD_HISTORY.write_text(text)
+    return len(out)
+
+
 def write_card_sales(sales, n=CARD_PAGE_SALES):
     """{card_id: [[price, version, date, url, source], ...]} newest first, for the static card pages.
     Kept out of cards.json so the homepage download stays small."""
@@ -417,6 +449,7 @@ def main():
         revealed = reveal_top_prices(data, sales)
         write_article_sales(sales)
         write_card_sales(sales)
+        write_card_history(sales)
         write_votes(supa.select("card_votes", {"select": "character,card_id,user_id"}))
         text = dumps(data)
         run.stats = {"sets": len(data["sets"]), "cards": len(data["cards"]),

@@ -192,6 +192,64 @@ def sale_date(d):
         return d or ''
 
 
+_CARD_HISTORY = None
+
+
+def card_history(c):
+    """{"v": version label, "s": [[date, price], ...]} from pipeline/card_price_history.json (export_cards.py)."""
+    global _CARD_HISTORY
+    if _CARD_HISTORY is None:
+        f = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'card_price_history.json')
+        _CARD_HISTORY = json.load(open(f)) if os.path.isfile(f) else {}
+    return _CARD_HISTORY.get(c['s'] + ':' + c['n'])
+
+
+def history_block(c):
+    """Price history chart (David, 2026-11-27): every sale of the card's most-sold version over time, drawn as a
+    static SVG so Google sees it. One series, so no legend (the heading names the version). Dots carry a native
+    hover tooltip; the numbers are also in a table under the chart. PLACEHOLDER: shown to everyone, 3+ sales."""
+    h = card_history(c)
+    if not h or len(h.get('s') or []) < 2:
+        return ''
+    import datetime
+    pts = [(datetime.date.fromisoformat(d), float(p)) for d, p in h['s']]
+    d0, d1 = pts[0][0], pts[-1][0]
+    span = max((d1 - d0).days, 1)
+    lo, hi = min(p for _, p in pts), max(p for _, p in pts)
+    lo = 0 if lo < hi * 0.4 else lo * 0.85
+    hi = hi * 1.1 if hi > lo else lo + 1
+    import math
+    raw = (hi - lo) / 3
+    mag = 10 ** math.floor(math.log10(raw))
+    step = next(m * mag for m in (1, 2, 2.5, 5, 10) if m * mag >= raw)   # clean axis steps ($25, $50, $100…)
+    lo = math.floor(lo / step) * step
+    hi = lo + step * 3
+    while hi < max(p for _, p in pts):
+        hi += step
+    n_ticks = round((hi - lo) / step)
+    # Positions are percentages of the plot area, so the chart stretches to any width while labels stay normal text
+    # and dots stay round (they're HTML, the line is an SVG with a non-scaling stroke).
+    def X(d):
+        return ((d - d0).days / span * 100) if d1 != d0 else 50
+    def Y(p):
+        return (1 - (p - lo) / (hi - lo)) * 100
+    grid = ''.join(f'<i class="phg" style="top:{Y(lo + step * i):.2f}%"><b>{money(lo + step * i)}</b></i>' for i in range(n_ticks + 1))
+    xl = (f'<span class="phx" style="left:0">{e(sale_date(d0.isoformat()))}</span>'
+          + (f'<span class="phx" style="right:0">{e(sale_date(d1.isoformat()))}</span>' if d1 != d0 else ''))
+    days = {}
+    for d, p in pts:
+        days.setdefault(d, []).append(p)
+    path = 'M' + ' L'.join(f'{X(d):.2f},{Y(sum(v) / len(v)):.2f}' for d, v in sorted(days.items()))
+    dots = ''.join(f'<span class="phd" style="left:{X(d):.2f}%;top:{Y(p):.2f}%" title="{e(sale_date(d.isoformat()))} · {money(p)}"></span>'
+                   for d, p in pts)
+    rows = ''.join(f'<tr><td>{e(sale_date(d.isoformat()))}</td><td>{money(p)}</td></tr>' for d, p in reversed(pts))
+    label = f'Price history of {c["name"]} {c["n"]}, {h["v"]}: {len(pts)} sales from {sale_date(d0.isoformat())} to {sale_date(d1.isoformat())}'
+    return (f'<section class="ph"><h3>Price history<span>{e(h["v"])} · {len(pts)} sales</span></h3>'
+            f'<div class="phc" role="img" aria-label="{e(label)}"><div class="php">{grid}'
+            f'<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="{path}" class="phl"/></svg>{dots}</div>{xl}</div>'
+            f'<details class="phn"><summary>See the numbers</summary><table><tr><th>Sold</th><th>Price</th></tr>{rows}</table></details></section>')
+
+
 def recent_block(c):
     """Recent sales built into the page (David, 2026-11-27) so Google sees real prices. Same markup acct.js uses:
     signed-in members get it swapped for their 10, Jonin Club for the full breakdown."""
@@ -634,7 +692,8 @@ def missions_page(chars):
 <p class="mt">Share your invite link. When a friend signs up through it and adds a card to their collection or casts a vote, you earn scrolls.</p>
 <div class="minv"><p class="mt" style="margin:0">Sign in to get your invite link.</p></div></article>
 <article class="mcard" id="m-battle"><div class="mtop"><h2>Vote in the daily battle</h2><span class="mxp" data-xp="daily_battle">+📜</span></div>
-<p class="mt">Two characters, one fight, a new matchup every day. Pick who wins. <a href="/battle/">Today’s battle →</a></p></article>
+<p class="mt">Two characters, one fight, a new matchup every day. Pick who wins. <a href="/battle/">Today’s battle →</a></p>
+<p class="mt mstreak"></p></article>
 <article class="mcard" id="m-vote"><div class="mtop"><h2>Vote for every character's coolest cards</h2><span class="mxp" data-xp="vote_character">+📜</span></div>
 <p class="mt">Open a character and vote for up to 3 of their best cards. Your first vote on each character earns scrolls, once per character. Moving a vote later keeps your scrolls.</p>
 <div class="mprog"><span class="mbar"><i style="width:0%"></i></span><b class="mcount">0 / {len(chars)}</b></div>
@@ -876,7 +935,7 @@ def card_page(c, s, prev, nxt, chars_by_name=None, set_cards=(), char_lists=None
 {newbie('card')}
 </div>
 </article>
-<div class="market{'' if sold_slab(c) else ' one'}">{sold_slab(c)}{price_block(c)}</div>
+<div class="market{'' if sold_slab(c) else ' one'}">{sold_slab(c)}{price_block(c)}</div>{history_block(c)}
 {nt_html}
 <nav class="prevnext">{nav}</nav>
 {related_rows(c, s, set_cards, char_lists or {}, chars_by_name or {}, nt_cards)}

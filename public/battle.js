@@ -22,7 +22,7 @@
     '.jbt .f .art{position:relative;display:block;width:100%;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:rgba(0,0,0,.25)}.jbt .f .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%;transition:transform .25s}.jbt .f:hover .art img{transform:scale(1.04)}.jbt .f.done .art img{transform:none}.jbt .f>span.nm{font:800 15px/1.1 \"Baloo 2\",sans-serif;letter-spacing:.2px}'+
     '.jbt .f.done{cursor:default;transform:none}.jbt .f.mine{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}.jbt .f.done:not(.mine){opacity:.75}'+
     '.jbt .jbar{height:6px;width:100%;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.jbt .jbar i{display:block;height:100%;background:var(--acc)}'+
-    '.jbt .f em{font:700 13px Inter,sans-serif;font-style:normal;color:var(--acc)}.jbt .ft{margin:0;font-size:12px;color:var(--mute)}.jbt .ft a{color:var(--acc)}'+
+    '.jbt .f em{font:700 13px Inter,sans-serif;font-style:normal;color:var(--acc)}.jbt .sk{margin:0;font-size:12px;color:var(--ink)}.jbt .sk b{color:var(--acc)}.jbt .ft{margin:0;font-size:12px;color:var(--mute)}.jbt .ft a{color:var(--acc)}'+
     '.jbt.big{padding:18px;gap:14px}.jbt.big h3{font-size:24px}.jbt.big .f>span.nm{font-size:20px}.jbt.big .vs{gap:14px}';
   var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 
@@ -36,7 +36,10 @@
         (voted?'<div class="jbar" aria-hidden="true"><i style="width:'+p+'%"></i></div><em>'+p+'%</em>':'')+'</button>'};
     var y=D.yesterday,yt=y?(+y.va)+(+y.vb):0,yl='';
     if(y&&yt){var w=+y.va>=+y.vb?[y.a,y.va,y.b]:[y.b,y.vb,y.a];yl=(+y.va===+y.vb?'Yesterday: '+esc(nice(y.a))+' vs '+esc(nice(y.b))+' was a tie.':'Yesterday: '+esc(nice(w[0]))+' beat '+esc(nice(w[2]))+' with '+pct(+w[1],yt)+'% of the vote.')}
-    el.innerHTML='<h3>⚔️ Daily battle'+(s?'<small>+'+s+' scrolls</small>':'')+'</h3>'+
+    // Streaks (2026-11-27): consecutive days voted; milestones pay bonus scrolls (db/039_battle_streaks.sql).
+    var sk=D.streak||0,nx=D.next,skl=sk?'<p class="sk">🔥 <b>'+sk+'-day streak</b>'+(nx?' · '+(nx.days-sk)+' more day'+(nx.days-sk===1?'':'s')+' for +'+nx.scrolls+' bonus scrolls':'')+'</p>':
+      (D.signed_in&&nx?'<p class="sk">🔥 Vote '+nx.days+' days in a row for +'+nx.scrolls+' bonus scrolls</p>':'');
+    el.innerHTML='<h3>⚔️ Daily battle'+(s?'<small>+'+s+' scrolls</small>':'')+'</h3>'+skl+
       '<p class="q">'+(voted?'You picked '+esc(D.mine===D.a.slug?D.a.label:D.b.label)+'. '+t+' vote'+(t===1?'':'s')+' so far. New battle tomorrow.':'Who wins in a 1v1? Tap to vote.')+'</p>'+
       '<div class="vs">'+side(D.a,'a')+'<b class="x" aria-hidden="true">VS</b>'+side(D.b,'b')+'</div>'+
       (!D.signed_in?'<p class="ft">Sign in free to vote and earn '+s+' scrolls a day.</p>':'')+
@@ -47,6 +50,7 @@
     if(!session()){if(typeof window.openAuth==='function')window.openAuth('up');else location.href='/#signup';if(window.jtrack)jtrack('battle-signin',{});return}
     busy=true;var pick=b.getAttribute('data-pick');
     rpc('vote_battle',{p_pick:pick}).then(function(d){D=d;render();if(window.jtrack)jtrack('battle-vote',{pick:pick});
+      try{window.dispatchEvent(new Event('jonin:xp'))}catch(_){}   // acct.js refreshes scrolls and shows a rank-up popup if earned
     }).catch(function(){alertless(b)}).then(function(){busy=false})});
   function alertless(b){var p=b.closest('.jbt').querySelector('.q');if(p)p.textContent='That vote didn’t go through. Refresh and try again.'}
   // Sign-in or sign-out in this tab or another: reload so the battle shows your vote state.
